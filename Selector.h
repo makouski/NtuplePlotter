@@ -2,7 +2,6 @@
 #define SELECTOR_H
 
 #include<vector>
-#include<set>
 #include<iostream>
 #include<algorithm>
 #include<TH1F.h>
@@ -26,51 +25,34 @@ double dR(double eta1, double phi1, double eta2, double phi2);
 
 class Selector{
 public:
-	Selector(const char* titleIn);
+	Selector();
 	~Selector();
 	void process_objects(const EventTree* inp_tree);
-	int  accept_counts();
-	void print_cutflow();
-	
-	std::string title;
 	
 	// selected object indices
-	std::vector<int> Photons;
-	std::set<int>    VetoedPhotons, WVetoedPhotons;
-	std::vector<int> Electrons, ElectronsLoose;
-	std::set<int>    VetoedElectrons;
-	std::vector<int> Muons, MuonsLoose;
-	std::vector<int> JetCands, JetCandsNoDR, Jets;
-	std::set<int>    VetoedJets;
+	std::vector<int> PhotonsPresel;
+	std::vector<bool> PhoPassChHadIso;
+	std::vector<bool> PhoPassPhoIso;
+	std::vector<bool> PhoPassSih;
+	std::vector<int> Electrons;
+	std::vector<int> ElectronsLoose;
+	//std::vector<int> Muons;
+	std::vector<int> MuonsLoose;
+	std::vector<int> Jets;
+	std::vector<int> bJets;
 	
 	// calculated rho corrected PF isolations
 	std::vector<double> Ele03RelIso;
 	std::vector<double> Mu04RelIso;
-	std::vector<double> Pho03ChHadIso, Pho03ChHadSCRIso, Pho03NeuHadIso, Pho03PhoIso, Pho03PhoSCRIso;	
-	
-	// histograms
-	TH1F* Nele_before_cut;
-	std::vector<TH1F*> histVector;
-	// some inv mass variables, for cutting or histogramminng
-	double JJGammaMassMin;
-	double JJEMassMin;
-	double bJJGammaMassMin;
-	double bJJEMassMin;
-        
-	double EGammaMETtransMassMin;
-
-	// cut-flow
-	TH1F* cutFlow;
-	
-	// cuts as parameters, to modify easily
-	double MET_cut;
-	bool no_trigger;
+	std::vector<double> Pho03ChHadIso;
+	std::vector<double> Pho03ChHadSCRIso;
+	std::vector<double> Pho03NeuHadIso;
+	std::vector<double> Pho03PhoIso;
+	std::vector<double> Pho03PhoSCRIso;	
 	
 	// jets
-	std::vector<double> jet_Pt_cuts;
+	double jet_Pt_cut;
 	double btag_cut;
-	int Njet_cut;
-	int NBjet_cut;
 
 	// electrons
 	double ele_Pt_cut;
@@ -81,53 +63,26 @@ public:
 	double ele_MVALoose_cut;
 	double ele_Dxy_cut;
 	int    ele_MissInnHit_cut;
-	int    Nele_cut, NlooseEleVeto_cut;
 	
 	// photons
 	double pho_Et_cut;
 	int    pho_ID_ind; // 0 - Loose, 1 - Medium, 2 - Tight
-	bool   pho_noSigmaIEta_cut;
-	bool   pho_noIso_cut;
-	bool   pho_noChHadIso_cut;
-	bool   pho_noPhoIso_cut;
 	bool   pho_noPixelSeed_cut;
 	bool   pho_noEleVeto_cut;
-	int    Npho_cut;
+
 	// muons
 	double mu_PtLoose_cut;
 	double mu_RelIsoLoose_cut;
-	int    NlooseMuVeto_cut;
 
-	// delta R cuts
-	bool   doVeto;
-	double veto_jet_dR;
-	double veto_lep_jet_dR;
-	double veto_pho_jet_dR;
-	double veto_pho_lep_dR;
-	double W_mass_veto;
-	double W_trans_mass_veto;
-	
 private:
 	const EventTree* tree;
 	
 	void clear_vectors();
-	void set_cutflow_labels();
 	void filter_photons();
 	void filter_electrons();
 	void filter_muons();
 	void filter_jets();
-	void make_dR_cuts();
-	void make_mass_cuts();
-	void vetoCollection(std::vector<int>* toClean, const Float_t* etaClean, const Float_t* phiClean, 
-						const std::vector<int>* toCheck, const Float_t* etaCheck, const Float_t* phiCheck, 
-						std::set<int>* vetoed, double dRcut);
-	void cleanCollection(std::vector<int>* toClean, std::set<int>* vetoed);
-	double invMass_jjp(int jetInd1, int jetInd2, int phoInd);
-	double invMass_jje(int jetInd1, int jetInd2, int eleInd);
-	double invMass_jj(int jetInd1, int jetInd2);
-	double clusterTransMass_pe(int phoInd, int eleInd);
 	
-	double JetPtCut(int jetInd);
 	bool fidEtaPass(double Eta);
 	
 	// effective areas, see Selector.cpp for more information
