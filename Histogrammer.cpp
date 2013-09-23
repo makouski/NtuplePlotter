@@ -221,12 +221,6 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		int ind = selEvent->Jets[0];
 		hists["jet1Pt"]->Fill( tree->jetPt_[ind], weight );
 		hists["jet1Eta"]->Fill( tree->jetEta_[ind], weight );
-		hists["jet1CHF"]->Fill( tree->jetCHF_[ind], weight );
-		hists["jet1CEF"]->Fill( tree->jetCEF_[ind], weight );
-		hists["jet1NHF"]->Fill( tree->jetNHF_[ind], weight );
-		hists["jet1NEF"]->Fill( tree->jetNEF_[ind], weight );
-		hists["jet1NCharged"]->Fill( tree->jetNCharged_[ind], weight );
-		hists["jet1NConstituents"]->Fill( tree->jetNConstituents_[ind], weight );
 	}
 	if( selEvent->Jets.size() > 1 ){
 		int ind = selEvent->Jets[1];

@@ -10,7 +10,7 @@ PUReweight::PUReweight(int nFiles, char** fileNames){
 	double PUweightInt = PUweightHist->Integral();
 	TH1F* mcPU=NULL;
 	for(int nmcfile = 0; nmcfile<nFiles; nmcfile++){
-		std::cout << "reading file " << *(fileNames[nmcfile]) << std::endl;
+		std::cout << "reading file " << std::string(fileNames[nmcfile]) << std::endl;
 		TFile* mcFile = new TFile(fileNames[nmcfile],"READ");
 		if( mcPU==NULL) mcPU = (TH1F*)mcFile->Get("ggNtuplizer/hPU");
 		else mcPU->Add((TH1F*)mcFile->Get("ggNtuplizer/hPU"));

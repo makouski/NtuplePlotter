@@ -1,4 +1,4 @@
-all: makeTemplates makeSkim
+all: makeTemplates
 
 makeTemplates: Histogrammer.o HistCollect.o Selector.o EventPick.o EventTree.o makeTemplates.cpp OverlapRemove.cpp PUReweight.cpp PUReweight.h
 	g++ -o makeTemplates `root-config --libs` -I`root-config --incdir` EventTree.o Selector.o EventPick.o Histogrammer.o HistCollect.o makeTemplates.cpp OverlapRemove.cpp PUReweight.cpp

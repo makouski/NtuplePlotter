@@ -126,14 +126,14 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 void EventPick::print_cutflow(){
 	std::cout << "Cut-Flow for the event selector: " << title << std::endl;
 	std::cout << "Input Events                 " << cutFlow->GetBinContent(1) << std::endl;
-	std::cout << "Events with ==" << Nele_eq << " electron   " << cutFlow->GetBinContent(2) << std::endl;
+	std::cout << "Events with ==" << Nele_eq << " electron     " << cutFlow->GetBinContent(2) << std::endl;
 	std::cout << "Events with <= " << NlooseMuVeto_le << " loose muons " << cutFlow->GetBinContent(3) << std::endl;
 	std::cout << "Events with <= " << NlooseEleVeto_le << " loose electrons " << cutFlow->GetBinContent(4) << std::endl;
 	std::cout << "Events with >= " << Njet_ge << " jets        " << cutFlow->GetBinContent(5) << std::endl;
 	std::cout << "Events with >= " << NBjet_ge << " b-tag       " << cutFlow->GetBinContent(6) << std::endl;
 	std::cout << "Events passing MET cut       " << cutFlow->GetBinContent(7) << std::endl;
 	std::cout << "Passing Trigger              " << cutFlow->GetBinContent(8) << std::endl;
-	std::cout << "Events with >=" << Npho_ge << " photon     " << cutFlow->GetBinContent(9) << std::endl;
+	std::cout << "Events with >=" << Npho_ge << " photon       " << cutFlow->GetBinContent(9) << std::endl;
 	std::cout << std::endl;
 }
 

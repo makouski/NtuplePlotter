@@ -75,7 +75,7 @@ int main(int ac, char** av){
 		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, PUweight);
 	}
 	
-	looseCollect->write_histograms(evtPickLoose, isMC, "histograms_new");
+	looseCollect->write_histograms(evtPickLoose, isMC, av[2]);
 	
 	std::cout << "Average PU weight " << PUweighter->getAvgWeight() << std::endl;
 	evtPickLoose->print_cutflow();
