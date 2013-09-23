@@ -85,7 +85,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	else passPreSel = false;
 	if(passPreSel && selector->ElectronsLoose.size() <= NlooseEleVeto_le) {cutFlow->Fill(3); cutFlowWeight->Fill(3,weight);}
 	else passPreSel = false;
-	if(Jets.size() >= Njet_ge) {cutFlow->Fill(4); cutFlowWeight->Fill(4,weight);}
+	if(passPreSel && Jets.size() >= Njet_ge) {cutFlow->Fill(4); cutFlowWeight->Fill(4,weight);}
 	else passPreSel = false;
 	if(passPreSel && bJets.size() >= NBjet_ge) {cutFlow->Fill(5); cutFlowWeight->Fill(5,weight);}
 	else passPreSel = false;
