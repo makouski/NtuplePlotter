@@ -1,0 +1,74 @@
+#ifndef EVENTPICK_H
+#define EVENTPICK_H
+
+#include<vector>
+#include<string>
+#include<set>
+#include<iostream>
+#include<TH1F.h>
+
+#include"EventTree.h"
+#include"Selector.h"
+
+class EventPick{
+public:
+	EventPick(std::string titleIn);
+	~EventPick();
+	void process_event(const EventTree* inp_tree, const Selector* inp_selector, double weight);
+	void print_cutflow();
+	
+	std::string title;
+	
+	// selected object indices
+	std::vector<int> Electrons;
+	std::vector<int> ElectronsLoose;
+	//std::vector<int> Muons;
+	std::vector<int> MuonsLoose;
+	std::vector<int> Jets;
+	std::vector<int> bJets;
+	// indices and selection cuts for photons
+	std::vector<int> Photons;
+	std::vector<int> PhotonsPresel;
+	std::vector<bool> PhoPassChHadIso;
+	std::vector<bool> PhoPassPhoIso;
+	std::vector<bool> PhoPassSih;
+	
+	// delta R cuts
+	double veto_jet_dR;
+	double veto_lep_jet_dR;
+	double veto_pho_jet_dR;
+	double veto_pho_lep_dR;
+	
+	// cuts as parameters, to modify easily
+	double MET_cut;
+	bool no_trigger;
+	
+	int Njet_ge;
+	int NBjet_ge;
+	
+	int Nele_eq;
+	int NlooseEleVeto_le;
+	
+	int Npho_ge;
+	int NlooseMuVeto_le;
+	
+	// variables showing passing or failing selections
+	bool passPreSel; // passed preselection
+	bool passAll; // single flag: event passed all cuts: preselection + photon
+	
+	// histograms
+	std::vector<TH1F*> histVector;
+	TH1F* cutFlow;
+	TH1F* cutFlowWeight;
+
+private:
+	const EventTree* tree;
+	const Selector* selector;
+	
+	void clear_vectors();
+	void set_cutflow_labels(TH1F* hist);
+	double dR_jet_ele(int jetInd, int eleInd);
+	double dR_jet_pho(int jetInd, int phoInd);
+	double dR_ele_pho(int eleInd, int phoInd);
+};
+#endif

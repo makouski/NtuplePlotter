@@ -34,7 +34,6 @@ Selector::Selector(){
 	// muons
 	mu_PtLoose_cut = 10.0;
 	mu_RelIsoLoose_cut = 0.2;
-	NlooseMuVeto_cut = 0;
 }
 
 void Selector::process_objects(const EventTree* inp_tree){

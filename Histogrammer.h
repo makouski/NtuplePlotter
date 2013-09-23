@@ -5,32 +5,33 @@
 #include<vector>
 #include<map>
 #include<string>
-#include"EventTree.h"
-#include"Selector.h"
 #include<TFile.h>
 #include<TH1F.h>
 #include<TH2F.h>
 #include<TMath.h>
 #include<TLorentzVector.h>
 
+#include"EventTree.h"
+#include"Selector.h"
+#include"EventPick.h"
+
 class Histogrammer{
 public:
-	Histogrammer(const char* titleIn);
+	Histogrammer(std::string titleIn);
 	~Histogrammer(void);
-	void fill(Selector* selector_, EventTree* tree, double weight);
-	void write_histograms(const char* folder, std::vector<TH1F*> histVector);
+	void fill(Selector* selector, EventPick* evtPick, EventTree* tree, double weight);
+	void write_histograms(std::string folder, std::vector<TH1F*> histVector);
 	
 private:
 	std::string title;
 	std::map< std::string, TH1F* > hists;
 	std::map< std::string, TH2F* > hists2d;
-
+	
 	void make_hist(const char* hname, const char* htitle, int nbins, double xlow, double xhigh, const char* xlabel, const char* ylabel);
+	void make_hist2d(const char* hname, const char* htitle, int nxbins, double xlow, double xhigh, int nybins, double ylow, double yhigh);
 	int minDrIndex(double myEta, double myPhi, std::vector<int> Inds, Float_t* etas, Float_t* phis);
 	double minDr(double myEta, double myPhi, std::vector<int> Inds, Float_t* etas, Float_t* phis);
-	double matchedJetBtag(double phoEta, double phoPhi, std::vector<int> Inds, Float_t* jetEtas, Float_t* jetPhis, Float_t* jetCSV);
-	double phoJetmass(double phoEt, double phoEta, double phoPhi, std::vector<int> Inds, Float_t* jetPts, Float_t* jetEtas, Float_t* jetPhis);
 	double minDrPhoB(int PhoInd, EventTree* tree);
-	double calc_ht(Selector* selector_, EventTree* tree);
+	double calc_ht(EventPick* evtPick, EventTree* tree);
 };
 #endif
