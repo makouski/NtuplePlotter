@@ -31,7 +31,7 @@ EventPick::EventPick(std::string titleIn){
 EventPick::~EventPick(){
 }
 
-void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_selector, double weight=1.0){
+void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_selector, double weight){
 	tree = inp_tree;
 	selector = inp_selector;
 	clear_vectors();

@@ -14,7 +14,7 @@ class EventPick{
 public:
 	EventPick(std::string titleIn);
 	~EventPick();
-	void process_event(const EventTree* inp_tree, const Selector* inp_selector, double weight);
+	void process_event(const EventTree* inp_tree, const Selector* inp_selector, double weight=1.0);
 	void print_cutflow();
 	
 	std::string title;
