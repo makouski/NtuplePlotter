@@ -79,19 +79,19 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	
 	cutFlow->Fill(0); // Input events
 	passPreSel = true;
-	if(passPreSel && Electrons.size() == Nele_eq) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
+	if(passPreSel && (no_trigger || tree->HLT_[tree->HLTIndex_[17]])) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
 	else passPreSel = false;
-	if(passPreSel && selector->MuonsLoose.size() <= NlooseMuVeto_le) {cutFlow->Fill(2); cutFlowWeight->Fill(2,weight);}
+	if(passPreSel && Electrons.size() == Nele_eq) {cutFlow->Fill(2); cutFlowWeight->Fill(2,weight);}
 	else passPreSel = false;
-	if(passPreSel && selector->ElectronsLoose.size() <= NlooseEleVeto_le) {cutFlow->Fill(3); cutFlowWeight->Fill(3,weight);}
+	if(passPreSel && selector->MuonsLoose.size() <= NlooseMuVeto_le) {cutFlow->Fill(3); cutFlowWeight->Fill(3,weight);}
 	else passPreSel = false;
-	if(passPreSel && Jets.size() >= Njet_ge) {cutFlow->Fill(4); cutFlowWeight->Fill(4,weight);}
+	if(passPreSel && selector->ElectronsLoose.size() <= NlooseEleVeto_le) {cutFlow->Fill(4); cutFlowWeight->Fill(4,weight);}
 	else passPreSel = false;
-	if(passPreSel && bJets.size() >= NBjet_ge) {cutFlow->Fill(5); cutFlowWeight->Fill(5,weight);}
+	if(passPreSel && Jets.size() >= Njet_ge) {cutFlow->Fill(5); cutFlowWeight->Fill(5,weight);}
 	else passPreSel = false;
-	if(passPreSel && tree->pfMET_ > MET_cut) {cutFlow->Fill(6); cutFlowWeight->Fill(6,weight);}
+	if(passPreSel && bJets.size() >= NBjet_ge) {cutFlow->Fill(6); cutFlowWeight->Fill(6,weight);}
 	else passPreSel = false;
-	if(passPreSel && (no_trigger || tree->HLT_[tree->HLTIndex_[17]])) {cutFlow->Fill(7); cutFlowWeight->Fill(7,weight);}
+	if(passPreSel && tree->pfMET_ > MET_cut) {cutFlow->Fill(7); cutFlowWeight->Fill(7,weight);}
 	else passPreSel = false;
 	
 	// photon cleaning:
@@ -126,26 +126,26 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 void EventPick::print_cutflow(){
 	std::cout << "Cut-Flow for the event selector: " << title << std::endl;
 	std::cout << "Input Events                 " << cutFlow->GetBinContent(1) << std::endl;
-	std::cout << "Events with ==" << Nele_eq << " electron     " << cutFlow->GetBinContent(2) << std::endl;
-	std::cout << "Events with <= " << NlooseMuVeto_le << " loose muons " << cutFlow->GetBinContent(3) << std::endl;
-	std::cout << "Events with <= " << NlooseEleVeto_le << " loose electrons " << cutFlow->GetBinContent(4) << std::endl;
-	std::cout << "Events with >= " << Njet_ge << " jets        " << cutFlow->GetBinContent(5) << std::endl;
-	std::cout << "Events with >= " << NBjet_ge << " b-tag       " << cutFlow->GetBinContent(6) << std::endl;
-	std::cout << "Events passing MET cut       " << cutFlow->GetBinContent(7) << std::endl;
-	std::cout << "Passing Trigger              " << cutFlow->GetBinContent(8) << std::endl;
+	std::cout << "Passing Trigger              " << cutFlow->GetBinContent(2) << std::endl;
+	std::cout << "Events with ==" << Nele_eq << " electron     " << cutFlow->GetBinContent(3) << std::endl;
+	std::cout << "Events with <= " << NlooseMuVeto_le << " loose muons " << cutFlow->GetBinContent(4) << std::endl;
+	std::cout << "Events with <= " << NlooseEleVeto_le << " loose electrons " << cutFlow->GetBinContent(5) << std::endl;
+	std::cout << "Events with >= " << Njet_ge << " jets        " << cutFlow->GetBinContent(6) << std::endl;
+	std::cout << "Events with >= " << NBjet_ge << " b-tag       " << cutFlow->GetBinContent(7) << std::endl;
+	std::cout << "Events passing MET cut       " << cutFlow->GetBinContent(8) << std::endl;
 	std::cout << "Events with >=" << Npho_ge << " photon       " << cutFlow->GetBinContent(9) << std::endl;
 	std::cout << std::endl;
 }
 
 void EventPick::set_cutflow_labels(TH1F* hist){
 	hist->GetXaxis()->SetBinLabel(1,"Input");
-	hist->GetXaxis()->SetBinLabel(2,"Electron");
-	hist->GetXaxis()->SetBinLabel(3,"Loose Mu");
-	hist->GetXaxis()->SetBinLabel(4,"Loose Ele");
-	hist->GetXaxis()->SetBinLabel(5,"N jets");
-	hist->GetXaxis()->SetBinLabel(6,"N b-tags");
-	hist->GetXaxis()->SetBinLabel(7,"MET");
-	hist->GetXaxis()->SetBinLabel(8,"Trigger");
+	hist->GetXaxis()->SetBinLabel(2,"Trigger");
+	hist->GetXaxis()->SetBinLabel(3,"Electron");
+	hist->GetXaxis()->SetBinLabel(4,"Loose Mu");
+	hist->GetXaxis()->SetBinLabel(5,"Loose Ele");
+	hist->GetXaxis()->SetBinLabel(6,"N jets");
+	hist->GetXaxis()->SetBinLabel(7,"N b-tags");
+	hist->GetXaxis()->SetBinLabel(8,"MET");
 	hist->GetXaxis()->SetBinLabel(9,"Photon");
 	//hist->GetXaxis()->SetBinLabel(1,"");
 }
