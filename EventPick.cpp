@@ -76,8 +76,8 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		if(goodEle) ElectronsLoose.push_back(*eleInd);
 	}
 	
-	
-	cutFlow->Fill(0); // Input events
+	cutFlow->Fill(0.0); // Input events
+	cutFlowWeight->Fill(0.0,weight);
 	passPreSel = true;
 	if(passPreSel && (no_trigger || tree->HLT_[tree->HLTIndex_[17]])) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
 	else passPreSel = false;
