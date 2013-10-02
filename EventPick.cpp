@@ -165,11 +165,11 @@ void EventPick::clear_vectors(){
 }
 
 double EventPick::dR_jet_ele(int jetInd, int eleInd){
-	return dR(tree->jetEta_[jetInd], tree->jetPhi_[jetInd], tree->eleSCEta_[eleInd], tree->elePhi_[eleInd]);
+	return dR(tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), tree->eleSCEta_->at(eleInd), tree->elePhi_->at(eleInd));
 }
 double EventPick::dR_jet_pho(int jetInd, int phoInd){
-	return dR(tree->jetEta_[jetInd], tree->jetPhi_[jetInd], tree->phoEta_[phoInd], tree->phoPhi_[phoInd]);
+	return dR(tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd));
 }
 double EventPick::dR_ele_pho(int eleInd, int phoInd){
-	return dR(tree->eleSCEta_[eleInd], tree->elePhi_[eleInd], tree->phoEta_[phoInd], tree->phoPhi_[phoInd]);
+	return dR(tree->eleSCEta_->at(eleInd), tree->elePhi_->at(eleInd), tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd));
 }

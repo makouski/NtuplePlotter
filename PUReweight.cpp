@@ -27,11 +27,11 @@ PUReweight::~PUReweight(){
 	delete PUweightHist;
 }
 
-double PUReweight::getWeight(int nPUInfo, int puBX[], int nPU[]){
+double PUReweight::getWeight(int nPUInfo, std::vector<int> *puBX, std::vector<int> *nPU){
 	double PUweight=0.0;
 	for(int puInd=0; puInd<nPUInfo; ++puInd){
-		if( puBX[puInd] == 0 ){
-			PUweight = PUweightHist->GetBinContent(PUweightHist->GetXaxis()->FindBin(nPU[puInd]));
+		if( puBX->at(puInd) == 0 ){
+			PUweight = PUweightHist->GetBinContent(PUweightHist->GetXaxis()->FindBin(nPU->at(puInd)));
 			break;
 		}
 	}

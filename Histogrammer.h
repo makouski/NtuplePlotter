@@ -29,8 +29,8 @@ private:
 	
 	void make_hist(const char* hname, const char* htitle, int nbins, double xlow, double xhigh, const char* xlabel, const char* ylabel);
 	void make_hist2d(const char* hname, const char* htitle, int nxbins, double xlow, double xhigh, int nybins, double ylow, double yhigh);
-	int minDrIndex(double myEta, double myPhi, std::vector<int> Inds, Float_t* etas, Float_t* phis);
-	double minDr(double myEta, double myPhi, std::vector<int> Inds, Float_t* etas, Float_t* phis);
+	int minDrIndex(double myEta, double myPhi, std::vector<int> Inds, std::vector<float> *etas, std::vector<float> *phis);
+	double minDr(double myEta, double myPhi, std::vector<int> Inds, std::vector<float> *etas, std::vector<float> *phis);
 	double minDrPhoB(int PhoInd, EventTree* tree);
 	double calc_ht(EventPick* evtPick, EventTree* tree);
 };

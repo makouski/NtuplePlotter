@@ -1,5 +1,6 @@
 #include"Selector.h"
 
+
 double dR(double eta1, double phi1, double eta2, double phi2){
 	double dphi = phi2 - phi1;
 	double deta = eta2 - eta1;
@@ -69,33 +70,33 @@ void Selector::clear_vectors(){
 
 void Selector::filter_photons(){
 	for(int phoInd = 0; phoInd < tree->nPho_; ++phoInd){
-		double eta = tree->phoEta_[phoInd];
-		double et = tree->phoEt_[phoInd];
+		double eta = tree->phoEta_->at(phoInd);
+		double et = tree->phoEt_->at(phoInd);
 
-		Pho03ChHadIso.push_back(    tree->phoPFChIso_[phoInd]   - tree->rho2012_ * phoEffArea03ChHad(eta) );
-		Pho03ChHadSCRIso.push_back( tree->phoSCRChIso_[phoInd]  - tree->rho2012_ * phoEffArea03ChHad(eta) );
-		Pho03NeuHadIso.push_back(   tree->phoPFNeuIso_[phoInd]  - tree->rho2012_ * phoEffArea03NeuHad(eta) );
-		Pho03PhoIso.push_back(      tree->phoPFPhoIso_[phoInd]  - tree->rho2012_ * phoEffArea03Pho(eta) );
-		Pho03PhoSCRIso.push_back(   tree->phoSCRPhoIso_[phoInd] - tree->rho2012_ * phoEffArea03Pho(eta) );
+		Pho03ChHadIso.push_back(    tree->phoPFChIso_->at(phoInd)   - tree->rho2012_ * phoEffArea03ChHad(eta) );
+		Pho03ChHadSCRIso.push_back( tree->phoSCRChIso_->at(phoInd)  - tree->rho2012_ * phoEffArea03ChHad(eta) );
+		Pho03NeuHadIso.push_back(   tree->phoPFNeuIso_->at(phoInd)  - tree->rho2012_ * phoEffArea03NeuHad(eta) );
+		Pho03PhoIso.push_back(      tree->phoPFPhoIso_->at(phoInd)  - tree->rho2012_ * phoEffArea03Pho(eta) );
+		Pho03PhoSCRIso.push_back(   tree->phoSCRPhoIso_->at(phoInd) - tree->rho2012_ * phoEffArea03Pho(eta) );
 
 		// manual spike cleaning
-		if (dR(tree->phoEta_[phoInd], tree->phoPhi_[phoInd], -1.76, 1.37) < 0.05) continue;
-		if (dR(tree->phoEta_[phoInd], tree->phoPhi_[phoInd],  2.37, 2.69) < 0.05) continue;		
+		if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd), -1.76, 1.37) < 0.05) continue;
+		if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd),  2.37, 2.69) < 0.05) continue;		
 
 		int region = 0; //barrel
 		if(TMath::Abs( eta )>1.5) region = 1; //endcap
 		bool phoPresel = fidEtaPass( eta ) &&
 						et > pho_Et_cut &&
-						( pho_noPixelSeed_cut || tree->phohasPixelSeed_[phoInd] == 0 ) &&
-						( pho_noEleVeto_cut || tree->phoEleVeto_[phoInd] == 0 ) &&
-						tree->phoIsConv_[phoInd] == photonID_IsConv[region][pho_ID_ind] &&
-						tree->phoHoverE_[phoInd] < photonID_HoverE[region][pho_ID_ind] &&
+						( pho_noPixelSeed_cut || tree->phohasPixelSeed_->at(phoInd) == 0 ) &&
+						( pho_noEleVeto_cut || tree->phoEleVeto_->at(phoInd) == 0 ) &&
+						tree->phoIsConv_->at(phoInd) == photonID_IsConv[region][pho_ID_ind] &&
+						tree->phoHoverE_->at(phoInd) < photonID_HoverE[region][pho_ID_ind] &&
 						Pho03NeuHadIso[phoInd] < 
 			(photonID_RhoCorrR03NeuHadIso_0[region][pho_ID_ind] + et * photonID_RhoCorrR03NeuHadIso_1[region][pho_ID_ind]);
 		
 		if(phoPresel){
 			PhotonsPresel.push_back(phoInd);
-			PhoPassSih.push_back( tree->phoSigmaIEtaIEta_[phoInd] < photonID_SigmaIEtaIEta[region][pho_ID_ind] );
+			PhoPassSih.push_back( tree->phoSigmaIEtaIEta_->at(phoInd) < photonID_SigmaIEtaIEta[region][pho_ID_ind] );
 			PhoPassChHadIso.push_back( Pho03ChHadIso[phoInd] < photonID_RhoCorrR03ChHadIso[region][pho_ID_ind] );
 			PhoPassPhoIso.push_back( Pho03PhoIso[phoInd] < photonID_RhoCorrR03PhoIso_0[region][pho_ID_ind] + et * photonID_RhoCorrR03PhoIso_1[region][pho_ID_ind] );
 		}
@@ -104,27 +105,28 @@ void Selector::filter_photons(){
 
 void Selector::filter_electrons(){
 	for(int eleInd = 0; eleInd < tree->nEle_; ++eleInd){
-		double eta = tree->eleSCEta_[eleInd];
-		double pt = tree->elePt_[eleInd];
+		double eta = tree->eleSCEta_->at(eleInd);
+		double pt = tree->elePt_->at(eleInd);
 		double rho_zero = std::max(0.0, (double)tree->rho2012_);
 		Ele03RelIso.push_back( 
-			(tree->elePFChIso03_[eleInd] + 
-			 std::max(0.0, tree->elePFNeuIso03_[eleInd] + tree->elePFPhoIso03_[eleInd] - rho_zero * eleEffArea03(eta))
+			(tree->elePFChIso03_->at(eleInd) + 
+			 std::max(0.0, tree->elePFNeuIso03_->at(eleInd) + tree->elePFPhoIso03_->at(eleInd) - rho_zero * eleEffArea03(eta))
 			) / pt );
+		
 		bool eleSel = fidEtaPass( eta ) &&
 						pt > ele_Pt_cut &&
 						ele_RelIso_range[0] <= Ele03RelIso[eleInd] &&
 						Ele03RelIso[eleInd] < ele_RelIso_range[1] &&
-						ele_MVA_range[0] < tree->eleIDMVATrig_[eleInd] &&
-						tree->eleIDMVATrig_[eleInd] <= ele_MVA_range[1] &&
-						tree->eleConvVtxFit_[eleInd] == 0 &&
-						TMath::Abs(tree->eleD0_[eleInd]) < ele_Dxy_cut &&
-						tree->eleMissHits_[eleInd] <= ele_MissInnHit_cut;
+						ele_MVA_range[0] < tree->eleIDMVATrig_->at(eleInd) &&
+						tree->eleIDMVATrig_->at(eleInd) <= ele_MVA_range[1] &&
+						tree->eleConvVtxFit_->at(eleInd) == 0 &&
+						TMath::Abs(tree->eleD0_->at(eleInd)) < ele_Dxy_cut &&
+						tree->eleMissHits_->at(eleInd) <= ele_MissInnHit_cut;
 		
 		bool looseSel = fabs(eta) < 2.5 && 
 						pt > ele_PtLoose_cut && 
 						Ele03RelIso[eleInd] < ele_RelIsoLoose_cut && 
-						tree->eleIDMVATrig_[eleInd] > ele_MVALoose_cut;
+						tree->eleIDMVATrig_->at(eleInd) > ele_MVALoose_cut;
 		
 		if( eleSel ){
 			Electrons.push_back(eleInd);
@@ -137,12 +139,12 @@ void Selector::filter_electrons(){
 
 void Selector::filter_muons(){
 	for(int muInd = 0; muInd < tree->nMu_; ++muInd){
-		double eta = tree->muEta_[muInd];
-		double pt = tree->muPt_[muInd];
+		double eta = tree->muEta_->at(muInd);
+		double pt = tree->muPt_->at(muInd);
 		double rho_zero = std::max(0.0, (double)tree->rho2012_);
 		Mu04RelIso.push_back( 
-			(tree->muPFIsoR04_CH_[muInd] +
-			 std::max(0.0, tree->muPFIsoR04_NH_[muInd] + tree->muPFIsoR04_Pho_[muInd] - rho_zero * muEffArea04(eta))
+			(tree->muPFIsoR04_CH_->at(muInd) +
+			 std::max(0.0, tree->muPFIsoR04_NH_->at(muInd) + tree->muPFIsoR04_Pho_->at(muInd) - rho_zero * muEffArea04(eta))
 			) / pt );
 		bool muSel = TMath::Abs(eta) < 2.5 &&
 						pt > mu_PtLoose_cut &&
@@ -156,17 +158,17 @@ void Selector::filter_muons(){
 // jet ID is not likely to be altered, so it is hardcoded
 void Selector::filter_jets(){
 	for(int jetInd = 0; jetInd < tree->nJet_; ++jetInd){
-		bool jetPresel = TMath::Abs(tree->jetEta_[jetInd]) < 2.4 &&
-						tree->jetCHF_[jetInd] > 0 &&
-						tree->jetNHF_[jetInd] < 0.99 &&
-						tree->jetCEF_[jetInd] < 0.99 &&
-						tree->jetNEF_[jetInd] < 0.99 &&
-						tree->jetNCharged_[jetInd] > 0 &&
-						tree->jetNConstituents_[jetInd] > 1;
+		bool jetPresel = TMath::Abs(tree->jetEta_->at(jetInd)) < 2.4 &&
+						tree->jetCHF_->at(jetInd) > 0 &&
+						tree->jetNHF_->at(jetInd) < 0.99 &&
+						tree->jetCEF_->at(jetInd) < 0.99 &&
+						tree->jetNEF_->at(jetInd) < 0.99 &&
+						tree->jetNCharged_->at(jetInd) > 0 &&
+						tree->jetNConstituents_->at(jetInd) > 1;
 		
-		if( jetPresel && tree->jetPt_[jetInd] > jet_Pt_cut){
+		if( jetPresel && tree->jetPt_->at(jetInd) > jet_Pt_cut){
 			Jets.push_back(jetInd);
-			if(tree->jetCombinedSecondaryVtxBJetTags_[jetInd] > btag_cut) bJets.push_back(jetInd);
+			if(tree->jetCombinedSecondaryVtxBJetTags_->at(jetInd) > btag_cut) bJets.push_back(jetInd);
 		}
 	}
 }

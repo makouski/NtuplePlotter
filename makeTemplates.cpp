@@ -89,12 +89,12 @@ int main(int ac, char** av){
 void doJER(EventTree* tree){
 	// scale
 	for(int jetInd = 0; jetInd < tree->nJet_ ; ++jetInd){
-		if(tree->jetGenJetIndex_[jetInd]>0){
-			double oldPt = tree->jetPt_[jetInd];
-			double genPt = tree->jetGenJetPt_[jetInd];
-			double eta = tree->jetEta_[jetInd];
-			tree->jetPt_[jetInd] = std::max(0.0, genPt + JERcorrection(eta)*(oldPt-genPt));
-			//std::cout << "old " << oldPt << "  new " << tree->jetPt_[jetInd] << std::endl;
+		if(tree->jetGenJetIndex_->at(jetInd)>0){
+			double oldPt = tree->jetPt_->at(jetInd);
+			double genPt = tree->jetGenJetPt_->at(jetInd);
+			double eta = tree->jetEta_->at(jetInd);
+			tree->jetPt_->at(jetInd) = std::max(0.0, genPt + JERcorrection(eta)*(oldPt-genPt));
+			//std::cout << "old " << oldPt << "  new " << tree->jetPt_->at(jetInd) << std::endl;
 		}
 	}
 	// reorder if needed

@@ -58,11 +58,12 @@ void HistCollect::fill_histograms(Selector* selector, EventPick* selEvent, Event
 			}
 		}
 	}
-	if(phoInd<0) return; // no good photons candidates
-	
-	barrel = fabs(tree->phoEta_[phoInd]) < 1.5;
-	
+	// FIXME
 	if(fillSum) histnom->fill(selector, selEvent, tree, weight);
+	
+	if(phoInd<0) return; // no good photons candidates
+	barrel = fabs(tree->phoEta_->at(phoInd)) < 1.5;
+	
 	if(fillBarrel && barrel) histnom_barrel->fill(selector, selEvent, tree, weight);
 	if(fillEndcap && !barrel) histnom_endcap->fill(selector, selEvent, tree, weight);
 	
@@ -147,17 +148,17 @@ void HistCollect::findPhotonCategory(int phoInd, EventTree* tree, bool* rs, bool
 	int mcPhotonInd = -1;
 	int mcEleInd = -1;
 	for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
-		bool etetamatch = dR(tree->mcEta[mcInd],tree->mcPhi[mcInd],tree->phoEta_[phoInd],tree->phoPhi_[phoInd]) < 0.2 && 
-		fabs(tree->phoEt_[phoInd] - tree->mcPt[mcInd]) / tree->mcPt[mcInd] < 1.0;
-		if( etetamatch && mcPhotonInd < 0 && tree->mcPID[mcInd] == 22)
+		bool etetamatch = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) < 0.2 && 
+		fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd) < 1.0;
+		if( etetamatch && mcPhotonInd < 0 && tree->mcPID->at(mcInd) == 22)
 			mcPhotonInd = mcInd; 
-		if( etetamatch && mcEleInd < 0 && abs(tree->mcPID[mcInd]) == 11 )
+		if( etetamatch && mcEleInd < 0 && abs(tree->mcPID->at(mcInd)) == 11 )
 			mcEleInd = mcInd;
 	}
 	
 	if(mcPhotonInd >= 0){
 		// signal: parents are quarks, gluons or bosons
-		if(tree->mcParentage[mcPhotonInd]==2 || tree->mcParentage[mcPhotonInd]==10 ) *rs = true;
+		if(tree->mcParentage->at(mcPhotonInd)==2 || tree->mcParentage->at(mcPhotonInd)==10 ) *rs = true;
 		else *rb = true;
 	}
 	else{
