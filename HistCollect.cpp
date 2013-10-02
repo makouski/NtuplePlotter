@@ -58,11 +58,12 @@ void HistCollect::fill_histograms(Selector* selector, EventPick* selEvent, Event
 			}
 		}
 	}
+	
+	if(fillSum) histnom->fill(selector, selEvent, tree, weight); // FIXME
 	if(phoInd<0) return; // no good photons candidates
 	
 	barrel = fabs(tree->phoEta_[phoInd]) < 1.5;
 	
-	if(fillSum) histnom->fill(selector, selEvent, tree, weight);
 	if(fillBarrel && barrel) histnom_barrel->fill(selector, selEvent, tree, weight);
 	if(fillEndcap && !barrel) histnom_endcap->fill(selector, selEvent, tree, weight);
 	

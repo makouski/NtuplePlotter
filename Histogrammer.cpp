@@ -85,7 +85,7 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 			}
 		}
 		
-		if(selEvent->PhoPassPhoIso[candInd]){
+		if(candInd >= 0 && selEvent->PhoPassPhoIso[candInd]){
 			hists2d["photon1_Sigma_ChIso"]->Fill(tree->phoSigmaIEtaIEta_[candArrInd],selector->Pho03ChHadIso[candArrInd], weight);
 			hists2d["photon1_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_[candArrInd],selector->Pho03ChHadSCRIso[candArrInd], weight);
 		
@@ -102,7 +102,7 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 				hists2d["photon1_60_up_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_[candArrInd],selector->Pho03ChHadSCRIso[candArrInd], weight);
 			}
 		}
-		if(selEvent->PhoPassChHadIso[candInd]){
+		if(candInd >= 0 && selEvent->PhoPassChHadIso[candInd]){
 			hists2d["photon1_Sigma_PhoIso"]->Fill(tree->phoSigmaIEtaIEta_[candArrInd],selector->Pho03PhoIso[candArrInd], weight);
 			hists2d["photon1_Sigma_PhoSCRIso"]->Fill(tree->phoSigmaIEtaIEta_[candArrInd],selector->Pho03PhoSCRIso[candArrInd], weight);
 		}
