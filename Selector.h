@@ -48,7 +48,9 @@ public:
 	std::vector<double> Pho03ChHadSCRIso;
 	std::vector<double> Pho03NeuHadIso;
 	std::vector<double> Pho03PhoIso;
-	std::vector<double> Pho03PhoSCRIso;	
+	std::vector<double> Pho03PhoSCRIso;
+	std::vector<double> Pho03RandPhoIso;
+	std::vector<double> Pho03RandChHadIso;
 	
 	// jets
 	double jet_Pt_cut;

@@ -39,8 +39,12 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("photon1SigmaIEtaIEta","photon 1 sigmaIetaIeta",80,0,0.04,"Photon #sigma_{i#etai#eta}","Events / 0.0005");
 	make_hist("photon1RelIso","photon 1 relative Isolation",30,-0.1,0.2,"Photon RelIso","Events / 0.01");
 	make_hist("photon1ChHadIso","photon 1 Charged Had Isolation",50,-2.5,10,"Photon ChHadIso","Events / 0.25 GeV");
+	make_hist("photon1ChHadSCRIso","photon 1 Charged Had SCR Isolation",50,-2.5,10,"Photon ChHadSCRIso","Events / 0.25 GeV");
+	make_hist("photon1ChHadRandIso","photon 1 Charged Had Rand Isolation",50,-2.5,10,"Photon ChHadRandIso","Events / 0.25 GeV");
 	make_hist("photon1NeuHadIso","photon 1 Neutral Had Isolation",60,-5,10,"Photon NeuHadIso","Events / 0.25 GeV");
 	make_hist("photon1PhoIso","photon 1 Photon Isolation",60,-5,10,"Photon PhoIso","Events / 0.25 GeV");
+	make_hist("photon1PhoSCRIso","photon 1 Photon SCR Isolation",60,-5,10,"Photon PhoSCRIso","Events / 0.25 GeV");
+	make_hist("photon1PhoRandIso","photon 1 Photon Rand Isolation",60,-5,10,"Photon PhoRandIso","Events / 0.25 GeV");
 	make_hist("photon1DrElectron","dR photon 1 to closest electron",60,0,6,"#DeltaR(#gamma,e)","Events / 0.1");
 	make_hist("photon1DrJet","dR photon 1 to closest jet",60,0,6,"#DeltaR(#gamma,jet)","Events / 0.1");
 	make_hist("photon1MotherID","photon 1 mother PDG ID",35,-0.5,34.5,"Photon mother PID","Events");
@@ -173,9 +177,17 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		hists["photon1Et"]->Fill( tree->phoEt_->at(ind), weight );
 		hists["photon1Eta"]->Fill( tree->phoEta_->at(ind), weight );
 		hists["photon1IsConv"]->Fill( tree->phoIsConv_->at(ind), weight );
+		
 		hists["photon1ChHadIso"]->Fill( selector->Pho03ChHadIso[ind], weight );
+		hists["photon1ChHadSCRIso"]->Fill( selector->Pho03ChHadSCRIso[ind], weight );
+		hists["photon1ChHadRandIso"]->Fill( selector->Pho03RandChHadIso[ind], weight );
+		
 		hists["photon1NeuHadIso"]->Fill( selector->Pho03NeuHadIso[ind], weight );
+		
 		hists["photon1PhoIso"]->Fill( selector->Pho03PhoIso[ind], weight );
+		hists["photon1PhoSCRIso"]->Fill( selector->Pho03PhoSCRIso[ind], weight );
+		hists["photon1PhoRandIso"]->Fill( selector->Pho03RandPhoIso[ind], weight );
+		
 		hists["photon1RelIso"]->Fill( 
 			(selector->Pho03ChHadIso[ind] + selector->Pho03NeuHadIso[ind] + selector->Pho03PhoIso[ind]) 
 			/ tree->phoEt_->at(ind), weight );

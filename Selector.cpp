@@ -66,6 +66,8 @@ void Selector::clear_vectors(){
 	Pho03NeuHadIso.clear();
 	Pho03PhoIso.clear();
 	Pho03PhoSCRIso.clear();
+	Pho03RandPhoIso.clear();
+	Pho03RandChHadIso.clear();
 }
 
 void Selector::filter_photons(){
@@ -75,10 +77,14 @@ void Selector::filter_photons(){
 
 		Pho03ChHadIso.push_back(    tree->phoPFChIso_->at(phoInd)   - tree->rho2012_ * phoEffArea03ChHad(eta) );
 		Pho03ChHadSCRIso.push_back( tree->phoSCRChIso_->at(phoInd)  - tree->rho2012_ * phoEffArea03ChHad(eta) );
-		Pho03NeuHadIso.push_back(   tree->phoPFNeuIso_->at(phoInd)  - tree->rho2012_ * phoEffArea03NeuHad(eta) );
+		Pho03RandChHadIso.push_back(tree->phoRandConeChIso_->at(phoInd) - tree->rho2012_ * phoEffArea03ChHad(eta) );
+		
+		Pho03NeuHadIso.push_back(   tree->phoPFNeuIso_->at(phoInd) - tree->rho2012_ * phoEffArea03NeuHad(eta) );
+		
 		Pho03PhoIso.push_back(      tree->phoPFPhoIso_->at(phoInd)  - tree->rho2012_ * phoEffArea03Pho(eta) );
 		Pho03PhoSCRIso.push_back(   tree->phoSCRPhoIso_->at(phoInd) - tree->rho2012_ * phoEffArea03Pho(eta) );
-
+		Pho03RandPhoIso.push_back(  tree->phoRandConePhoIso_->at(phoInd) - tree->rho2012_ * phoEffArea03Pho(eta) );
+		
 		// manual spike cleaning
 		if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd), -1.76, 1.37) < 0.05) continue;
 		if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd),  2.37, 2.69) < 0.05) continue;		

@@ -276,6 +276,12 @@ EventTree::EventTree(int nFiles, char** fileNames){
 
 	chain->SetBranchStatus("phoSCRChIso",1);
 	chain->SetBranchAddress("phoSCRChIso", &phoSCRChIso_);
+	
+	chain->SetBranchStatus("phoRandConePhoIso",1);
+	chain->SetBranchAddress("phoRandConePhoIso", &phoRandConePhoIso_);
+	
+	chain->SetBranchStatus("phoRandConeChIso",1);
+	chain->SetBranchAddress("phoRandConeChIso", &phoRandConeChIso_);
 
 	//chain->SetBranchStatus("rho25",1);
 	//chain->SetBranchAddress("rho25", &rho25_);
