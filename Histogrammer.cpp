@@ -12,9 +12,8 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist2d("photon1_35_45_Sigma_ChSCRIso","photon1 Et 35 to 45 SigmaIetaIeta vs ChSCRIso",160,0,0.04,30,-10,20);
 	make_hist2d("photon1_45_60_Sigma_ChSCRIso","photon1 Et 45 to 60 SigmaIetaIeta vs ChSCRIso",160,0,0.04,30,-10,20);
 	make_hist2d("photon1_60_up_Sigma_ChSCRIso","photon1 Et 60 up SigmaIetaIeta vs ChSCRIso",160,0,0.04,30,-10,20);
-
-	make_hist2d("MTW_M3","W trans mass v.s. M3",60,0,300,100,0,1000);
-	make_hist2d("MTW_M3_min","W trans mass v.s. minimal M3",60,0,300,60,0,600);
+	
+	make_hist2d("MTW_M3","W trans mass v.s. M3",60,0,300,60,0,600);
 
 	// creating histograms
 	// electrons
@@ -75,6 +74,9 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("nVtx","Number of Primary Vertices",50,0.5,50.5,"N_{PV}","Events");
 	make_hist("nJets","number of jets",15,-0.5,14.5,"N_{jets}","Events");
 	make_hist("PUweight","PU weight",30,0,3,"PUweight","Events / 10");
+	make_hist("M3first","Mass of 3 highest Pt jets",100,0,1000,"M3 (Gev)","Events / 10 GeV");
+	make_hist("minM3","Minimal Mass of 3 jets",60,0,600,"min M3 (Gev)","Events / 10 GeV");
+	make_hist("M3","Mass of 3 jets with highest total Pt",100,0,1000,"Max Pt M3 (Gev)","Events / 10 GeV");
 }
 
 void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree, double weight){
@@ -141,7 +143,9 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		if(selEvent->Jets.size()>=3){
 			TLorentzVector j1,j2,j3;
 			int jetI;
-			double minM3 = 99999.9; 
+			double minM3 = 99999.9;
+			double M3maxPt = 99999.9;
+			double maxPt = 0.0;
 			for(int jet1I=0; jet1I < selEvent->Jets.size()-2; jet1I++)
 				for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size()-1; jet2I++)
 					for(int jet3I=jet2I+1; jet3I < selEvent->Jets.size(); jet3I++){
@@ -153,10 +157,14 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 						j3.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
 			
 						double m3 = (j1+j2+j3).M();
-						if(jet1I==0 && jet2I==1 && jet3I==2) hists2d["MTW_M3"]->Fill( MTW, m3, weight);
+						double totalPt = (j1+j2+j3).Pt();
+						if(jet1I==0 && jet2I==1 && jet3I==2) hists["M3first"]->Fill(m3, weight);
 						if(m3 < minM3) minM3 = m3;
+						if(maxPt < totalPt){maxPt=totalPt; M3maxPt=m3; }
 					}
-			hists2d["MTW_M3_min"]->Fill( MTW, minM3, weight);
+			hists["M3"]->Fill(M3maxPt, weight);
+			hists["minM3"]->Fill(minM3, weight);
+			hists2d["MTW_M3"]->Fill( MTW, M3maxPt, weight);
 		}
 		if( tree->isData_ == 0 ){
 			if( tree->eleGenIndex_->at(ind) >= 0 ){
