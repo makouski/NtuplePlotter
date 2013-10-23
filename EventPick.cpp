@@ -79,7 +79,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	cutFlow->Fill(0.0); // Input events
 	cutFlowWeight->Fill(0.0,weight);
 	passPreSel = true;
-	if(passPreSel && (no_trigger || tree->HLT_[tree->HLTIndex_[17]])) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
+	if(passPreSel && tree->IsVtxGood_>=0 && (no_trigger || tree->HLT_[tree->HLTIndex_[17]])) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
 	else passPreSel = false;
 	if(passPreSel && Electrons.size() == Nele_eq) {cutFlow->Fill(2); cutFlowWeight->Fill(2,weight);}
 	else passPreSel = false;
@@ -126,7 +126,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 void EventPick::print_cutflow(){
 	std::cout << "Cut-Flow for the event selector: " << title << std::endl;
 	std::cout << "Input Events                 " << cutFlow->GetBinContent(1) << std::endl;
-	std::cout << "Passing Trigger              " << cutFlow->GetBinContent(2) << std::endl;
+	std::cout << "Passing Trigger and PV       " << cutFlow->GetBinContent(2) << std::endl;
 	std::cout << "Events with ==" << Nele_eq << " electron     " << cutFlow->GetBinContent(3) << std::endl;
 	std::cout << "Events with <= " << NlooseMuVeto_le << " loose muons " << cutFlow->GetBinContent(4) << std::endl;
 	std::cout << "Events with <= " << NlooseEleVeto_le << " loose electrons " << cutFlow->GetBinContent(5) << std::endl;

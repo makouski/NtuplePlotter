@@ -13,6 +13,9 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist2d("photon1_45_60_Sigma_ChSCRIso","photon1 Et 45 to 60 SigmaIetaIeta vs ChSCRIso",160,0,0.04,30,-10,20);
 	make_hist2d("photon1_60_up_Sigma_ChSCRIso","photon1 Et 60 up SigmaIetaIeta vs ChSCRIso",160,0,0.04,30,-10,20);
 
+	make_hist2d("MTW_M3","W trans mass v.s. M3",60,0,300,100,0,1000);
+	make_hist2d("MTW_M3_min","W trans mass v.s. minimal M3",60,0,300,60,0,600);
+
 	// creating histograms
 	// electrons
 	make_hist("ele1Pt","electron 1 Pt",30,0,300,"Electron p_{T} (GeV)","Events / 10 GeV");
@@ -71,9 +74,13 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("MET","Missing Transverse Momentum",30,0,300,"MET (GeV)","Events / 10 GeV");
 	make_hist("nVtx","Number of Primary Vertices",50,0.5,50.5,"N_{PV}","Events");
 	make_hist("nJets","number of jets",15,-0.5,14.5,"N_{jets}","Events");
+	make_hist("PUweight","PU weight",30,0,3,"PUweight","Events / 10");
 }
 
 void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree, double weight){
+	// sanity check: PU weight
+	hists["PUweight"]->Fill(weight);
+	
 	// 2d photon candidate histograms
 	//std::cout << "here0" << std::endl;
 	if(selEvent->PhotonsPresel.size()>0){
@@ -129,9 +136,28 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		hists["ele1sigmaIetaIeta"]->Fill( tree->eleSigmaIEtaIEta_->at(ind), weight );
 		hists["ele1MissHits"]->Fill( tree->eleMissHits_->at(ind), weight );
 		hists["ele1DrJet"]->Fill( minDr(tree->eleSCEta_->at(ind), tree->elePhi_->at(ind), selEvent->Jets, tree->jetEta_, tree->jetPhi_), weight );
-		hists["WtransMass"]->Fill( 
-			TMath::Sqrt(2*(tree->elePt_->at(ind))*(tree->pfMET_)*( 1.0 - TMath::Cos(dR(0.0,tree->elePhi_->at(ind),0.0,tree->pfMETPhi_)) )), 
-			weight );
+		double MTW = TMath::Sqrt(2*(tree->elePt_->at(ind))*(tree->pfMET_)*( 1.0 - TMath::Cos(dR(0.0,tree->elePhi_->at(ind),0.0,tree->pfMETPhi_)) ));
+		hists["WtransMass"]->Fill( MTW, weight );
+		if(selEvent->Jets.size()>=3){
+			TLorentzVector j1,j2,j3;
+			int jetI;
+			double minM3 = 99999.9; 
+			for(int jet1I=0; jet1I < selEvent->Jets.size()-2; jet1I++)
+				for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size()-1; jet2I++)
+					for(int jet3I=jet2I+1; jet3I < selEvent->Jets.size(); jet3I++){
+						jetI = selEvent->Jets[jet1I];
+						j1.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+						jetI = selEvent->Jets[jet2I];
+						j2.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+						jetI = selEvent->Jets[jet3I];
+						j3.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+			
+						double m3 = (j1+j2+j3).M();
+						if(jet1I==0 && jet2I==1 && jet3I==2) hists2d["MTW_M3"]->Fill( MTW, m3, weight);
+						if(m3 < minM3) minM3 = m3;
+					}
+			hists2d["MTW_M3_min"]->Fill( MTW, minM3, weight);
+		}
 		if( tree->isData_ == 0 ){
 			if( tree->eleGenIndex_->at(ind) >= 0 ){
 				hists["ele1MotherID"]->Fill( tree->eleGenMomPID_->at(ind), weight );
