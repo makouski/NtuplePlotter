@@ -58,10 +58,15 @@ void HistCollect::fill_histograms(Selector* selector, EventPick* selEvent, Event
 			}
 		}
 	}
-	// FIXME
-	if(fillSum) histnom->fill(selector, selEvent, tree, weight);
 	
-	if(phoInd<0) return; // no good photons candidates
+	bool passAllTemp = selEvent->passAll;
+	// make histograms for pre-selection cuts
+	selEvent->passAll = true;
+	if(fillSum) histnom->fill(selector, selEvent, tree, weight);
+	// keep the true value
+	selEvent->passAll = passAllTemp;
+
+	if(phoInd<0) return; // no good photon candidates
 	barrel = fabs(tree->phoEta_->at(phoInd)) < 1.5;
 	
 	if(fillBarrel && barrel) histnom_barrel->fill(selector, selEvent, tree, weight);

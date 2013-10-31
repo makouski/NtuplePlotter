@@ -129,7 +129,7 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	//std::cout << "here1" << std::endl;
 	// full event selection histograms
 	if(!selEvent->passAll) return;
-
+	double MTW = 0.0;
 	// electrons
 	if( selEvent->Electrons.size() > 0 ){
 		int ind = selEvent->Electrons[0];
@@ -143,35 +143,9 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		hists["ele1sigmaIetaIeta"]->Fill( tree->eleSigmaIEtaIEta_->at(ind), weight );
 		hists["ele1MissHits"]->Fill( tree->eleMissHits_->at(ind), weight );
 		hists["ele1DrJet"]->Fill( minDr(tree->eleSCEta_->at(ind), tree->elePhi_->at(ind), selEvent->Jets, tree->jetEta_, tree->jetPhi_), weight );
-		double MTW = TMath::Sqrt(2*(tree->elePt_->at(ind))*(tree->pfMET_)*( 1.0 - TMath::Cos(dR(0.0,tree->elePhi_->at(ind),0.0,tree->pfMETPhi_)) ));
+		MTW = TMath::Sqrt(2*(tree->elePt_->at(ind))*(tree->pfMET_)*( 1.0 - TMath::Cos(dR(0.0,tree->elePhi_->at(ind),0.0,tree->pfMETPhi_)) ));
 		hists["WtransMass"]->Fill( MTW, weight );
-		if(selEvent->Jets.size()>=3){
-			TLorentzVector j1,j2,j3;
-			int jetI;
-			double minM3 = 99999.9;
-			double M3maxPt = 99999.9;
-			double maxPt = 0.0;
-			for(int jet1I=0; jet1I < selEvent->Jets.size()-2; jet1I++)
-				for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size()-1; jet2I++)
-					for(int jet3I=jet2I+1; jet3I < selEvent->Jets.size(); jet3I++){
-						jetI = selEvent->Jets[jet1I];
-						j1.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
-						jetI = selEvent->Jets[jet2I];
-						j2.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
-						jetI = selEvent->Jets[jet3I];
-						j3.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
-			
-						double m3 = (j1+j2+j3).M();
-						double totalPt = (j1+j2+j3).Pt();
-						if(jet1I==0 && jet2I==1 && jet3I==2) hists["M3first"]->Fill(m3, weight);
-						if(m3 < minM3) minM3 = m3;
-						if(maxPt < totalPt){maxPt=totalPt; M3maxPt=m3; }
-					}
-			hists["M3"]->Fill(M3maxPt, weight);
-			hists["minM3"]->Fill(minM3, weight);
-			hists2d["MTW_M3"]->Fill( MTW, M3maxPt, weight);
-		}
-		if( tree->isData_ == 0 ){
+			if( tree->isData_ == 0 ){
 			if( tree->eleGenIndex_->at(ind) >= 0 ){
 				hists["ele1MotherID"]->Fill( tree->eleGenMomPID_->at(ind), weight );
 				if( TMath::Abs(tree->eleGenMomPID_->at(ind)) == 11 )
@@ -269,6 +243,33 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	hists["nJets"]->Fill( selEvent->Jets.size(), weight );
 	//std::cout << "here5" << std::endl;
 	// jets
+	if(selEvent->Jets.size()>=3){
+		TLorentzVector j1,j2,j3;
+		int jetI;
+		double minM3 = 99999.9;
+		double M3maxPt = 99999.9;
+		double maxPt = 0.0;
+		for(int jet1I=0; jet1I < selEvent->Jets.size()-2; jet1I++)
+			for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size()-1; jet2I++)
+				for(int jet3I=jet2I+1; jet3I < selEvent->Jets.size(); jet3I++){
+					jetI = selEvent->Jets[jet1I];
+					j1.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+					jetI = selEvent->Jets[jet2I];
+					j2.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+					jetI = selEvent->Jets[jet3I];
+					j3.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+		
+					double m3 = (j1+j2+j3).M();
+					double totalPt = (j1+j2+j3).Pt();
+					if(jet1I==0 && jet2I==1 && jet3I==2) hists["M3first"]->Fill(m3, weight);
+					if(m3 < minM3) minM3 = m3;
+					if(maxPt < totalPt){maxPt=totalPt; M3maxPt=m3; }
+				}
+		hists["M3"]->Fill(M3maxPt, weight);
+		hists["minM3"]->Fill(minM3, weight);
+		hists2d["MTW_M3"]->Fill( MTW, M3maxPt, weight);
+	}
+
 	if( selEvent->Jets.size() > 0 ){
 		int ind = selEvent->Jets[0];
 		hists["jet1Pt"]->Fill( tree->jetPt_->at(ind), weight );

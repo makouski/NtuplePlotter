@@ -19,7 +19,7 @@ int main(int ac, char** av){
 
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
-	HistCollect* fourjCollect = new HistCollect("1pho4j",std::string("top4j_")+av[1]);
+	//HistCollect* fourjCollect = new HistCollect("1pho4j",std::string("top4j_")+av[1]);
 	// HistCollect for tight Photon ID
 	//HistCollect* tightCollect = new HistCollect("1photight",std::string("top_")+av[1]);
 	
@@ -31,8 +31,8 @@ int main(int ac, char** av){
 	
 	// create event selectors here
 	EventPick* evtPickLoose = new EventPick("LoosePhotonID");
-	EventPick* evtPickLoose4j = new EventPick("LoosePhotonID4j");
-	evtPickLoose4j->Njet_ge = 4;
+	//EventPick* evtPickLoose4j = new EventPick("LoosePhotonID4j");
+	//evtPickLoose4j->Njet_ge = 4;
 	//EventPick* evtPickTight = new EventPick("TightPhotonID");
 	
 	
@@ -52,7 +52,7 @@ int main(int ac, char** av){
 	Long64_t nEntr = tree->GetEntries();
 	for(Long64_t entry=0; entry<nEntr; entry++){
 		if(entry%10000 == 0) std::cout << "processing entry " << entry << " out of " << nEntr << std::endl;
-		//if(entry==30000) break;
+		//if(entry==5000000) break;
 		tree->GetEntry(entry);
 		isMC = !(tree->isData_);
 		
@@ -72,16 +72,16 @@ int main(int ac, char** av){
 		//selectorTight->process_objects(tree);
 		
 		evtPickLoose->process_event(tree, selectorLoose, PUweight);
-		evtPickLoose4j->process_event(tree, selectorLoose, PUweight);
+		//evtPickLoose4j->process_event(tree, selectorLoose, PUweight);
 		//evtPickTight->process_event(tree, selectorTight, PUweight);
 		
 		// fill the histograms
 		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, PUweight);
-		fourjCollect->fill_histograms(selectorLoose, evtPickLoose4j, tree, isMC, PUweight);
+		//fourjCollect->fill_histograms(selectorLoose, evtPickLoose4j, tree, isMC, PUweight);
 	}
 	
 	looseCollect->write_histograms(evtPickLoose, isMC, av[2]);
-	fourjCollect->write_histograms(evtPickLoose4j, isMC, av[2]);
+	//fourjCollect->write_histograms(evtPickLoose4j, isMC, av[2]);
 
 	std::cout << "Average PU weight " << PUweighter->getAvgWeight() << std::endl;
 	evtPickLoose->print_cutflow();
