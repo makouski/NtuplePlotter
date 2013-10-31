@@ -75,9 +75,13 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("nVtx","Number of Primary Vertices",50,0.5,50.5,"N_{PV}","Events");
 	make_hist("nJets","number of jets",15,-0.5,14.5,"N_{jets}","Events");
 	make_hist("PUweight","PU weight",30,0,3,"PUweight","Events / 10");
+
 	make_hist("M3first","Mass of 3 highest Pt jets",100,0,1000,"M3 (Gev)","Events / 10 GeV");
 	make_hist("minM3","Minimal Mass of 3 jets",60,0,600,"min M3 (Gev)","Events / 10 GeV");
 	make_hist("M3","Mass of 3 jets with highest total Pt",100,0,1000,"Max Pt M3 (Gev)","Events / 10 GeV");
+
+	make_hist("minM3_pho","Minimal Mass of 2 jets and photon",60,0,600,"min M3 pho (Gev)","Events / 10 GeV");
+	make_hist("M3_pho","Mass of 2 jets and photon with highest total Pt",100,0,1000,"Max Pt M3 pho(Gev)","Events / 10 GeV");
 }
 
 void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree, double weight){
@@ -246,28 +250,65 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	if(selEvent->Jets.size()>=3){
 		TLorentzVector j1,j2,j3;
 		int jetI;
+		
 		double minM3 = 99999.9;
 		double M3maxPt = 99999.9;
 		double maxPt = 0.0;
-		for(int jet1I=0; jet1I < selEvent->Jets.size()-2; jet1I++)
-			for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size()-1; jet2I++)
+		double M3first = 0.0;
+		for(int jet1I=0; jet1I < selEvent->Jets.size()-2; jet1I++){	
+			jetI = selEvent->Jets[jet1I];
+			j1.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+			for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size()-1; jet2I++){
+				jetI = selEvent->Jets[jet2I];
+				j2.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
 				for(int jet3I=jet2I+1; jet3I < selEvent->Jets.size(); jet3I++){
-					jetI = selEvent->Jets[jet1I];
-					j1.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
-					jetI = selEvent->Jets[jet2I];
-					j2.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
 					jetI = selEvent->Jets[jet3I];
 					j3.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
 		
 					double m3 = (j1+j2+j3).M();
 					double totalPt = (j1+j2+j3).Pt();
-					if(jet1I==0 && jet2I==1 && jet3I==2) hists["M3first"]->Fill(m3, weight);
+					
+					if(jet1I==0 && jet2I==1 && jet3I==2) M3first = m3;
 					if(m3 < minM3) minM3 = m3;
-					if(maxPt < totalPt){maxPt=totalPt; M3maxPt=m3; }
+					if(maxPt < totalPt){ maxPt=totalPt; M3maxPt=m3; }
 				}
+			}
+		}
+		
+		hists["M3first"]->Fill(M3first, weight);
 		hists["M3"]->Fill(M3maxPt, weight);
 		hists["minM3"]->Fill(minM3, weight);
 		hists2d["MTW_M3"]->Fill( MTW, M3maxPt, weight);
+		
+		TLorentzVector phovec;
+		int phoInd = -1;
+		if( selEvent->Photons.size() > 0 ) {
+			phoInd = selEvent->Photons[0];
+			phovec.SetPtEtaPhiM(tree->phoEt_->at(phoInd), tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd), 0.0);
+		}
+		double minM3_pho = 99999.9;
+		double M3maxPt_pho = 99999.9;
+		double maxPt_pho = 0.0;
+
+		if(phoInd>=0){
+			for(int jet1I=0; jet1I < selEvent->Jets.size()-1; jet1I++){
+				jetI = selEvent->Jets[jet1I];
+				j1.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+				if(phovec.DeltaR(j1)<0.2) continue;
+				for(int jet2I=jet1I+1; jet2I < selEvent->Jets.size(); jet2I++){
+					jetI = selEvent->Jets[jet2I];
+					j2.SetPtEtaPhiM(tree->jetPt_->at(jetI), tree->jetEta_->at(jetI), tree->jetPhi_->at(jetI), 0.0);
+					if(phovec.DeltaR(j2)<0.2) continue;
+					double m3 = (j1+j2+phovec).M();
+					double totalPt = (j1+j2+phovec).Pt();
+					// photon experimental stuff
+					if(m3 < minM3_pho) minM3_pho = m3;
+					if(maxPt_pho < totalPt){ maxPt_pho=totalPt; M3maxPt_pho=m3; }
+				}
+			}
+			hists["M3_pho"]->Fill(M3maxPt_pho, weight);
+			hists["minM3_pho"]->Fill(minM3_pho, weight);
+		}
 	}
 
 	if( selEvent->Jets.size() > 0 ){
