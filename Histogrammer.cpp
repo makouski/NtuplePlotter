@@ -14,6 +14,7 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist2d("photon1_60_up_Sigma_ChSCRIso","photon1 Et 60 up SigmaIetaIeta vs ChSCRIso",160,0,0.04,30,-10,20);
 	
 	make_hist2d("MTW_M3","W trans mass v.s. M3",60,0,300,60,0,600);
+	make_hist2d("photon1_Sigma_Et","photon1 SigmaIetaIeta vs Et",160,0,0.04,40,0,200);
 
 	// creating histograms
 	// electrons
@@ -102,7 +103,10 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		if(candInd >= 0 && selEvent->PhoPassPhoIso[candInd]){
 			hists2d["photon1_Sigma_ChIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadIso[candArrInd], weight);
 			hists2d["photon1_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
-		
+			
+			hists2d["photon1_Sigma_Et"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd), tree->phoEt_->at(candArrInd), weight);
+
+
 			if(tree->phoEt_->at(candArrInd)>=25 && tree->phoEt_->at(candArrInd)<35){
 				hists2d["photon1_25_35_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
 			}
@@ -124,7 +128,8 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	}
 	//std::cout << "here1" << std::endl;
 	// full event selection histograms
-	
+	if(!selEvent->passAll) return;
+
 	// electrons
 	if( selEvent->Electrons.size() > 0 ){
 		int ind = selEvent->Electrons[0];
