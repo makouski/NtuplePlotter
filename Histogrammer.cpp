@@ -40,10 +40,15 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("photon1IsConv","photon 1 IsConv",2,-0.5,1.5,"","");
 	make_hist("photon1HoverE","photon 1 HoverE",100,0,0.1,"Photon H/E","Events / 0.001");
 	make_hist("photon1SigmaIEtaIEta","photon 1 sigmaIetaIeta",80,0,0.04,"Photon #sigma_{i#etai#eta}","Events / 0.0005");
-	make_hist("photon1RelIso","photon 1 relative Isolation",30,-0.1,0.2,"Photon RelIso","Events / 0.01");
 	make_hist("photon1ChHadIso","photon 1 Charged Had Isolation",60,-2.0,10,"Photon ChHadIso","Events / 0.2 GeV");
 	make_hist("photon1ChHadSCRIso","photon 1 Charged Had SCR Isolation",60,-2.0,10,"Photon ChHadSCRIso","Events / 0.2 GeV");
 	make_hist("photon1ChHadRandIso","photon 1 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+
+	make_hist("photon1_25_35_ChHadRandIso","photon 1 Et 25 to 35 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_35_45_ChHadRandIso","photon 1 Et 35 to 45 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_45_60_ChHadRandIso","photon 1 Et 45 to 60 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_60_up_ChHadRandIso","photon 1 Et 60 up Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+
 	make_hist("photon1NeuHadIso","photon 1 Neutral Had Isolation",75,-5,10,"Photon NeuHadIso","Events / 0.2 GeV");
 	make_hist("photon1PhoIso","photon 1 Photon Isolation",75,-5,10,"Photon PhoIso","Events / 0.2 GeV");
 	make_hist("photon1PhoSCRIso","photon 1 Photon SCR Isolation",75,-5,10,"Photon PhoSCRIso","Events / 0.2 GeV");
@@ -107,20 +112,19 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		if(candInd >= 0 && selEvent->PhoPassPhoIso[candInd]){
 			hists2d["photon1_Sigma_ChIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadIso[candArrInd], weight);
 			hists2d["photon1_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
-			
 			hists2d["photon1_Sigma_Et"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd), tree->phoEt_->at(candArrInd), weight);
-
-
-			if(tree->phoEt_->at(candArrInd)>=25 && tree->phoEt_->at(candArrInd)<35){
+			
+			double phoEt = tree->phoEt_->at(candArrInd);
+			if(phoEt>=25 && phoEt<35){
 				hists2d["photon1_25_35_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
 			}
-			if(tree->phoEt_->at(candArrInd)>=35 && tree->phoEt_->at(candArrInd)<45){
+			if(phoEt>=35 && phoEt<45){
 				hists2d["photon1_35_45_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
 			}
-			if(tree->phoEt_->at(candArrInd)>=45 && tree->phoEt_->at(candArrInd)<60){
+			if(phoEt>=45 && phoEt<60){
 				hists2d["photon1_45_60_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
 			}
-			if(tree->phoEt_->at(candArrInd)>=60){
+			if(phoEt>=60){
 				hists2d["photon1_60_up_Sigma_ChSCRIso"]->Fill(tree->phoSigmaIEtaIEta_->at(candArrInd),selector->Pho03ChHadSCRIso[candArrInd], weight);
 			}
 		}
@@ -149,7 +153,7 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		hists["ele1DrJet"]->Fill( minDr(tree->eleSCEta_->at(ind), tree->elePhi_->at(ind), selEvent->Jets, tree->jetEta_, tree->jetPhi_), weight );
 		MTW = TMath::Sqrt(2*(tree->elePt_->at(ind))*(tree->pfMET_)*( 1.0 - TMath::Cos(dR(0.0,tree->elePhi_->at(ind),0.0,tree->pfMETPhi_)) ));
 		hists["WtransMass"]->Fill( MTW, weight );
-			if( tree->isData_ == 0 ){
+		if( tree->isData_ == 0 ){
 			if( tree->eleGenIndex_->at(ind) >= 0 ){
 				hists["ele1MotherID"]->Fill( tree->eleGenMomPID_->at(ind), weight );
 				if( TMath::Abs(tree->eleGenMomPID_->at(ind)) == 11 )
@@ -190,7 +194,6 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	hists["nPhotons"]->Fill(selEvent->Photons.size(), weight);
 	if( selEvent->Photons.size() > 0 ){
 		int ind = selEvent->Photons[0];
-
 		hists["photon1Et"]->Fill( tree->phoEt_->at(ind), weight );
 		hists["photon1Eta"]->Fill( tree->phoEta_->at(ind), weight );
 		hists["photon1IsConv"]->Fill( tree->phoIsConv_->at(ind), weight );
@@ -198,16 +201,26 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		hists["photon1ChHadIso"]->Fill( selector->Pho03ChHadIso[ind], weight );
 		hists["photon1ChHadSCRIso"]->Fill( selector->Pho03ChHadSCRIso[ind], weight );
 		hists["photon1ChHadRandIso"]->Fill( selector->Pho03RandChHadIso[ind], weight );
-		
+		double phoEt = tree->phoEt_->at(ind);
+		if(phoEt>=25 && phoEt<35){
+			hists["photon1_25_35_ChHadRandIso"]->Fill( selector->Pho03RandChHadIso[ind], weight );
+		}
+		if(phoEt>=35 && phoEt<45){
+			hists["photon1_35_45_ChHadRandIso"]->Fill( selector->Pho03RandChHadIso[ind], weight );
+		}
+		if(phoEt>=45 && phoEt<60){
+			hists["photon1_45_60_ChHadRandIso"]->Fill( selector->Pho03RandChHadIso[ind], weight );
+		}
+		if(phoEt>=60){
+			hists["photon1_60_up_ChHadRandIso"]->Fill( selector->Pho03RandChHadIso[ind], weight );
+		}
+
 		hists["photon1NeuHadIso"]->Fill( selector->Pho03NeuHadIso[ind], weight );
 		
 		hists["photon1PhoIso"]->Fill( selector->Pho03PhoIso[ind], weight );
 		hists["photon1PhoSCRIso"]->Fill( selector->Pho03PhoSCRIso[ind], weight );
 		hists["photon1PhoRandIso"]->Fill( selector->Pho03RandPhoIso[ind], weight );
 		
-		hists["photon1RelIso"]->Fill( 
-			(selector->Pho03ChHadIso[ind] + selector->Pho03NeuHadIso[ind] + selector->Pho03PhoIso[ind]) 
-			/ tree->phoEt_->at(ind), weight );
 		hists["photon1HoverE"]->Fill( tree->phoHoverE_->at(ind), weight );
 		hists["photon1SigmaIEtaIEta"]->Fill( tree->phoSigmaIEtaIEta_->at(ind), weight );
 		hists["photon1DrElectron"]->Fill( minDr(tree->phoEta_->at(ind), tree->phoPhi_->at(ind), selEvent->Electrons, tree->eleSCEta_, tree->elePhi_), weight );
