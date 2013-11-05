@@ -19,7 +19,7 @@ int main(int ac, char** av){
 	EventPick* evtPick = new EventPick("nominal");
 
 	// add more branches to be saved
-	tree->chain->SetBranchStatus("*",1);
+	//tree->chain->SetBranchStatus("*",1);
 
 	TFile* outFile = new TFile( av[1] ,"RECREATE" );
 	TDirectory* ggDir = outFile->mkdir("ggNtuplizer","ggNtuplizer");
