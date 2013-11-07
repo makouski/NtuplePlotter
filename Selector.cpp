@@ -85,9 +85,9 @@ void Selector::filter_photons(){
 		Pho03PhoSCRIso.push_back(   tree->phoSCRPhoIso_->at(phoInd) - tree->rho2012_ * phoEffArea03Pho(eta) );
 		Pho03RandPhoIso.push_back(  tree->phoRandConePhoIso_->at(phoInd) - tree->rho2012_ * phoEffArea03Pho(eta) );
 		
-		// manual spike cleaning
-		if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd), -1.76, 1.37) < 0.05) continue;
-		if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd),  2.37, 2.69) < 0.05) continue;		
+		// manual spike cleaning (was necessary before)
+		//if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd), -1.76, 1.37) < 0.05) continue;
+		//if (dR(tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd),  2.37, 2.69) < 0.05) continue;		
 
 		int region = 0; //barrel
 		if(TMath::Abs( eta )>1.5) region = 1; //endcap
