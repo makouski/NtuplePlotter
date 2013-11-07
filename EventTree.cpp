@@ -53,6 +53,9 @@ EventTree::EventTree(int nFiles, char** fileNames){
 
 	chain->SetBranchStatus("pfMETPhi",1);
 	chain->SetBranchAddress("pfMETPhi", &pfMETPhi_);
+
+	chain->SetBranchStatus("pfMET*",1);
+	chain->SetBranchStatus("pfType01MET*",1);
 	
 	// electrons	
 	
@@ -112,6 +115,9 @@ EventTree::EventTree(int nFiles, char** fileNames){
 	chain->SetBranchStatus("eleEoverP",1);
 	chain->SetBranchAddress("eleEoverP", &eleEoverP_);
 
+	// keep this branch in the skim
+	chain->SetBranchStatus("elePin",1);
+
 	eleSigmaIEtaIEta_ = new vector<float>;
 	chain->SetBranchStatus("eleSigmaIEtaIEta",1);
 	chain->SetBranchAddress("eleSigmaIEtaIEta", &eleSigmaIEtaIEta_);
@@ -157,7 +163,15 @@ EventTree::EventTree(int nFiles, char** fileNames){
 	chain->SetBranchAddress("eleGenMomPID", &eleGenMomPID_);
 
 	// muons
-	
+	// keep some branches in the skim
+	chain->SetBranchStatus("muChi2NDF", 1);
+	chain->SetBranchStatus("muNumberOfValidTrkLayers",1);
+	chain->SetBranchStatus("muNumberOfValidMuonHits",1);
+	chain->SetBranchStatus("muNumberOfValidPixelHits",1);
+	chain->SetBranchStatus("muDz",1);
+	chain->SetBranchStatus("muD0",1);
+	chain->SetBranchStatus("muStations",1);
+
 	chain->SetBranchStatus("nMu",1);
 	chain->SetBranchAddress("nMu", &nMu_);
 
