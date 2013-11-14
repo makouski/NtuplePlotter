@@ -108,7 +108,7 @@ def optimizeBinBoundaries(hist, minAcc, firstBinValue=-9999, lastBinValue=9999):
 def makeUniformHist(hist):
 	nbins = hist.GetNbinsX()
 	#print 'nbins',nbins
-	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,1,nbins)
+	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,1,nbins+1)
 	for ind in xrange(1,nbins+1):
 		outhist.SetBinContent(ind,hist.GetBinContent(ind))
 		outhist.SetBinError(ind,hist.GetBinError(ind))
@@ -190,6 +190,7 @@ hist_sig_templ_name = 'photon1'+phoEtrange+'ChHadRandIso'
 hist_sig_name = 'photon1ChHadSCRIso'
 
 usePhoIso = False
+#usePhoIso = True
 # for Pho Iso
 if usePhoIso:
 	FitVarname = 'SCRPhoIso'
@@ -260,7 +261,7 @@ lowUFitRange = pseudodataR.FindBin(lowFitrange)
 if lowUFitRange == 0:
 	print 'lower bin is underfow, setting to 1'
 	lowUFitRange = 1
-highUFitRange = pseudodataR.FindBin(highFitrange)
+highUFitRange = pseudodataR.FindBin(highFitrange) + 1
 if pseudodataR.GetBinLowEdge(highUFitRange) == highFitrange:
 	print 'upper bin in on the border of fit range, reducing'
 	highUFitRange -= 1
