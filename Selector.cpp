@@ -103,7 +103,7 @@ void Selector::filter_photons(){
 		if(phoPresel){
 			PhotonsPresel.push_back(phoInd);
 			PhoPassSih.push_back( tree->phoSigmaIEtaIEta_->at(phoInd) < photonID_SigmaIEtaIEta[region][pho_ID_ind] );
-			// substitute ChHadIso cut to loose SC footprint removed ChHadIso cut in photon selection
+			// substitute ChHadIso cut to loose SC footprint removed ChHadIso cut of 5 GeV in photon selection
 			PhoPassChHadIso.push_back( Pho03ChHadSCRIso[phoInd] < 5 /*photonID_RhoCorrR03ChHadIso[region][pho_ID_ind]*/ );
 			PhoPassPhoIso.push_back( Pho03PhoIso[phoInd] < photonID_RhoCorrR03PhoIso_0[region][pho_ID_ind] + et * photonID_RhoCorrR03PhoIso_1[region][pho_ID_ind] );
 		}

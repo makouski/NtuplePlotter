@@ -25,12 +25,16 @@ int main(int ac, char** av){
 	
 	// object selectors
 	Selector* selectorLoose = new Selector();
+	//selectorLoose->jet_Pt_cut = 20;
+	
 	//Selector* selectorTight = new Selector();
 	// set up the parameters for object selectors here
 	//selectorTight->pho_ID_ind = 2; // tight ID
 	
 	// create event selectors here
 	EventPick* evtPickLoose = new EventPick("LoosePhotonID");
+	//evtPickLoose->veto_pho_jet_dR = 0.8;
+	//evtPickLoose->veto_pho_lep_dR = 0.8;
 	//EventPick* evtPickLoose4j = new EventPick("LoosePhotonID4j");
 	//evtPickLoose4j->Njet_ge = 4;
 	//EventPick* evtPickTight = new EventPick("TightPhotonID");

@@ -42,17 +42,17 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("photon1SigmaIEtaIEta","photon 1 sigmaIetaIeta",80,0,0.04,"Photon #sigma_{i#etai#eta}","Events / 0.0005");
 	make_hist("photon1ChHadIso","photon 1 Charged Had Isolation",60,-2.0,10,"Photon ChHadIso","Events / 0.2 GeV");
 	make_hist("photon1ChHadSCRIso","photon 1 Charged Had SCR Isolation",60,-2.0,10,"Photon ChHadSCRIso","Events / 0.2 GeV");
-	make_hist("photon1ChHadRandIso","photon 1 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1ChHadRandIso","photon 1 Charged Had Rand Isolation",110,-2.0,20,"Photon ChHadRandIso","Events / 0.2 GeV");
 
-	make_hist("photon1_25_35_ChHadRandIso","photon 1 Et 25 to 35 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
-	make_hist("photon1_35_45_ChHadRandIso","photon 1 Et 35 to 45 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
-	make_hist("photon1_45_60_ChHadRandIso","photon 1 Et 45 to 60 Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
-	make_hist("photon1_60_up_ChHadRandIso","photon 1 Et 60 up Charged Had Rand Isolation",60,-2.0,10,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_25_35_ChHadRandIso","photon 1 Et 25 to 35 Charged Had Rand Isolation",110,-2.0,20,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_35_45_ChHadRandIso","photon 1 Et 35 to 45 Charged Had Rand Isolation",110,-2.0,20,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_45_60_ChHadRandIso","photon 1 Et 45 to 60 Charged Had Rand Isolation",110,-2.0,20,"Photon ChHadRandIso","Events / 0.2 GeV");
+	make_hist("photon1_60_up_ChHadRandIso","photon 1 Et 60 up Charged Had Rand Isolation",110,-2.0,20,"Photon ChHadRandIso","Events / 0.2 GeV");
 
 	make_hist("photon1NeuHadIso","photon 1 Neutral Had Isolation",75,-5,10,"Photon NeuHadIso","Events / 0.2 GeV");
 	make_hist("photon1PhoIso","photon 1 Photon Isolation",75,-5,10,"Photon PhoIso","Events / 0.2 GeV");
 	make_hist("photon1PhoSCRIso","photon 1 Photon SCR Isolation",75,-5,10,"Photon PhoSCRIso","Events / 0.2 GeV");
-	make_hist("photon1PhoRandIso","photon 1 Photon Rand Isolation",75,-5,10,"Photon PhoRandIso","Events / 0.2 GeV");
+	make_hist("photon1PhoRandIso","photon 1 Photon Rand Isolation",125,-5,20,"Photon PhoRandIso","Events / 0.2 GeV");
 	make_hist("photon1DrElectron","dR photon 1 to closest electron",60,0,6,"#DeltaR(#gamma,e)","Events / 0.1");
 	make_hist("photon1DrJet","dR photon 1 to closest jet",60,0,6,"#DeltaR(#gamma,jet)","Events / 0.1");
 	make_hist("photon1MotherID","photon 1 mother PDG ID",35,-0.5,34.5,"Photon mother PID","Events");
