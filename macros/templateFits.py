@@ -24,21 +24,22 @@ def makeFit(varname, varmin, varmax, signalHist, backgroundHist, dataHist, plotN
 	sumPdf = ROOT.RooAddPdf('totalPdf','signal and background', signalPdf, backgroundPdf, signalFractionVar)
 	
 	# fit
-	sumPdf.fitTo( dataDataHist, ROOT.RooFit.SumW2Error(ROOT.kFALSE) )
+	sumPdf.fitTo( dataDataHist, ROOT.RooFit.SumW2Error(ROOT.kFALSE), ROOT.RooFit.PrintLevel(-1) )
 	
-	# plot results
-	c1 = ROOT.TCanvas('c1', 'c1', 800, 600)
-	plotter = ROOT.RooPlot(sihihVar,varmin,varmax,20) # nBins is dummy 
-	dataDataHist.plotOn(plotter, ROOT.RooFit.Name('data'))
-	sumPdf.plotOn(plotter, ROOT.RooFit.Name('sum'), ROOT.RooFit.LineColor(ROOT.kRed))
-	sumPdf.plotOn(plotter, ROOT.RooFit.Components('signalPdf'), ROOT.RooFit.Name('signal'), 
-		ROOT.RooFit.LineColor(ROOT.kGreen))
-	sumPdf.plotOn(plotter, ROOT.RooFit.Components('backgroundPdf'), ROOT.RooFit.Name('background'), 
-		ROOT.RooFit.LineColor(ROOT.kBlue))
-	sumPdf.paramOn(plotter)
+	if plotName!='':
+		# plot results
+		c1 = ROOT.TCanvas('c1', 'c1', 800, 600)
+		plotter = ROOT.RooPlot(sihihVar,varmin,varmax,20) # nBins is dummy 
+		dataDataHist.plotOn(plotter, ROOT.RooFit.Name('data'))
+		sumPdf.plotOn(plotter, ROOT.RooFit.Name('sum'), ROOT.RooFit.LineColor(ROOT.kRed))
+		sumPdf.plotOn(plotter, ROOT.RooFit.Components('signalPdf'), ROOT.RooFit.Name('signal'), 
+			ROOT.RooFit.LineColor(ROOT.kGreen))
+		sumPdf.plotOn(plotter, ROOT.RooFit.Components('backgroundPdf'), ROOT.RooFit.Name('background'), 
+			ROOT.RooFit.LineColor(ROOT.kBlue))
+		sumPdf.paramOn(plotter)
 
-	plotter.Draw()
-	c1.SaveAs(plotName)
+		plotter.Draw()
+		c1.SaveAs(plotName)
 	print 'fit returned value ',signalFractionVar.getVal(),' +- ',signalFractionVar.getError()
 	return (signalFractionVar.getVal(),signalFractionVar.getError())
 	
@@ -78,14 +79,14 @@ def getTemplFrom2Dhist(filename, histname, auxAxis, minval, maxval):
 	templhist.Sumw2()
 	return templhist
 
-def optimizeBinBoundaries(hist,minAcc,lastBinValue=9999):
+def optimizeBinBoundaries(hist, minAcc, firstBinValue=-9999, lastBinValue=9999):
 	nbins = hist.GetNbinsX()
 	accu = 0
 	binlist = []
 	
 	# ignore empty bins in the beginning
 	for firstind in xrange(1,nbins+1):
-		if hist.GetBinContent(firstind) > 0.0001:
+		if hist.GetBinContent(firstind) > 0.0001 or hist.GetBinLowEdge(firstind)>=firstBinValue:
 			binlist.append(hist.GetBinLowEdge(firstind))
 			break
 	
@@ -107,10 +108,21 @@ def optimizeBinBoundaries(hist,minAcc,lastBinValue=9999):
 def makeUniformHist(hist):
 	nbins = hist.GetNbinsX()
 	#print 'nbins',nbins
-	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,0,nbins)
+	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,1,nbins)
 	for ind in xrange(1,nbins+1):
 		outhist.SetBinContent(ind,hist.GetBinContent(ind))
 		outhist.SetBinError(ind,hist.GetBinError(ind))
+	return outhist
+
+
+random = ROOT.TRandom3()
+
+def makeRandUniformHist(hist):
+	nbins = hist.GetNbinsX()
+	#print 'nbins',nbins
+	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,1,nbins)
+	for ind in xrange(1,nbins+1):
+		outhist.SetBinContent(ind, random.Poisson(hist.GetBinContent(ind)))
 	return outhist
 
 
@@ -162,7 +174,11 @@ def getWeightedHist(selection, histName, leftCut=None, rightCut=None):
 
 # fit range
 lowFitrange = -0.5
-highFitrange = 10.0
+highFitrange = 19.99
+#highFitrange = 9.99
+
+# number of pseudo experiments. off by default
+NpseudoExp = 0
 
 # photon Et range
 #phoEtrange = '_60_up_'
@@ -181,7 +197,7 @@ if usePhoIso:
 	hist_sig_templ_name = 'photon1PhoRandIso'
 	hist_sig_name = 'photon1PhoSCRIso'
 	lowFitrange = -3.0
-	highFitrange = 6.0
+	highFitrange = 9.99
 
 
 # sideband in sigmaIetaIeta
@@ -200,8 +216,8 @@ pseudodata = getWeightedHist('', hist2d_name, 0.0, 0.012)
 pseudosignal = getWeightedHist('rs', hist2d_name, 0.0, 0.012)
 
 leftbin = pseudodata.FindBin(lowFitrange)
-rightbin = pseudodata.FindBin(highFitrange)-1
-
+rightbin = pseudodata.FindBin(highFitrange)
+print 'calculating integrals in bins',leftbin,rightbin
 MCtrueSelSignalFraction = pseudosignal.Integral(leftbin, rightbin)/pseudodata.Integral(leftbin, rightbin)
 ########################################
 
@@ -218,13 +234,17 @@ print 'Data Integral: ',pseudodata.Integral()
 bckg_templ.Rebin(2)
 pseudodata.Rebin(2)
 
-#boundaries = optimizeBinBoundaries(pseudodata,15,highFitrange)
-boundaries = optimizeBinBoundaries(pseudodata,30,highFitrange)
+#boundaries = optimizeBinBoundaries(pseudodata,15,lowFitrange,highFitrange)
+boundaries = optimizeBinBoundaries(bckg_templ, 10, lowFitrange, highFitrange)
 
 print 'new number of boundaries ',len(boundaries)
 pseudodataR = pseudodata.Rebin(len(boundaries)-1,pseudodata.GetName()+'rebin',boundaries)
 bckg_templR = bckg_templ.Rebin(len(boundaries)-1,bckg_templ.GetName()+'rebin',boundaries)
 sig_templR  = sig_templ.Rebin(len(boundaries)-1,sig_templ.GetName()+'rebin',boundaries)
+# to avoid signal going below fit range in the plot
+print 'sig_templR underflow ', sig_templR.GetBinContent(0)
+print 'settin to 0'
+sig_templR.SetBinContent(0,0)
 
 pseudodataU = makeUniformHist(pseudodataR)
 bckg_templU = makeUniformHist(bckg_templR)
@@ -236,19 +256,47 @@ print '#'*50
 #makeFit(FitVarname,lowFitrange,highFitrange, sig_templR, bckg_templR, pseudodataR, 'fit_'+FitVarname+'.png')
 
 # do fit for fixed bin size histogram
-lowUFitRange = 0
-highUFitRange = pseudodataU.GetNbinsX()-1
+lowUFitRange = pseudodataR.FindBin(lowFitrange)
+if lowUFitRange == 0:
+	print 'lower bin is underfow, setting to 1'
+	lowUFitRange = 1
+highUFitRange = pseudodataR.FindBin(highFitrange)
+if pseudodataR.GetBinLowEdge(highUFitRange) == highFitrange:
+	print 'upper bin in on the border of fit range, reducing'
+	highUFitRange -= 1
+
 print 'fitting in the bin range ',lowUFitRange, highUFitRange
 (fitSigFrac,fitSigFracErr) = makeFit(FitVarname+' bin number',lowUFitRange,highUFitRange, sig_templU, bckg_templU, pseudodataU, 'fit_'+phoEtrange+FitVarname+'_uniform.png')
 
+# pseudo-experiments:
+pe_results = ROOT.TH1F('pe_results','Pseudo-experiments',100,0,1)
+#pe_results = ROOT.TH1F('pe_results','Pseudo-experiments',50,0.4,0.9)
+for npi in xrange(NpseudoExp):
+	print '-'*80
+	print 'pe # ',npi
+	pseudodataUrand = makeRandUniformHist(pseudodataR)
+	bckg_templUrand = makeRandUniformHist(bckg_templR)
+	sig_templUrand  = makeRandUniformHist(sig_templR)
+	(fitSigFracRand,fitSigFracErrRand) = makeFit(FitVarname+' bin number',lowUFitRange, highUFitRange, sig_templUrand, bckg_templUrand, pseudodataUrand, '')
+	pe_results.Fill(fitSigFracRand)
+
 # draw the result
+ROOT.gStyle.SetOptFit(111)
 c1 = ROOT.TCanvas('c1','c1',800,800)
-leg = ROOT.TLegend(0.6,0.7,0.99,0.99)
+pe_results.GetXaxis().SetTitle('signal fraction')
+pe_results.Draw()
+pe_results.Fit('gaus')
+
+if NpseudoExp > 0:
+	c1.SaveAs('pe_results.png')
+
+ROOT.gStyle.SetOptStat(0)
+
+leg = ROOT.TLegend(0.6,0.7,0.99,0.94)
 leg.SetFillColor(0)
 
-#leftbin = pseudodataR.FindBin(lowFitrange)
-#rightbin = pseudodataR.FindBin(highFitrange)-1
-leftbin = 1
+
+leftbin = lowUFitRange
 rightbin = highUFitRange
 
 print 'bins for normalization ',leftbin,rightbin
@@ -265,11 +313,13 @@ bckg_templR.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 stack = ROOT.THStack(FitVarname+'_stack',FitVarname+'_stack')
 stack.Add(bckg_templR)
 stack.Add(sig_templR)
+stack.SetTitle('')
 stack.Draw('hist')
+stack.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
 stack.SetMaximum(1.2*stack.GetMaximum())
 stack.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 
-leg.AddEntry(pseudodataR, 'Data', 'lf')
+leg.AddEntry(pseudodataR, 'Data', 'lfp')
 leg.AddEntry(sig_templR, 'Signal', 'lf')
 leg.AddEntry(bckg_templR, 'Background', 'lf')
 leg.Draw()
@@ -293,9 +343,10 @@ randCone_Iso.SetLineColor(2)
 
 leg.AddEntry(trueSignalIso, 'MC truth signal','lf')
 leg.AddEntry(randCone_Iso, 'Random cone', 'lf')
-
-trueSignalIso.Draw()
-randCone_Iso.Draw('same')
+randCone_Iso.SetTitle('')
+randCone_Iso.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
+randCone_Iso.Draw()
+trueSignalIso.Draw('same')
 leg.Draw()
 c1.SaveAs(hist_sig_name+'_sig'+phoEtrange+'templ.png')
 c1.SetLogy(1)
@@ -336,6 +387,8 @@ leg.AddEntry(sbIso,'sihih side band', 'lf')
 #leg.AddEntry(true_sel_bckg,'MC truth backg, nom. selection', 'lf')
 
 #true_sel_bckg.Draw()
+true_bckg.SetTitle('')
+true_bckg.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
 true_bckg.Draw()
 sbIso.Draw('same')
 leg.Draw()
