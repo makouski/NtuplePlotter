@@ -298,7 +298,7 @@ leg.SetFillColor(0)
 
 
 leftbin = lowUFitRange
-rightbin = highUFitRange
+rightbin = highUFitRange - 1
 
 print 'bins for normalization ',leftbin,rightbin
 bckg_templR.Scale((1.0-fitSigFrac)*pseudodataR.Integral(leftbin,rightbin)/bckg_templR.Integral(leftbin,rightbin))
