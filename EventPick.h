@@ -60,6 +60,7 @@ public:
 	std::vector<TH1F*> histVector;
 	TH1F* cutFlow;
 	TH1F* cutFlowWeight;
+	TH1F* genPhoRegionWeight;
 
 private:
 	const EventTree* tree;

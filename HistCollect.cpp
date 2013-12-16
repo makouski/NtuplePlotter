@@ -154,7 +154,7 @@ void HistCollect::findPhotonCategory(int phoInd, EventTree* tree, bool* rs, bool
 	int mcEleInd = -1;
 	for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
 		bool etetamatch = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) < 0.2 && 
-		fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd) < 1.0;
+			fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd) < 1.0;
 		if( etetamatch && mcPhotonInd < 0 && tree->mcPID->at(mcInd) == 22)
 			mcPhotonInd = mcInd; 
 		if( etetamatch && mcEleInd < 0 && abs(tree->mcPID->at(mcInd)) == 11 )

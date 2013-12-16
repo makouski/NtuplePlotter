@@ -12,7 +12,11 @@ EventPick::EventPick(std::string titleIn){
 	cutFlowWeight->SetDirectory(0);
 	set_cutflow_labels(cutFlowWeight);
 	histVector.push_back(cutFlowWeight);
-	
+
+	genPhoRegionWeight = new TH1F("genPhoRegionWeight","GenPhoton passing fiducial cuts: barrel 0 or endcap 1",2,-0.5,1.5);
+	genPhoRegionWeight->SetDirectory(0);
+	histVector.push_back(genPhoRegionWeight);
+
 	// assign cut values
 	veto_jet_dR = 0.3;
 	veto_lep_jet_dR = 0.5;
@@ -121,6 +125,25 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		cutFlowWeight->Fill(8,weight);
 		passAll = true;
 	}
+
+	// saving information about Gen Level photons, if any
+	// Save it only if PreSelection passed
+	// Separate count for barrel and endcap (will be used separately anyway)
+	bool foundGenPhotonBarrel = false;
+	bool foundGenPhotonEndcap = false;
+	if(passPreSel && !(tree->isData_)){
+		for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+			if(tree->mcPID->at(mcInd) == 22 && 
+			   (tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10) &&
+			   tree->mcPt->at(mcInd) > selector->pho_Et_cut){
+				double fabsEta = TMath::Abs(tree->mcEta->at(mcInd));
+				if(fabsEta < 1.4442) foundGenPhotonBarrel = true;
+				if( 1.566 < fabsEta && fabsEta < 2.5) foundGenPhotonEndcap = true;
+			}
+		}
+	}
+	if(foundGenPhotonBarrel) genPhoRegionWeight->Fill(0, weight);
+	if(foundGenPhotonEndcap) genPhoRegionWeight->Fill(1, weight);
 }
 
 void EventPick::print_cutflow(){
