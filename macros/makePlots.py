@@ -54,8 +54,9 @@ def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varList,
 		if 'barrel' in outDirName and 'photon1SigmaIEtaIEta' in var:
 			stack.GetXaxis().SetRangeUser(0.0,0.025)
 		
-		stack.GetXaxis().SetTitle(dataTemplate.histList[var].GetXaxis().GetTitle())
-		stack.GetYaxis().SetTitle(dataTemplate.histList[var].GetYaxis().GetTitle())
+		if dataTemplate is not None:
+			stack.GetXaxis().SetTitle(dataTemplate.histList[var].GetXaxis().GetTitle())
+			stack.GetYaxis().SetTitle(dataTemplate.histList[var].GetYaxis().GetTitle())
 		stack.SetTitle('')
 
 		if dataTemplate is not None:
@@ -79,17 +80,10 @@ def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varList,
 def loadDataTemplate(varList, inputDir, prefix):
 	templPrefix = inputDir+prefix
 	DataTempl = distribution('Data', [
-		(templPrefix+'Data_a_Aug6.root', 1),
-		(templPrefix+'Data_a_Jul13.root', 1),
-		(templPrefix+'Data_b_Jul13.root', 1),
-		(templPrefix+'Data_c_Aug24.root', 1),
-		(templPrefix+'Data_c_Dec11.root', 1),
-		(templPrefix+'Data_c_PRv2.root', 1),
-		(templPrefix+'Data_d_PRv1_part1.root', 1),
-		(templPrefix+'Data_d_PRv1_part2.root', 1),
-		(templPrefix+'Data_d_PRv1_part3.root', 1),
-		(templPrefix+'Data_d_PRv1_part4.root', 1),
-		(templPrefix+'Data_d_PRv1_part5.root', 1),
+		(templPrefix+'Data_a.root', 1),
+		(templPrefix+'Data_b.root', 1),
+		(templPrefix+'Data_c.root', 1),
+		(templPrefix+'Data_d.root', 1),
 		], varList)
 	return DataTempl
 
@@ -97,128 +91,129 @@ def loadDataTemplate(varList, inputDir, prefix):
 def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	templPrefix = inputDir+prefix
 	
-	WHIZARDTempl = distribution('WHIZARD'+titleSuffix, [(templPrefix+'WHIZARD.root', gSF*TTgamma_xs/WHIZARD_num)], varList, 98, fillStyle)
+	MCtemplates = {}
 	
-	TTJetsTempl = distribution('TTJets'+titleSuffix, [
+	MCtemplates['WHIZARD'] = distribution('WHIZARD'+titleSuffix, [(templPrefix+'WHIZARD.root', gSF*TTgamma_xs/WHIZARD_num)], varList, 98, fillStyle)
+	
+	MCtemplates['TTJets'] = distribution('TTJets'+titleSuffix, [
 		(templPrefix+'TTJets1l.root', gSF*TTJets1l_xs/TTJets1l_num),
 		(templPrefix+'TTJets2l.root', gSF*TTJets2l_xs/TTJets2l_num),
 		], varList ,11, fillStyle)
 	
-	#VgammaTempl = distribution('Vgamma'+titleSuffix, [
-    #    (templPrefix+'Zgamma.root', gSF*Zgamma_xs/Zgamma_num),
-    #    (templPrefix+'Wgamma.root', gSF*Wgamma_xs/Wgamma_num),
-    #    (templPrefix+'WWgamma.root', gSF*WWgamma_xs/WWgamma_num),
-    #    ], varList, 90, fillStyle)
-
-	OtherTempl = distribution('Other'+titleSuffix, [
-        (templPrefix+'WJets1.root', gSF*WJets_xs/(WJets1_num+WJets2_num)),
-        (templPrefix+'WJets2.root', gSF*WJets_xs/(WJets1_num+WJets2_num)),
-
-		(templPrefix+'ZJets.root', gSF*ZJets_xs/ZJets_num),
-
+	MCtemplates['Vgamma'] = distribution('Vgamma'+titleSuffix, [
         (templPrefix+'Zgamma.root', gSF*Zgamma_xs/Zgamma_num),
         (templPrefix+'Wgamma.root', gSF*Wgamma_xs/Wgamma_num),
-        (templPrefix+'WWgamma.root', gSF*WWgamma_xs/WWgamma_num),
+    #    (templPrefix+'WWgamma.root', gSF*WWgamma_xs/WWgamma_num),
+        ], varList, 90, fillStyle)
 
+	MCtemplates['SingleTop'] = distribution('SingleTop'+titleSuffix, [
 		(templPrefix+'SingleT_t.root',      gSF*SingTopT_xs/SingTopT_num),
         (templPrefix+'SingleT_s.root',      gSF*SingTopS_xs/SingTopS_num),
         (templPrefix+'SingleT_tw.root',     gSF*SingToptW_xs/SingToptW_num),
         (templPrefix+'SingleTbar_t.root',   gSF*SingTopbarT_xs/SingTopbarT_num),
         (templPrefix+'SingleTbar_s.root',   gSF*SingTopbarS_xs/SingTopbarS_num),
         (templPrefix+'SingleTbar_tw.root',  gSF*SingTopbartW_xs/SingTopbartW_num),
-		
-        (templPrefix+'WZ_3lnu.root', gSF*WZ_3lnu_xs/WZ_3lnu_num),
-        (templPrefix+'WZ_2l2q.root', gSF*WZ_2l2q_xs/WZ_2l2q_num),
-        
-        (templPrefix+'ZZ_2e2mu.root', gSF*ZZ_2e2mu_xs/ZZ_2e2mu_num),
-        (templPrefix+'ZZ_2e2tau.root', gSF*ZZ_2e2tau_xs/ZZ_2e2tau_num),
-        (templPrefix+'ZZ_2mu2tau.root', gSF*ZZ_2mu2tau_xs/ZZ_2mu2tau_num),
-        (templPrefix+'ZZ_4e.root', gSF*ZZ_4e_xs/ZZ_4e_num),
-        (templPrefix+'ZZ_4mu.root', gSF*ZZ_4mu_xs/ZZ_4mu_num),
-        (templPrefix+'ZZ_4tau.root', gSF*ZZ_4tau_xs/ZZ_4tau_num),
-        
-        (templPrefix+'WW_2l2nu.root', gSF*WW_2l2nu_xs/WW_2l2nu_num),
-
-        (templPrefix+'TTW.root', gSF*TTW_xs/TTW_num),
-        (templPrefix+'TTZ.root', gSF*TTZ_xs/TTZ_num),
-		], varList, 7, fillStyle)
+		], varList, 8, fillStyle)
 	
-	MCtemplates = []
-	MCtemplates.append(WHIZARDTempl)
-	MCtemplates.append(TTJetsTempl)
-	#MCtemplates.append(VgammaTempl)
-	MCtemplates.append(OtherTempl)
+	MCtemplates['Other'] = distribution('Other'+titleSuffix, [
+        (templPrefix+'WJets.root', gSF*WJets_xs/WJets_num),
+		(templPrefix+'ZJets.root', gSF*ZJets_xs/ZJets_num),
+		
+        #(templPrefix+'WZ_3lnu.root', gSF*WZ_3lnu_xs/WZ_3lnu_num),
+        #(templPrefix+'WZ_2l2q.root', gSF*WZ_2l2q_xs/WZ_2l2q_num),
+        
+        #(templPrefix+'ZZ_2e2mu.root', gSF*ZZ_2e2mu_xs/ZZ_2e2mu_num),
+        #(templPrefix+'ZZ_2e2tau.root', gSF*ZZ_2e2tau_xs/ZZ_2e2tau_num),
+        #(templPrefix+'ZZ_2mu2tau.root', gSF*ZZ_2mu2tau_xs/ZZ_2mu2tau_num),
+        #(templPrefix+'ZZ_4e.root', gSF*ZZ_4e_xs/ZZ_4e_num),
+        #(templPrefix+'ZZ_4mu.root', gSF*ZZ_4mu_xs/ZZ_4mu_num),
+        #(templPrefix+'ZZ_4tau.root', gSF*ZZ_4tau_xs/ZZ_4tau_num),
+        
+        #(templPrefix+'WW_2l2nu.root', gSF*WW_2l2nu_xs/WW_2l2nu_num),
+
+        #(templPrefix+'TTW.root', gSF*TTW_xs/TTW_num),
+        #(templPrefix+'TTZ.root', gSF*TTZ_xs/TTZ_num),
+		], varList, 7, fillStyle)
+
 	return MCtemplates
 
-def makeAllPlots(varList, inputDir, outDirName):
+def makeAllPlots(varList, varSaveList,  inputDir, outDirName):
 	shortVarList = varList[:]
 	shortVarList.remove('cut_flow')
-	shortVarList.remove('Nele_before_cut')
-
+	shortVarList.remove('genPhoRegionWeight')
 	
-	# load templates (barrel+endcap)
+	# load templates PreSel
 	
 	DataTempl = loadDataTemplate(varList, inputDir, 'hist_1pho_top_')
-	
-	MCTempl_rs = loadMCTemplates(varList, inputDir, 'hist_1pho_rs_top_', '(signal)', 3001)
-	#MCTempl_rb = loadMCTemplates(varList, inputDir, 'hist_1pho_rb_top_', '(rb)', 3003)
-	MCTempl_fe = loadMCTemplates(varList, inputDir, 'hist_1pho_fe_top_', '(electron)', 3006)
-	MCTempl_fjrb = loadMCTemplates(varList, inputDir, 'hist_1pho_fjrb_top_', '(fake)', 3007)
-	# combine MC categories in correct order
+	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001)
 	MCTempl = []
-	for templInd in xrange(len(MCTempl_rs)):
-		MCTempl.append(MCTempl_rs[templInd])
-		#MCTempl.append(MCTempl_rb[templInd])
-		MCTempl.append(MCTempl_fe[templInd])
-		MCTempl.append(MCTempl_fjrb[templInd])
+	MCTempl.append(MCTemplDict['WHIZARD'])
+	MCTempl.append(MCTemplDict['TTJets'])
+	MCTempl.append(MCTemplDict['Vgamma'])
+	MCTempl.append(MCTemplDict['SingleTop'])
+	MCTempl.append(MCTemplDict['Other'])
 	
-	plotTemplates( DataTempl, MCTempl, [], varList, outDirName)
+	plotTemplates( DataTempl, MCTempl, [], varList, outDirName+'/presel')
 	
-	
-	# load templates (barrel)
-	
-	DataTempl_b = loadDataTemplate(shortVarList, inputDir, 'hist_1pho_barrel_top_')
-	
-	MCTempl_rs_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_barrel_top_', '(signal)', 3001)
-	#MCTempl_rb_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rb_barrel_top_', '(rb)', 3003)
-	MCTempl_fe_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_barrel_top_', '(electron)', 3006)
-	MCTempl_fjrb_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_barrel_top_', '(fake)', 3007)
-	# combine MC categories in correct order
+	region = 'barrel'
+	# load templates
+	DataTempl_b = loadDataTemplate(shortVarList, inputDir, 'hist_1pho_'+region+'_top_')
+	MCTemplDict_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_'+region+'_top_','',1001)
 	MCTempl_b = []
-	for templInd in xrange(len(MCTempl_rs_b)):
-		MCTempl_b.append(MCTempl_rs_b[templInd])
-		#MCTempl_b.append(MCTempl_rb_b[templInd])
-		MCTempl_b.append(MCTempl_fe_b[templInd])
-		MCTempl_b.append(MCTempl_fjrb_b[templInd])
+	MCTempl_b.append(MCTemplDict_b['WHIZARD'])
+	MCTempl_b.append(MCTemplDict_b['TTJets'])
+	MCTempl_b.append(MCTemplDict_b['Vgamma'])
+	MCTempl_b.append(MCTemplDict_b['SingleTop'])
+	MCTempl_b.append(MCTemplDict_b['Other'])
 	
-	plotTemplates( DataTempl_b, MCTempl_b, [], shortVarList, outDirName+'/barrel')
+	plotTemplates( DataTempl_b, MCTempl_b, [], shortVarList, outDirName+'/'+region+'_samples')
+	
+	MCTempl_rs_c = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_'+region+'_top_', '_signal', 1001)
+	MCTempl_fe_c = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_'+region+'_top_', '_electron', 3005)
+	MCTempl_fjrb_c = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_'+region+'_top_', '_fake', 3005)
 	
 	# save barrel sihih templates for fit
-	saveTemplatesToFile([DataTempl_b]+MCTempl_b, ['photon1SigmaIEtaIEta'], 'templates_sihih_barrel.root')
+	saveTemplatesToFile([DataTempl_b] + MCTempl_b + MCTempl_rs_c.values() + MCTempl_fe_c.values() + MCTempl_fjrb_c.values(), varSaveList, 'templates_barrel.root')
 
-	# load templates (endcap)
 	
-	DataTempl_e = loadDataTemplate(shortVarList, inputDir, 'hist_1pho_endcap_top_')
+	# combine MC categories
+	TTphoton = MCTempl_rs_c['WHIZARD']
+	TTphoton.mergeWith(MCTempl_rs_c['TTJets'])
+	TTphoton.name = 'TopPair+photon'
 	
-	MCTempl_rs_e = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_endcap_top_', '(signal)', 3001)
-	#MCTempl_rb_e = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rb_endcap_top_', '(rb)', 3003)
-	MCTempl_fe_e = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_endcap_top_', '(electron)', 3006)
-	MCTempl_fjrb_e = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_endcap_top_', '(fake)', 3007)
-	# combine MC categories in correct order
-	MCTempl_e = []
-	for templInd in xrange(len(MCTempl_rs_e)):
-		MCTempl_e.append(MCTempl_rs_e[templInd])
-		#MCTempl_e.append(MCTempl_rb_e[templInd])
-		MCTempl_e.append(MCTempl_fe_e[templInd])
-		MCTempl_e.append(MCTempl_fjrb_e[templInd])
+	TTfake = MCTempl_fe_c['WHIZARD']
+	TTfake.mergeWith(MCTempl_fjrb_c['WHIZARD'])
+	TTfake.mergeWith(MCTempl_fe_c['TTJets'])
+	TTfake.mergeWith(MCTempl_fjrb_c['TTJets'])
+	TTfake.name = 'TopPair+fake'
 	
-	plotTemplates( DataTempl_e, MCTempl_e, [], shortVarList, outDirName+'/endcap')
+	BGphoton = MCTempl_rs_c['Vgamma']
+	BGphoton.mergeWith(MCTempl_rs_c['SingleTop'])
+	BGphoton.mergeWith(MCTempl_rs_c['Other'])
+	BGphoton.name = 'BG+photon'
+	
+	BGfake = MCTempl_fe_c['Vgamma']
+	BGfake.mergeWith(MCTempl_fjrb_c['Vgamma'])
+	BGfake.mergeWith(MCTempl_fe_c['SingleTop'])
+	BGfake.mergeWith(MCTempl_fjrb_c['SingleTop'])
+	BGfake.mergeWith(MCTempl_fe_c['Other'])
+	BGfake.mergeWith(MCTempl_fjrb_c['Other'])
+	BGfake.name = 'BG+fake'
+
+	
+	MCTempl_c = []
+	MCTempl_c.append(TTphoton)
+	MCTempl_c.append(TTfake)
+	MCTempl_c.append(BGphoton)
+	MCTempl_c.append(BGfake)
+	
+	plotTemplates( DataTempl_b, MCTempl_c, [], shortVarList, outDirName+'/'+region+'_categories')
 
     
 # main part ##############################################################################################
 
 varList = ['nVtx',
-			'MET','Ht','WtransMass','WtransMass_photon',
+			'MET','Ht','WtransMass','M3','M3first','minM3',
 
 			'ele1Pt','ele1Eta','ele1RelIso',
 			'ele1D0','ele1MVA','ele1Dz',
@@ -228,19 +223,20 @@ varList = ['nVtx',
 			'looseEleDrGenPho',
 
 			'cut_flow',
-			'Nele_before_cut',
-			'jjg_inv_mass','jje_inv_mass','bjjg_inv_mass','bjje_inv_mass','ele_met_g_trans_mass','Njets_vetoed',
            
 			'nJets',
-			'jet1Pt','jet1CHF','jet1CEF','jet1NHF','jet1NEF','jet1NCharged','jet1NConstituents',
-			'jet2Pt','jet3Pt','jet4Pt','jet1Eta','jet2Eta','jet3Eta','jet4Eta',
+			'jet1Pt','jet2Pt','jet3Pt','jet4Pt','jet1Eta','jet2Eta','jet3Eta','jet4Eta',
 
 			'photon1Et','photon1Eta','photon1HoverE','photon1SigmaIEtaIEta',
 			'photon1DrElectron','photon1DrJet',
-			'photon1RelIso','photon1ChHadIso','photon1NeuHadIso','photon1PhoIso',
-			'photon1MotherID','photon1GMotherID','photon1DrMCbquark','GenPhotonEt',
+			'photon1ChHadIso','photon1NeuHadIso','photon1PhoIso',
+			'photon1ChHadSCRIso','photon1PhoSCRIso',
+			'photon1ChHadRandIso','photon1PhoRandIso',
+			'photon1MotherID','photon1GMotherID','photon1DrMCbquark','GenPhotonEt','genPhoRegionWeight',
+			'photon1_Sigma_ChSCRIso'
 			]
+varSaveList = ['photon1ChHadSCRIso', 'photon1ChHadRandIso', 'photon1_Sigma_ChSCRIso']
 
-makeAllPlots(varList, '/Users/makouski/dis/plotting_trees/Hist/', 'plots')
+makeAllPlots(varList, varSaveList, '/Users/makouski/dis/plotting_trees/Hist/', 'plots')
 #makeAllPlots(varList, '/uscms_data/d2/makouski/ttgamma/plotting/Hist/', 'plots')
 

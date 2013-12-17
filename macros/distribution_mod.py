@@ -30,6 +30,11 @@ class distribution:
 						self.histList[histName].Add(tempHist)
 				tf.Close()
 	
+	def mergeWith(self, other):
+		for histName in self.histList:
+			self.histList[histName].Add(other.histList[histName])
+		
+	
 	def shiftUnderOverFlow(self, histNameList):
 		for histName in histNameList:
 			nBins = self.histList[histName].GetNbinsX()

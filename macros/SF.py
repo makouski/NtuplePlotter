@@ -2,70 +2,60 @@
 luminosity = 19.63*1000
 gSF = luminosity
 
-# first line: Nevt from AODSIM
-# second line: number of events from gg files
-#Top_num        = 6923750
-# ???
-TTJets1l_num        = 10629902 # checked.  was off
-TTJets2l_num        = 12019013 # checked.  was off
+TTJets1l_num        = 24849110 #
+TTJets2l_num        = 12086717 #
 
-TTgamma_num      = 71598 # checked
+TTgamma_num      =  1719954 #
 
-#WJets_num      = 57709905
-#WJets1_num      = 30106028 # skim
-#WJets2_num      = 27603876 # skim
-WJets1_num      = 27185540 # checked. new skim (???)
-WJets2_num      = 30524364 # checked. new skim (???)
+WJets_num      = 57709905 #
 
-#ZJets_num      = 30459503
-ZJets_num      = 30459504 # ?  checked. (skimmed)
+ZJets_num      = 30458871 #
 
 #ZZ_num            = 9799908 #AODSIM inclusive?
 # 2e2mu + 2e2tau + 2mu2tau + 4e + 4mu + 4tau
-ZZ_2e2mu_num       = 1497445
-ZZ_2e2tau_num      = 823911
-ZZ_2mu2tau_num     = 823922
-ZZ_4e_num          = 1499093
-ZZ_4mu_num         = 1499064
-ZZ_4tau_num        = 824466
+#ZZ_2e2mu_num       = 1497445
+#ZZ_2e2tau_num      = 823911
+#ZZ_2mu2tau_num     = 823922
+#ZZ_4e_num          = 1499093
+#ZZ_4mu_num         = 1499064
+#ZZ_4tau_num        = 824466
 
 #WW_num            = 10000431 #AODSIM
-WW_2l2nu_num       = 1903235 # checked
+#WW_2l2nu_num       = 1903235 #
 
 #WZ_num            = 10000283 #AODSIM
-#WZ_num            = 5233969 # old
-WZ_3lnu_num       = 2017979 # checked
-WZ_2l2q_num       = 3215990 # checked
+#WZ_num            = 5233969 # 
+#WZ_3lnu_num       = 2017979 #
+#WZ_2l2q_num       = 3215990 #
 
-Wgamma_num        = 4802358 # checked
+Wgamma_num        = 4877150 #
 
-WWgamma_num       = 304285 # checked
+#WWgamma_num       = 304285 #
 
-Zgamma_num        = 6588161 # checked
+Zgamma_num        = 6588161 #
 
-TTW_num           = 196046 # checked
+#TTW_num           = 196046 #
+#TTZ_num           = 210160 #
 
-TTZ_num           = 210160 # checked
-
-WHIZARD_num       = 1069486 # new full sim sample 756000 # checked
+WHIZARD_num       = 1074860 #
 
 #SingToptW_num     = 497658
-SingToptW_num     = 497658 # checked
+SingToptW_num     =  497658 #
 
 #SingTopbartW_num  = 493460
-SingTopbartW_num  = 493460 # checked
+SingTopbartW_num  =  493460 #
 
 #SingTopT_num      = 3758227
-SingTopT_num      = 99876 # checked (too few!!!!!!)
+SingTopT_num      =  99876 # small sample
 
 #SingTopbarT_num   = 1935072
-SingTopbarT_num   = 1885072 # checked (smaller!)
+SingTopbarT_num   =  1935072 #
 
 #SingTopS_num      = 259961
-SingTopS_num      = 259961 # checked
+SingTopS_num      =  259961 #
 
 #SingTopbarS_num   = 139974
-SingTopbarS_num   = 139974 # checked
+SingTopbarS_num   =  139974 #
 
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/QGC
 Zgamma_xs         = 132.6 # PREP
