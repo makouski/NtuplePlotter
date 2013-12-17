@@ -142,8 +142,8 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 			}
 		}
 	}
-	if(foundGenPhotonBarrel) genPhoRegionWeight->Fill(0, weight);
-	if(foundGenPhotonEndcap) genPhoRegionWeight->Fill(1, weight);
+	if(foundGenPhotonBarrel) genPhoRegionWeight->Fill(0.0, weight);
+	if(foundGenPhotonEndcap) genPhoRegionWeight->Fill(1.0, weight);
 }
 
 void EventPick::print_cutflow(){
