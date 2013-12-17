@@ -74,7 +74,7 @@ int main(int ac, char** av){
 		//if(isMC) doJER(tree_);
 		
 		// apply PU reweighting
-		PUweight = PUweighter->getWeight(tree->nPUInfo_, tree->puBX_, tree->nPU_);
+		if(isMC) PUweight = PUweighter->getWeight(tree->nPUInfo_, tree->puBX_, tree->nPU_);
 		
 		// do overlap removal here
 		if( isMC && doOverlapRemoval && overlapWHIZARD(tree)){
