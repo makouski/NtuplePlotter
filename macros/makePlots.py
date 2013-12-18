@@ -153,6 +153,7 @@ def makeAllPlots(varList, varSaveList,  inputDir, outDirName):
 	MCTempl.append(MCTemplDict['SingleTop'])
 	MCTempl.append(MCTemplDict['Other'])
 	
+	saveTemplatesToFile([DataTempl] + MCTempl, ['genPhoRegionWeight','MET','M3','ele1Pt','ele1Eta','ele1RelIso'], 'templates_presel.root')
 	plotTemplates( DataTempl, MCTempl, [], varList, outDirName+'/presel')
 	
 	region = 'barrel'
