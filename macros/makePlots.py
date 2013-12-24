@@ -140,7 +140,6 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 def makeAllPlots(varList, varSaveList,  inputDir, outDirName):
 	shortVarList = varList[:]
 	shortVarList.remove('cut_flow')
-	shortVarList.remove('genPhoRegionWeight')
 	
 	# load templates PreSel
 	
@@ -153,7 +152,7 @@ def makeAllPlots(varList, varSaveList,  inputDir, outDirName):
 	MCTempl.append(MCTemplDict['SingleTop'])
 	MCTempl.append(MCTemplDict['Other'])
 	
-	saveTemplatesToFile([DataTempl] + MCTempl, ['genPhoRegionWeight','MET','M3','ele1Pt','ele1Eta','ele1RelIso'], 'templates_presel.root')
+	saveTemplatesToFile([DataTempl] + MCTempl, ['MET','M3','ele1Pt','ele1Eta','ele1RelIso'], 'templates_presel.root')
 	plotTemplates( DataTempl, MCTempl, [], varList, outDirName+'/presel')
 	
 	region = 'barrel'
@@ -233,7 +232,7 @@ varList = ['nVtx',
 			'photon1ChHadIso','photon1NeuHadIso','photon1PhoIso',
 			'photon1ChHadSCRIso','photon1PhoSCRIso',
 			'photon1ChHadRandIso','photon1PhoRandIso',
-			'photon1MotherID','photon1GMotherID','photon1DrMCbquark','GenPhotonEt','genPhoRegionWeight',
+			'photon1MotherID','photon1GMotherID','photon1DrMCbquark','GenPhotonEt',
 			'photon1_Sigma_ChSCRIso'
 			]
 varSaveList = ['photon1ChHadSCRIso', 'photon1ChHadRandIso', 'photon1_Sigma_ChSCRIso']
