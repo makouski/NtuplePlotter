@@ -18,6 +18,10 @@ int main(int ac, char** av){
 	Selector* selector = new Selector();
 	EventPick* evtPick = new EventPick("nominal");
 
+	// antiselection for QCD fit
+	//selector->ele_Iso_MVA_invert = true;
+	//evtPick->NBjet_ge = 0;
+
 	// add more branches to be saved
 	//tree->chain->SetBranchStatus("*",1);
 

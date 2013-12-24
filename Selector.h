@@ -65,6 +65,7 @@ public:
 	double ele_MVALoose_cut;
 	double ele_Dxy_cut;
 	int    ele_MissInnHit_cut;
+	bool   ele_Iso_MVA_invert;
 	
 	// photons
 	double pho_Et_cut;

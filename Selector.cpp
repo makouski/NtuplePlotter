@@ -25,6 +25,7 @@ Selector::Selector(){
 	ele_MVALoose_cut = 0.0;
 	ele_Dxy_cut = 0.02;
 	ele_MissInnHit_cut = 0;
+	ele_Iso_MVA_invert = false;
 
 	// photons
 	pho_Et_cut = 25.0; 
@@ -120,12 +121,14 @@ void Selector::filter_electrons(){
 			 std::max(0.0, tree->elePFNeuIso03_->at(eleInd) + tree->elePFPhoIso03_->at(eleInd) - rho_zero * eleEffArea03(eta))
 			) / pt );
 		
+		bool Iso_MVA_pass = ele_RelIso_range[0] <= Ele03RelIso[eleInd] &&
+					Ele03RelIso[eleInd] < ele_RelIso_range[1] &&
+					ele_MVA_range[0] < tree->eleIDMVATrig_->at(eleInd) &&
+					tree->eleIDMVATrig_->at(eleInd) <= ele_MVA_range[1];
+		if(ele_Iso_MVA_invert) Iso_MVA_pass = !Iso_MVA_pass;
 		bool eleSel = fidEtaPass( eta ) &&
 						pt > ele_Pt_cut &&
-						ele_RelIso_range[0] <= Ele03RelIso[eleInd] &&
-						Ele03RelIso[eleInd] < ele_RelIso_range[1] &&
-						ele_MVA_range[0] < tree->eleIDMVATrig_->at(eleInd) &&
-						tree->eleIDMVATrig_->at(eleInd) <= ele_MVA_range[1] &&
+						Iso_MVA_pass &&
 						tree->eleConvVtxFit_->at(eleInd) == 0 &&
 						TMath::Abs(tree->eleD0_->at(eleInd)) < ele_Dxy_cut &&
 						tree->eleMissHits_->at(eleInd) <= ele_MissInnHit_cut;
