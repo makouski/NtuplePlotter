@@ -17,10 +17,13 @@ int main(int ac, char** av){
 	EventTree* tree = new EventTree(ac-2, av+2);
 	Selector* selector = new Selector();
 	EventPick* evtPick = new EventPick("nominal");
+	
+	// no MET cut, for QCD fits
+	evtPick->MET_cut = -1.0;
 
 	// antiselection for QCD fit
 	//selector->ele_Iso_MVA_invert = true;
-	//evtPick->NBjet_ge = 0;
+	evtPick->NBjet_ge = 0;
 
 	// add more branches to be saved
 	//tree->chain->SetBranchStatus("*",1);

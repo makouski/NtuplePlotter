@@ -80,17 +80,17 @@ void HistCollect::fill_histograms(Selector* selector, EventPick* selEvent, Event
 	findPhotonCategory(phoInd, tree, &rs, &rb, &fe, &fj);
 	
 	// filling
-	if(rs){
+	if(rs && fillRS){
 		if(fillMCCategSum) histnom_rs->fill(selector, selEvent, tree, weight);
 		if(fillBarrel && barrel) histnom_barrel_rs->fill(selector, selEvent,tree, weight);
 		if(fillEndcap && !barrel) histnom_endcap_rs->fill(selector, selEvent ,tree, weight);
 	}
-	if(fe){
+	if(fe && fillFE){
 		if(fillMCCategSum) histnom_fe->fill(selector, selEvent, tree, weight);
 		if(fillBarrel && barrel) histnom_barrel_fe->fill(selector, selEvent, tree, weight);
 		if(fillEndcap && !barrel) histnom_endcap_fe->fill(selector, selEvent, tree, weight);
 	}
-	if(fj||rb){
+	if((fj||rb) && fillFJRB){
 		if(fillMCCategSum) histnom_fjrb->fill(selector, selEvent, tree, weight);
 		if(fillBarrel && barrel) histnom_barrel_fjrb->fill(selector, selEvent, tree, weight);
 		if(fillEndcap && !barrel) histnom_endcap_fjrb->fill(selector, selEvent, tree, weight);
