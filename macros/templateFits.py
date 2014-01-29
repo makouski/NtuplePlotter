@@ -44,19 +44,26 @@ def makeFit(varname, varmin, varmax, signalHist, backgroundHist, dataHist, plotN
 	return (signalFractionVar.getVal(),signalFractionVar.getError())
 	
 
+openfiles = {}
+
 def get1DHist(filename, histname):
-	file = ROOT.TFile(filename,'READ')
+	if filename not in openfiles:
+		openfiles[filename] = ROOT.TFile(filename,'READ')
+	file = openfiles[filename]
+		
 	hist = file.Get(histname)
 	hist.SetDirectory(0)
-	file.Close()
-	hist.Sumw2()
+	hist.SetFillColor(0)
+	#hist.Sumw2()
 	return hist
 
 def getTemplFrom2Dhist(filename, histname, auxAxis, minval, maxval):
-	file = ROOT.TFile(filename,'READ')
+	if filename not in openfiles:
+		openfiles[filename] = ROOT.TFile(filename,'READ')
+	file = openfiles[filename]
+
 	hist2d = file.Get(histname)
 	hist2d.SetDirectory(0)
-	file.Close()
 	
 	if auxAxis == 'Y':
 		firstBin = hist2d.GetYaxis().FindBin(minval)
@@ -76,7 +83,9 @@ def getTemplFrom2Dhist(filename, histname, auxAxis, minval, maxval):
 	else:
 		templhist = hist2d.ProjectionY('projY'+filename+histname+'_'+str(minval)+'_'+str(maxval), firstBin,lastBin)
 	templhist.SetDirectory(0)
-	templhist.Sumw2()
+	templhist.SetFillColor(0)
+	#templhist.Sumw2()
+	
 	return templhist
 
 def optimizeBinBoundaries(hist, minAcc, firstBinValue=-9999, lastBinValue=9999):
@@ -86,7 +95,8 @@ def optimizeBinBoundaries(hist, minAcc, firstBinValue=-9999, lastBinValue=9999):
 	
 	# ignore empty bins in the beginning
 	for firstind in xrange(1,nbins+1):
-		if hist.GetBinContent(firstind) > 0.0001 or hist.GetBinLowEdge(firstind)>=firstBinValue:
+		#if hist.GetBinContent(firstind) > 0.0001 and hist.GetBinLowEdge(firstind)>=firstBinValue:
+		if hist.GetBinLowEdge(firstind)>=firstBinValue:
 			binlist.append(hist.GetBinLowEdge(firstind))
 			break
 	
@@ -126,63 +136,46 @@ def makeRandUniformHist(hist):
 	return outhist
 
 
-# scale factors
-WHIZARD_SF = 19.63*1000 * 0.9081*2/1074860
-TTJets1l_SF = 19.63*1000 * 99.44 / 24849108
-TTJets2l_SF = 19.63*1000 * 23.83 / 12086717
-#TTJetsInc_SF = 19.63*1000 * 227/6474753
-
 def getWeightedHist(selection, histName, leftCut=None, rightCut=None):
 	suffix = None
 	if selection=='': suffix = '_'
-	elif selection=='rs': suffix = '_rs_'
-	elif selection=='fjrb': suffix = '_fjrb_'
+	elif selection=='data': suffix = '_'
+	elif selection=='rs': suffix = '_signal_'
+	elif selection=='fjrb': suffix = '_fake_'
+	elif selection=='fe': suffix = '_electron_'
 	if suffix==None: 
-		print 'wrong parameter'
+		print '#############################  wrong parameter!!!'
 		return None
-	WHIZARD_filename =  'newhist/hist_1pho'+suffix+'barrel_top_WHIZARD.root'
-	TTJets1l_filename = 'newhist/hist_1pho'+suffix+'barrel_top_TTJets1l.root'
-	TTJets2l_filename = 'newhist/hist_1pho'+suffix+'barrel_top_TTJets2l.root'
+
+	filename =  'templates_barrel.root'
+	Snames = ['WHIZARD','TTJets'] #,'Vgamma','SingleTop','Other']
+	if selection=='data':
+		Snames = ['Data']
 	
 	if leftCut==None and rightCut==None:
 		# 1d histogram 
-		whiz_hist = get1DHist(WHIZARD_filename, histName)
-		whiz_hist.Scale(WHIZARD_SF)
-		TTjets1l_hist = get1DHist(TTJets1l_filename, histName)
-		TTjets1l_hist.Scale(TTJets1l_SF)
-		TTjets2l_hist = get1DHist(TTJets2l_filename, histName)
-		TTjets2l_hist.Scale(TTJets2l_SF)
-
-		sumHist = whiz_hist
-		sumHist.Add(TTjets1l_hist)
-		sumHist.Add(TTjets2l_hist)
+		sumHist = get1DHist(filename, Snames[0]+suffix+histName)
+		for sampl in Snames[1:]:
+			sumHist.Add(get1DHist(filename, sampl+suffix+histName))
 		return sumHist
 	else:
 		# 2d histogram projection
-		whiz_histp = getTemplFrom2Dhist(WHIZARD_filename, histName, 'X', leftCut, rightCut)
-		whiz_histp.Scale(WHIZARD_SF)
-		TTJets1l_histp = getTemplFrom2Dhist(TTJets1l_filename, histName, 'X', leftCut, rightCut)
-		TTJets1l_histp.Scale(TTJets1l_SF)
-		TTJets2l_histp = getTemplFrom2Dhist(TTJets2l_filename, histName, 'X', leftCut, rightCut)
-		TTJets2l_histp.Scale(TTJets2l_SF)
-
-		sumHistp = whiz_histp
-		sumHistp.Add(TTJets1l_histp)
-		sumHistp.Add(TTJets2l_histp)
+		sumHistp = getTemplFrom2Dhist(filename, Snames[0]+suffix+histName, 'X', leftCut, rightCut)
+		for sampl in Snames[1:]:
+			sumHistp.Add(getTemplFrom2Dhist(filename, sampl+suffix+histName, 'X', leftCut, rightCut))
 		return sumHistp
-
 
 # fit range
 lowFitrange = -0.5
 highFitrange = 19.99
-#highFitrange = 9.99
+#highFitrange = 5.0
 
 # number of pseudo experiments. off by default
 NpseudoExp = 0
 
 # photon Et range
 #phoEtrange = '_60_up_'
-phoEtrange = '_'
+phoEtrange = '_' # all Et
 FitVarname = 'SCRChHadIso'
 hist2d_name = 'photon1'+phoEtrange+'Sigma_ChSCRIso'
 if phoEtrange=='_': phoEtrange = ''
@@ -238,6 +231,15 @@ pseudodata.Rebin(2)
 #boundaries = optimizeBinBoundaries(pseudodata,15,lowFitrange,highFitrange)
 boundaries = optimizeBinBoundaries(bckg_templ, 10, lowFitrange, highFitrange)
 
+#### test with MC truth shapes ###
+#sig_templ = pseudosignal
+#sig_templ.Rebin(2)
+#bckg_templ = getWeightedHist('fjrb', hist2d_name, 0.0, 0.012)
+#elefakes = getWeightedHist('fe', hist2d_name, 0.0, 0.012)
+#print 'ele fakes integral ',elefakes.Integral()
+#bckg_templ.Add(elefakes)
+#################################
+
 print 'new number of boundaries ',len(boundaries)
 pseudodataR = pseudodata.Rebin(len(boundaries)-1,pseudodata.GetName()+'rebin',boundaries)
 bckg_templR = bckg_templ.Rebin(len(boundaries)-1,bckg_templ.GetName()+'rebin',boundaries)
@@ -262,12 +264,12 @@ if lowUFitRange == 0:
 	print 'lower bin is underfow, setting to 1'
 	lowUFitRange = 1
 highUFitRange = pseudodataR.FindBin(highFitrange) + 1
-if pseudodataR.GetBinLowEdge(highUFitRange) == highFitrange:
+if pseudodataR.GetBinLowEdge(highUFitRange-1) == highFitrange:
 	print 'upper bin in on the border of fit range, reducing'
 	highUFitRange -= 1
 
 print 'fitting in the bin range ',lowUFitRange, highUFitRange
-(fitSigFrac,fitSigFracErr) = makeFit(FitVarname+' bin number',lowUFitRange,highUFitRange, sig_templU, bckg_templU, pseudodataU, 'fit_'+phoEtrange+FitVarname+'_uniform.png')
+(fitSigFrac,fitSigFracErr) = makeFit(FitVarname+' bin number',lowUFitRange,highUFitRange, sig_templU, bckg_templU, pseudodataU, 'fitplots/fit_'+phoEtrange+FitVarname+'_uniform.png')
 
 # pseudo-experiments:
 pe_results = ROOT.TH1F('pe_results','Pseudo-experiments',100,0,1)
@@ -289,13 +291,39 @@ pe_results.Draw()
 pe_results.Fit('gaus')
 
 if NpseudoExp > 0:
-	c1.SaveAs('pe_results.png')
+	c1.SaveAs('fitplots/pe_results.png')
+
 
 ROOT.gStyle.SetOptStat(0)
 
 leg = ROOT.TLegend(0.6,0.7,0.99,0.94)
 leg.SetFillColor(0)
 
+# calculate signal fraction in selected regoin (iso < 5.0) ##########
+fitleftbinsig = sig_templ.FindBin(lowFitrange)
+fitrightbinsig = sig_templ.FindBin(highFitrange)
+print 'Signal Fit Range bins',fitleftbinsig,fitrightbinsig
+fitleftbinbckg = bckg_templ.FindBin(lowFitrange)
+fitrightbinbckg = bckg_templ.FindBin(highFitrange)
+print 'Background Fit Range bins',fitleftbinbckg,fitrightbinbckg
+
+selleftbinsig = sig_templ.FindBin(lowFitrange)
+selrightbinsig = sig_templ.FindBin(4.99)
+print 'Signal Nominal selection bins',selleftbinsig,selrightbinsig
+selleftbinbckg = bckg_templ.FindBin(lowFitrange)
+selrightbinbckg = bckg_templ.FindBin(4.99)
+print 'Background Nominal selection bins',selleftbinbckg,selrightbinbckg
+
+sig_templ.Scale(fitSigFrac/sig_templ.Integral(fitleftbinsig,fitrightbinsig))
+bckg_templ.Scale((1.0-fitSigFrac)/bckg_templ.Integral(fitleftbinbckg,fitrightbinbckg))
+
+sig_templ_Int = sig_templ.Integral(selleftbinsig,selrightbinsig)
+bckg_templ_Int = bckg_templ.Integral(selleftbinbckg,selrightbinbckg)
+
+print '#'*50
+print 'Signal fraction in Nominal selected region: ',(sig_templ_Int)/(sig_templ_Int + bckg_templ_Int)
+print '#'*50
+#######################################################################
 
 leftbin = lowUFitRange
 rightbin = highUFitRange - 1
@@ -320,25 +348,28 @@ stack.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
 stack.SetMaximum(1.2*stack.GetMaximum())
 stack.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 
-leg.AddEntry(pseudodataR, 'Data', 'lfp')
+leg.AddEntry(pseudodataR, 'Pseudo Data', 'lfp')
 leg.AddEntry(sig_templR, 'Signal', 'lf')
 leg.AddEntry(bckg_templR, 'Background', 'lf')
 leg.Draw()
 pseudodataR.SetMarkerStyle(8)
+pseudodataR.SetLineColor(1)
 pseudodataR.Draw('esame')
-c1.SaveAs('plot_'+phoEtrange+FitVarname+'.png')
+c1.SaveAs('fitplots/plot_'+phoEtrange+FitVarname+'.png')
 
 leg.Clear()
+
 ## compare template shapes here
 
 # signal template: compare MC truth photon isolation with random cone isolation
 trueSignalIso = getWeightedHist('rs', hist2d_name, 0.0, 0.012)
 trueSignalIso.Rebin(2)
 trueSignalIso.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
-trueSignalIsoInt = trueSignalIso.Integral()
 trueSignalIso.Scale(1.0/trueSignalIso.Integral())
+trueSignalIso.SetLineColor(1)
 
 randCone_Iso = getWeightedHist('', hist_sig_templ_name)
+randCone_Iso.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 randCone_Iso.Scale(1.0/randCone_Iso.Integral())
 randCone_Iso.SetLineColor(2)
 
@@ -349,9 +380,9 @@ randCone_Iso.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
 randCone_Iso.Draw()
 trueSignalIso.Draw('same')
 leg.Draw()
-c1.SaveAs(hist_sig_name+'_sig'+phoEtrange+'templ.png')
+c1.SaveAs('fitplots/'+hist_sig_name+'_sig'+phoEtrange+'templ.png')
 c1.SetLogy(1)
-c1.SaveAs(hist_sig_name+'_sig'+phoEtrange+'templ_log.png')
+c1.SaveAs('fitplots/'+hist_sig_name+'_sig'+phoEtrange+'templ_log.png')
 c1.SetLogy(0)
 leg.Clear()
 
@@ -377,7 +408,7 @@ sbIso.SetLineColor(2)
 true_bckg = getWeightedHist('fjrb',hist2d_name, 0.0, 0.012)
 true_bckg.Rebin(2)
 true_bckg.Scale(1.0/true_bckg.Integral())
-
+true_bckg.SetLineColor(1)
 
 #true_sel_bckg = getWeightedHist('fjrb', hist_sig_name)
 #true_sel_bckg.Scale(1.0/true_sel_bckg.Integral())
@@ -393,9 +424,9 @@ true_bckg.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
 true_bckg.Draw()
 sbIso.Draw('same')
 leg.Draw()
-c1.SaveAs(hist_sig_name+phoEtrange+'_bckg.png')
+c1.SaveAs('fitplots/'+hist_sig_name+phoEtrange+'_bckg.png')
 c1.SetLogy(1)
-c1.SaveAs(hist_sig_name+phoEtrange+'_bckg_log.png')
+c1.SaveAs('fitplots/'+hist_sig_name+phoEtrange+'_bckg_log.png')
 c1.SetLogy(0)
 
 true_bckg.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
@@ -409,13 +440,14 @@ sbIso.Scale(1.0/sbIso.Integral())
 true_bckg.Draw()
 sbIso.Draw('same')
 leg.Draw()
-c1.SaveAs(hist_sig_name+phoEtrange+'_bckg_fitrange.png')
+c1.SaveAs('fitplots/'+hist_sig_name+phoEtrange+'_bckg_fitrange.png')
 leg.Clear()
 
 
 # find MC truth signal fraction in nominal selection #############################################################################
 # extract "rs" parts, divide by "photon1ChHadSCRIso" sum
-total_sig = getWeightedHist('', hist_sig_name)
+totalSigInt = getWeightedHist('', hist_sig_name).Integral()
+trueSignalInt = getWeightedHist('rs', hist_sig_name).Integral()
 
-print 'MC truth signal fraction afetr full selection is ', trueSignalIsoInt/total_sig.Integral()
+print 'MC truth signal fraction afetr Nominal selection is ', trueSignalInt/totalSigInt
 print 'MC truth signal fraction if SCR iso in fit range used as selection: ',MCtrueSelSignalFraction
