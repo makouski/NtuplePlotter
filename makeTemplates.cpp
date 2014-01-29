@@ -19,24 +19,40 @@ int main(int ac, char** av){
 
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
+	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
 	//HistCollect* fourjCollect = new HistCollect("1pho4j",std::string("top4j_")+av[1]);
 	// HistCollect for tight Photon ID
 	//HistCollect* tightCollect = new HistCollect("1photight",std::string("top_")+av[1]);
 	
 	// object selectors
 	Selector* selectorLoose = new Selector();
+	if(std::string(av[3]).find("QCD") != std::string::npos){
+		selectorLoose->ele_Iso_MVA_invert = true;
+
+		// no MC categories for data-driven QCD needed
+		looseCollect->fillRS = false;
+		looseCollect->fillFE = false;
+		looseCollect->fillFJRB = false;
+
+		looseCollectNoMET->fillRS = false;
+		looseCollectNoMET->fillFE = false;
+		looseCollectNoMET->fillFJRB = false;
+	}
 	//selectorLoose->jet_Pt_cut = 15000;
 	//selectorLoose->ele_Pt_cut = 25;
 	//selectorLoose->pho_Et_cut = 20.0;
-	
+	//selectorLoose->pho_ID_ind = 2;  //pho ID	
+
 	//Selector* selectorTight = new Selector();
 	// set up the parameters for object selectors here
 	//selectorTight->pho_ID_ind = 2; // tight ID
 	
 	// create event selectors here
 	EventPick* evtPickLoose = new EventPick("LoosePhotonID");
+	EventPick* evtPickLooseNoMET = new EventPick("LoosePhotonID");
+	evtPickLooseNoMET->MET_cut = -1.0;
+	
 	//evtPickLoose->Njet_ge = 0;
-	//evtPickLoose->MET_cut = 0;
 	//evtPickLoose->no_trigger = true;
 	//evtPickLoose->NBjet_ge = 0;
 	//evtPickLoose->Nele_eq = 1;
@@ -86,15 +102,19 @@ int main(int ac, char** av){
 		//selectorTight->process_objects(tree);
 		
 		evtPickLoose->process_event(tree, selectorLoose, PUweight);
+		evtPickLooseNoMET->process_event(tree, selectorLoose, PUweight);
+
 		//evtPickLoose4j->process_event(tree, selectorLoose, PUweight);
 		//evtPickTight->process_event(tree, selectorTight, PUweight);
 		
 		// fill the histograms
 		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, PUweight);
+		looseCollectNoMET->fill_histograms(selectorLoose, evtPickLooseNoMET, tree, isMC, PUweight);
 		//fourjCollect->fill_histograms(selectorLoose, evtPickLoose4j, tree, isMC, PUweight);
 	}
 	
 	looseCollect->write_histograms(evtPickLoose, isMC, av[2]);
+	looseCollectNoMET->write_histograms(evtPickLoose, isMC, av[2]);
 	//fourjCollect->write_histograms(evtPickLoose4j, isMC, av[2]);
 
 	std::cout << "Average PU weight " << PUweighter->getAvgWeight() << std::endl;
