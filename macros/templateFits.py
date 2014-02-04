@@ -173,6 +173,9 @@ highFitrange = 19.99
 # number of pseudo experiments. off by default
 NpseudoExp = 0
 
+# use MC (closure test) or Data
+fitData = False
+
 # photon Et range
 #phoEtrange = '_60_up_'
 phoEtrange = '_' # all Et
@@ -194,20 +197,30 @@ if usePhoIso:
 	highFitrange = 9.99
 
 
+# nominal selection cut
+sihihSelCut = 0.012
+
 # sideband in sigmaIetaIeta
 sbLeft = 0.012
 sbRight = 0.016
 
+#sbLeft = 0.011
+#sbRight = 0.014
+
+if fitData:
+	reqStr = 'data'
+else:
+	reqStr = ''
 # signal template, data driven, random cone isolation
-sig_templ = getWeightedHist('', hist_sig_templ_name)
+sig_templ = getWeightedHist(reqStr, hist_sig_templ_name)
 # background template, data driven, sideband in sihih
-bckg_templ = getWeightedHist('', hist2d_name, sbLeft, sbRight)
+bckg_templ = getWeightedHist(reqStr, hist2d_name, sbLeft, sbRight)
 # data, no cut on isolation, cut on sihih
-pseudodata = getWeightedHist('', hist2d_name, 0.0, 0.012)
+pseudodata = getWeightedHist(reqStr, hist2d_name, 0.0, sihihSelCut)
 
 
 ### MC truth for SCR isolation selection, for true signal fraction calculation
-pseudosignal = getWeightedHist('rs', hist2d_name, 0.0, 0.012)
+pseudosignal = getWeightedHist('rs', hist2d_name, 0.0, sihihSelCut)
 
 leftbin = pseudodata.FindBin(lowFitrange)
 rightbin = pseudodata.FindBin(highFitrange)
@@ -234,8 +247,8 @@ boundaries = optimizeBinBoundaries(bckg_templ, 10, lowFitrange, highFitrange)
 #### test with MC truth shapes ###
 #sig_templ = pseudosignal
 #sig_templ.Rebin(2)
-#bckg_templ = getWeightedHist('fjrb', hist2d_name, 0.0, 0.012)
-#elefakes = getWeightedHist('fe', hist2d_name, 0.0, 0.012)
+#bckg_templ = getWeightedHist('fjrb', hist2d_name, 0.0, sihihSelCut)
+#elefakes = getWeightedHist('fe', hist2d_name, 0.0, sihihSelCut)
 #print 'ele fakes integral ',elefakes.Integral()
 #bckg_templ.Add(elefakes)
 #################################
@@ -293,7 +306,6 @@ pe_results.Fit('gaus')
 if NpseudoExp > 0:
 	c1.SaveAs('fitplots/pe_results.png')
 
-
 ROOT.gStyle.SetOptStat(0)
 
 leg = ROOT.TLegend(0.6,0.7,0.99,0.94)
@@ -324,6 +336,11 @@ print '#'*50
 print 'Signal fraction in Nominal selected region: ',(sig_templ_Int)/(sig_templ_Int + bckg_templ_Int)
 print '#'*50
 #######################################################################
+
+
+if fitData:
+	print 'Fitting of Data is done'
+	exit()
 
 leftbin = lowUFitRange
 rightbin = highUFitRange - 1
@@ -362,7 +379,7 @@ leg.Clear()
 ## compare template shapes here
 
 # signal template: compare MC truth photon isolation with random cone isolation
-trueSignalIso = getWeightedHist('rs', hist2d_name, 0.0, 0.012)
+trueSignalIso = getWeightedHist('rs', hist2d_name, 0.0, sihihSelCut)
 trueSignalIso.Rebin(2)
 trueSignalIso.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 trueSignalIso.Scale(1.0/trueSignalIso.Integral())
@@ -405,7 +422,7 @@ sbIso.Scale(1.0/sbIso.Integral())
 sbIso.SetLineColor(2)
 
 # MC truth background (fjrb) shape
-true_bckg = getWeightedHist('fjrb',hist2d_name, 0.0, 0.012)
+true_bckg = getWeightedHist('fjrb',hist2d_name, 0.0, sihihSelCut)
 true_bckg.Rebin(2)
 true_bckg.Scale(1.0/true_bckg.Integral())
 true_bckg.SetLineColor(1)
