@@ -83,7 +83,9 @@ print 'Integral of Data in the desired range: ', dataInt
 qcdInt = qcdDataHist.Integral(lowbin, highbin)
 print 'Integral of data-driven QCD in the desired range: ', qcdInt
 print '#'*80
-print 'Scale factor for QCD in nominal MET range: ', metFrac*dataInt/qcdInt
+# take into account only fit error
+# stat errors on histograms are treated while calculating the final answer
+print 'Scale factor for QCD in nominal MET range: ', metFrac*dataInt/qcdInt,' +-',metFracErr*dataInt/qcdInt,'(fit error only)'
 print '#'*80
 
 print 'now do M3 fit'
@@ -107,6 +109,6 @@ dataInt = DataHist.Integral()
 topInt = TopHist.Integral()
 WJInt = WJHist.Integral()
 
-print 'Correction to the Top scale factor: ', m3TopFrac * dataInt / topInt
-print 'Correction to all other scale factor: ', (1.0-m3TopFrac) * dataInt / WJInt
+print 'Correction to the Top scale factor: ', m3TopFrac * dataInt / topInt, ' +-',m3TopFracErr * dataInt / topInt,'(fit error only)'
+print 'Correction to WJets scale factor: ', (1.0-m3TopFrac) * dataInt / WJInt, ' +-',m3TopFracErr * dataInt / WJInt,'(fit error only)'
 
