@@ -27,7 +27,11 @@ int main(int ac, char** av){
 	// object selectors
 	Selector* selectorLoose = new Selector();
 	if(std::string(av[3]).find("QCD") != std::string::npos){
-		selectorLoose->ele_Iso_MVA_invert = true;
+		selectorLoose->ele_MVA_range[0] = -1.0;
+		selectorLoose->ele_MVA_range[1] = -0.1;
+		selectorLoose->ele_RelIso_range[0] = 0.25;
+		selectorLoose->ele_RelIso_range[1] = 1.0;
+		//selectorLoose->ele_Iso_MVA_invert = true;
 
 		// no MC categories for data-driven QCD needed
 		looseCollect->fillRS = false;
@@ -49,10 +53,12 @@ int main(int ac, char** av){
 	
 	// create event selectors here
 	EventPick* evtPickLoose = new EventPick("LoosePhotonID");
+	//evtPickLoose->veto_pho_jet_dR = 0.05;
+	//evtPickLoose->Njet_ge = 4;
 	EventPick* evtPickLooseNoMET = new EventPick("LoosePhotonID");
 	evtPickLooseNoMET->MET_cut = -1.0;
-	
-	//evtPickLoose->Njet_ge = 0;
+	//evtPickLooseNoMET->veto_pho_jet_dR = 0.05;
+	//evtPickLooseNoMET->Njet_ge = 4;
 	//evtPickLoose->no_trigger = true;
 	//evtPickLoose->NBjet_ge = 0;
 	//evtPickLoose->Nele_eq = 1;

@@ -121,11 +121,13 @@ void Selector::filter_electrons(){
 			 std::max(0.0, tree->elePFNeuIso03_->at(eleInd) + tree->elePFPhoIso03_->at(eleInd) - rho_zero * eleEffArea03(eta))
 			) / pt );
 		
-		bool Iso_MVA_pass = ele_RelIso_range[0] <= Ele03RelIso[eleInd] &&
-					Ele03RelIso[eleInd] < ele_RelIso_range[1] &&
-					ele_MVA_range[0] < tree->eleIDMVATrig_->at(eleInd) &&
-					tree->eleIDMVATrig_->at(eleInd) <= ele_MVA_range[1];
-		if(ele_Iso_MVA_invert) Iso_MVA_pass = !Iso_MVA_pass;
+		bool Iso_pass = ele_RelIso_range[0] <= Ele03RelIso[eleInd] &&
+				Ele03RelIso[eleInd] < ele_RelIso_range[1];
+		bool MVA_pass = ele_MVA_range[0] < tree->eleIDMVATrig_->at(eleInd) &&
+				tree->eleIDMVATrig_->at(eleInd) <= ele_MVA_range[1];
+		bool Iso_MVA_pass;
+		if(ele_Iso_MVA_invert) Iso_MVA_pass = !Iso_pass || !MVA_pass;
+		else Iso_MVA_pass = Iso_pass && MVA_pass;
 		bool eleSel = fidEtaPass( eta ) &&
 						pt > ele_Pt_cut &&
 						Iso_MVA_pass &&
