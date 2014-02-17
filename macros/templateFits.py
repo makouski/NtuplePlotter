@@ -170,8 +170,11 @@ lowFitrange = -0.5
 highFitrange = 19.99
 #highFitrange = 5.0
 
-# number of pseudo experiments. off by default
+# number of pseudo experiments. off by default reasonable resuts for 1000 or so
 NpseudoExp = 0
+
+# use MC (closure test) or Data
+fitData = True
 
 # photon Et range
 #phoEtrange = '_60_up_'
@@ -194,20 +197,30 @@ if usePhoIso:
 	highFitrange = 9.99
 
 
+# nominal selection cut
+sihihSelCut = 0.012
+
 # sideband in sigmaIetaIeta
 sbLeft = 0.012
 sbRight = 0.016
 
+#sbLeft = 0.011
+#sbRight = 0.014
+
+if fitData:
+	reqStr = 'data'
+else:
+	reqStr = ''
 # signal template, data driven, random cone isolation
-sig_templ = getWeightedHist('', hist_sig_templ_name)
+sig_templ = getWeightedHist(reqStr, hist_sig_templ_name)
 # background template, data driven, sideband in sihih
-bckg_templ = getWeightedHist('', hist2d_name, sbLeft, sbRight)
+bckg_templ = getWeightedHist(reqStr, hist2d_name, sbLeft, sbRight)
 # data, no cut on isolation, cut on sihih
-pseudodata = getWeightedHist('', hist2d_name, 0.0, 0.012)
+pseudodata = getWeightedHist(reqStr, hist2d_name, 0.0, sihihSelCut)
 
 
 ### MC truth for SCR isolation selection, for true signal fraction calculation
-pseudosignal = getWeightedHist('rs', hist2d_name, 0.0, 0.012)
+pseudosignal = getWeightedHist('rs', hist2d_name, 0.0, sihihSelCut)
 
 leftbin = pseudodata.FindBin(lowFitrange)
 rightbin = pseudodata.FindBin(highFitrange)
@@ -234,8 +247,8 @@ boundaries = optimizeBinBoundaries(bckg_templ, 10, lowFitrange, highFitrange)
 #### test with MC truth shapes ###
 #sig_templ = pseudosignal
 #sig_templ.Rebin(2)
-#bckg_templ = getWeightedHist('fjrb', hist2d_name, 0.0, 0.012)
-#elefakes = getWeightedHist('fe', hist2d_name, 0.0, 0.012)
+#bckg_templ = getWeightedHist('fjrb', hist2d_name, 0.0, sihihSelCut)
+#elefakes = getWeightedHist('fe', hist2d_name, 0.0, sihihSelCut)
 #print 'ele fakes integral ',elefakes.Integral()
 #bckg_templ.Add(elefakes)
 #################################
@@ -289,10 +302,14 @@ c1 = ROOT.TCanvas('c1','c1',800,800)
 pe_results.GetXaxis().SetTitle('signal fraction')
 pe_results.Draw()
 pe_results.Fit('gaus')
+pefit = pe_results.GetFunction('gaus')
+fitPEsigma = 0
+if NpseudoExp > 500:
+	fitPEsigma = pefit.GetParameter(2)
+	print 'sigma from fit',fitPEsigma
 
 if NpseudoExp > 0:
 	c1.SaveAs('fitplots/pe_results.png')
-
 
 ROOT.gStyle.SetOptStat(0)
 
@@ -314,15 +331,35 @@ selleftbinbckg = bckg_templ.FindBin(lowFitrange)
 selrightbinbckg = bckg_templ.FindBin(4.99)
 print 'Background Nominal selection bins',selleftbinbckg,selrightbinbckg
 
-sig_templ.Scale(fitSigFrac/sig_templ.Integral(fitleftbinsig,fitrightbinsig))
-bckg_templ.Scale((1.0-fitSigFrac)/bckg_templ.Integral(fitleftbinbckg,fitrightbinbckg))
+sig_templ.Scale(1.0/sig_templ.Integral(fitleftbinsig,fitrightbinsig))
+bckg_templ.Scale(1.0/bckg_templ.Integral(fitleftbinbckg,fitrightbinbckg))
 
-sig_templ_Int = sig_templ.Integral(selleftbinsig,selrightbinsig)
-bckg_templ_Int = bckg_templ.Integral(selleftbinbckg,selrightbinbckg)
+sig_templ_IntErr = ROOT.Double()
+sig_templ_Int = sig_templ.IntegralAndError(selleftbinsig,selrightbinsig,sig_templ_IntErr)
+bckg_templ_IntErr = ROOT.Double()
+bckg_templ_Int = bckg_templ.IntegralAndError(selleftbinbckg,selrightbinbckg,bckg_templ_IntErr)
 
 print '#'*50
-print 'Signal fraction in Nominal selected region: ',(sig_templ_Int)/(sig_templ_Int + bckg_templ_Int)
+print 'Signal fraction in Nominal selected region: ',(sig_templ_Int)/(sig_templ_Int + bckg_templ_Int*(1.0/fitSigFrac - 1))
+if NpseudoExp > 500:
+	SFNomSel = 1. / (1. + bckg_templ_Int/sig_templ_Int*(1./fitSigFrac - 1) )
+	# all relative uncertainties add in quadratures
+	print 'relative error on signal fraction after PE fit: ',fitPEsigma/fitSigFrac
+	Term1 = (1./fitSigFrac - 1)
+	# relative error of the Term1
+	relErrTerm1 = ((1./fitSigFrac)*fitPEsigma/fitSigFrac)/Term1
+	#print 'relative error on Term1: ',relErrTerm1
+	print 'relative error on sig. and bckg. integrals:',sig_templ_IntErr/sig_templ_Int,bckg_templ_IntErr/bckg_templ_Int
+	Term2 = bckg_templ_Int/sig_templ_Int*(1./fitSigFrac - 1)
+	relErrTerm2 = ((relErrTerm1)**2 + (sig_templ_IntErr/sig_templ_Int)**2 + (bckg_templ_IntErr/bckg_templ_Int)**2)**0.5
+	absErrTerm2 = Term2*relErrTerm2
+	# total relative error, same as relative error of denominator
+	# absolute error of denominator same as absErrTerm2
+	# relative error of denominator:
+	relErrDenom = absErrTerm2 / ( 1. + Term2 )
+	print 'Final Signal Fraction value with error: ', SFNomSel, ' +-',SFNomSel * relErrDenom
 print '#'*50
+
 #######################################################################
 
 leftbin = lowUFitRange
@@ -348,7 +385,10 @@ stack.GetXaxis().SetTitle('photon '+FitVarname+' (GeV)')
 stack.SetMaximum(1.2*stack.GetMaximum())
 stack.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 
-leg.AddEntry(pseudodataR, 'Pseudo Data', 'lfp')
+if fitData:
+	leg.AddEntry(pseudodataR, 'Data', 'lfp')
+else: 
+	leg.AddEntry(pseudodataR, 'Pseudo Data', 'lfp')
 leg.AddEntry(sig_templR, 'Signal', 'lf')
 leg.AddEntry(bckg_templR, 'Background', 'lf')
 leg.Draw()
@@ -357,12 +397,17 @@ pseudodataR.SetLineColor(1)
 pseudodataR.Draw('esame')
 c1.SaveAs('fitplots/plot_'+phoEtrange+FitVarname+'.png')
 
+if fitData:
+	print 'Fitting of Data is done'
+	exit()
+
+
 leg.Clear()
 
 ## compare template shapes here
 
 # signal template: compare MC truth photon isolation with random cone isolation
-trueSignalIso = getWeightedHist('rs', hist2d_name, 0.0, 0.012)
+trueSignalIso = getWeightedHist('rs', hist2d_name, 0.0, sihihSelCut)
 trueSignalIso.Rebin(2)
 trueSignalIso.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 trueSignalIso.Scale(1.0/trueSignalIso.Integral())
@@ -405,7 +450,7 @@ sbIso.Scale(1.0/sbIso.Integral())
 sbIso.SetLineColor(2)
 
 # MC truth background (fjrb) shape
-true_bckg = getWeightedHist('fjrb',hist2d_name, 0.0, 0.012)
+true_bckg = getWeightedHist('fjrb',hist2d_name, 0.0, sihihSelCut)
 true_bckg.Rebin(2)
 true_bckg.Scale(1.0/true_bckg.Integral())
 true_bckg.SetLineColor(1)
