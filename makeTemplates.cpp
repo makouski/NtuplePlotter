@@ -7,6 +7,18 @@
 #include"HistCollect.h"
 #include"PUReweight.h"
 
+#include"TRandom3.h"
+// temporary solution
+#include"JECvariation.cpp"
+
+// 0:down, 1:norm, 2:up
+int jecvar012_g = 1;
+int jervar012_g = 1;
+int phosmear01_g = 0; // 1 : do it, 0 : don't do it
+int elesmear01_g = 0; // 1 : do it, 0 : don't do it
+
+void doEleSmearing(EventTree* tree);
+void doPhoSmearing(EventTree* tree);
 void doJER(EventTree* tree);
 double JERcorrection(double eta);
 bool overlapWHIZARD(EventTree* tree);
@@ -17,6 +29,7 @@ int main(int ac, char** av){
 		return -1;
 	}
 
+	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  PhoSmear: " << phosmear01_g << "  EleSmear: " << elesmear01_g << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
 	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
@@ -85,6 +98,11 @@ int main(int ac, char** av){
 	// initialize PU reweighting here
 	PUReweight* PUweighter = new PUReweight(ac-3, av+3);
 	
+	tree->GetEntry(0);
+	isMC = !(tree->isData_);
+	JECvariation* jecvar;
+	jecvar = new JECvariation("./jecAK5PF/Summer12_V7", isMC);
+	
 	Long64_t nEntr = tree->GetEntries();
 	for(Long64_t entry=0; entry<nEntr; entry++){
 		if(entry%10000 == 0) std::cout << "processing entry " << entry << " out of " << nEntr << std::endl;
@@ -92,12 +110,17 @@ int main(int ac, char** av){
 		tree->GetEntry(entry);
 		isMC = !(tree->isData_);
 		
-		// JER smearing (not used now)
-		//if(isMC) doJER(tree_);
-		
+		if(isMC) jecvar->applyJEC(tree, jecvar012_g); // 0:down, 1:norm, 2:up
+		// JER smearing 
+		if(isMC) doJER(tree);
+		// photon energy smearing
+		if(isMC) doPhoSmearing(tree);
+		// electron energy smearing
+		if(isMC) doEleSmearing(tree);
 		// apply PU reweighting
 		if(isMC) PUweight = PUweighter->getWeight(tree->nPUInfo_, tree->puBX_, tree->nPU_);
-		
+		// electron trigger efficiency reweighting
+	
 		// do overlap removal here
 		if( isMC && doOverlapRemoval && overlapWHIZARD(tree)){
 			// overlapping part, not needed
@@ -131,10 +154,37 @@ int main(int ac, char** av){
 }
 
 
+void doEleSmearing(EventTree* tree){
+	static TRandom3 rand;
+	if(elesmear01_g == 0) return;
+	for(int eleInd = 0; eleInd < tree->nEle_; ++eleInd){
+		if(tree->elePt_->at(eleInd) < 15) continue;
+		//std::cout << "electron Pt before " << tree->elePt_->at(eleInd) << "   "; 
+		double factor = rand.Gaus(1.0,0.01);
+		//std::cout << "factor " << factor << "  ";
+		tree->elePt_->at(eleInd) *= factor;
+		//std::cout << "electron Pt after " << tree->elePt_->at(eleInd) << std::endl;
+	}
+}
+
+void doPhoSmearing(EventTree* tree){
+	static TRandom3 rand;
+	if(phosmear01_g == 0) return;
+	for(int phoInd = 0; phoInd < tree->nPho_; ++phoInd){
+		if(tree->phoEt_->at(phoInd) < 15) continue;
+		//std::cout << "photon Et before " << tree->phoEt_->at(phoInd) << "   "; 
+		double factor = rand.Gaus(1.0,0.01);
+		//std::cout << "factor " << factor << "  ";
+		tree->phoEt_->at(phoInd) *= factor;
+		//std::cout << "photon Et after " << tree->phoEt_->at(phoInd) << std::endl;
+	}
+}
+
 // https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
 void doJER(EventTree* tree){
 	// scale
 	for(int jetInd = 0; jetInd < tree->nJet_ ; ++jetInd){
+		if(tree->jetPt_->at(jetInd) < 20) continue;
 		if(tree->jetGenJetIndex_->at(jetInd)>0){
 			double oldPt = tree->jetPt_->at(jetInd);
 			double genPt = tree->jetGenJetPt_->at(jetInd);
@@ -153,10 +203,40 @@ void doJER(EventTree* tree){
 double JERcorrection(double JetEta){
 	double eta = TMath::Abs(JetEta);
 	static const double corr[5] = {1.052, 1.057, 1.096, 1.134, 1.288};
+	static const double corrDown[5] = {0.990, 1.001, 1.032, 1.042, 1.089};
+	static const double corrUp[5] = {1.115, 1.114, 1.161, 1.228, 1.488};
 	int region = 0;
 	if( eta >= 0.5 ) region++;
 	if( eta >= 1.1 ) region++;
 	if( eta >= 1.7 ) region++;
 	if( eta >= 2.3 ) region++;
-	return corr[region];
+	if(jervar012_g == 0) return corrDown[region];
+	if(jervar012_g == 1) return corr[region];
+	if(jervar012_g == 2) return corrUp[region];
 }
+
+
+// https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_NOttbar_payload_EPS13.txt
+
+// weight for >=1 btag :  1 - sum(1-SFi) over all b-tagged jets
+
+//Tagger: CSVM within 20 < pt < 800 GeV, abs(eta) < 2.4, x = pt
+// SFb = (0.939158+(0.000158694*x))+(-2.53962e-07*(x*x));
+// SFb_error[] = {
+// 0.0415694,
+// 0.023429,
+// 0.0261074,
+// 0.0239251,
+// 0.0232416,
+// 0.0197251,
+// 0.0217319,
+// 0.0198108,
+// 0.0193,
+// 0.0276144,
+// 0.0205839,
+// 0.026915,
+// 0.0312739,
+// 0.0415054,
+// 0.0740561,
+// 0.0598311 };
+//

@@ -1,8 +1,7 @@
 all: makeTemplates makeSkim
 
-makeTemplates: Histogrammer.o HistCollect.o Selector.o EventPick.o EventTree.o makeTemplates.cpp OverlapRemove.cpp PUReweight.cpp PUReweight.h
-	g++ -o makeTemplates `root-config --libs` -I`root-config --incdir` EventTree.o Selector.o EventPick.o Histogrammer.o HistCollect.o makeTemplates.cpp OverlapRemove.cpp PUReweight.cpp
-##  JetMETObjects/FactorizedJetCorrector.o JetMETObjects/JetCorrectorParameters.o JetMETObjects/SimpleJetCorrector.o
+makeTemplates: Histogrammer.o HistCollect.o Selector.o EventPick.o EventTree.o makeTemplates.cpp OverlapRemove.cpp PUReweight.cpp PUReweight.h JECvariation.cpp
+	g++ -o makeTemplates `root-config --libs` -I`root-config --incdir` EventTree.o Selector.o EventPick.o Histogrammer.o HistCollect.o makeTemplates.cpp OverlapRemove.cpp PUReweight.cpp JetMETObjects/FactorizedJetCorrector.o JetMETObjects/JetCorrectorParameters.o JetMETObjects/SimpleJetCorrector.o JetMETObjects/JetCorrectionUncertainty.o JetMETObjects/SimpleJetCorrectionUncertainty.o
 
 makeSkim: Selector.o EventPick.o EventTree.o makeSkim.cpp
 	g++ -o makeSkim `root-config --libs` -I`root-config --incdir` EventTree.o EventPick.o Selector.o makeSkim.cpp

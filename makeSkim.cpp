@@ -16,6 +16,7 @@ int main(int ac, char** av){
 	// input: dealing with TTree first
 	EventTree* tree = new EventTree(ac-2, av+2);
 	Selector* selector = new Selector();
+	selector->jet_Pt_cut = 20;
 	EventPick* evtPick = new EventPick("nominal");
 	
 	// no MET cut, for QCD fits
