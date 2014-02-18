@@ -11,12 +11,15 @@
 // temporary solution
 #include"JECvariation.cpp"
 
-// 0:down, 1:norm, 2:up
-int jecvar012_g = 1;
-int jervar012_g = 1;
+int jecvar012_g = 1; // 0:down, 1:norm, 2:up
+int jervar012_g = 1; // 0:down, 1:norm, 2:up
+int eleeff012_g = 1; // 0:down, 1:norm, 2:up
+int btagvar012_g = 1; // 0:down, 1:norm, 2:up
 int phosmear01_g = 0; // 1 : do it, 0 : don't do it
 int elesmear01_g = 0; // 1 : do it, 0 : don't do it
 
+double getEleEff(EventTree* tree, EventPick* evt);
+double getBtagSF(EventTree* tree, EventPick* evt);
 void doEleSmearing(EventTree* tree);
 void doPhoSmearing(EventTree* tree);
 void doJER(EventTree* tree);
@@ -29,7 +32,8 @@ int main(int ac, char** av){
 		return -1;
 	}
 
-	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  PhoSmear: " << phosmear01_g << "  EleSmear: " << elesmear01_g << std::endl;
+	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  EleEff: " << eleeff012_g << "  BtagVar: " << btagvar012_g << "  ";
+	std::cout << "  PhoSmear: " << phosmear01_g << "  EleSmear: " << elesmear01_g << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
 	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
@@ -39,7 +43,9 @@ int main(int ac, char** av){
 	
 	// object selectors
 	Selector* selectorLoose = new Selector();
+	bool isQCD = false;
 	if(std::string(av[3]).find("QCD") != std::string::npos){
+		isQCD = true;
 		selectorLoose->ele_MVA_range[0] = -1.0;
 		selectorLoose->ele_MVA_range[1] = -0.1;
 		selectorLoose->ele_RelIso_range[0] = 0.25;
@@ -110,17 +116,19 @@ int main(int ac, char** av){
 		tree->GetEntry(entry);
 		isMC = !(tree->isData_);
 		
-		if(isMC) jecvar->applyJEC(tree, jecvar012_g); // 0:down, 1:norm, 2:up
-		// JER smearing 
-		if(isMC) doJER(tree);
-		// photon energy smearing
-		if(isMC) doPhoSmearing(tree);
-		// electron energy smearing
-		if(isMC) doEleSmearing(tree);
 		// apply PU reweighting
 		if(isMC) PUweight = PUweighter->getWeight(tree->nPUInfo_, tree->puBX_, tree->nPU_);
-		// electron trigger efficiency reweighting
-	
+		
+		if(isMC && !isQCD){
+			// JEC
+			jecvar->applyJEC(tree, jecvar012_g); // 0:down, 1:norm, 2:up
+			// JER smearing 
+			doJER(tree);
+			// photon energy smearing
+			doPhoSmearing(tree);
+			// electron energy smearing
+			doEleSmearing(tree);
+		}
 		// do overlap removal here
 		if( isMC && doOverlapRemoval && overlapWHIZARD(tree)){
 			// overlapping part, not needed
@@ -130,16 +138,24 @@ int main(int ac, char** av){
 		selectorLoose->process_objects(tree);
 		//selectorTight->process_objects(tree);
 		
+
 		evtPickLoose->process_event(tree, selectorLoose, PUweight);
 		evtPickLooseNoMET->process_event(tree, selectorLoose, PUweight);
 
 		//evtPickLoose4j->process_event(tree, selectorLoose, PUweight);
 		//evtPickTight->process_event(tree, selectorTight, PUweight);
 		
+		double evtWeight = PUweight;
+		if(isMC && !isQCD){
+			// electron trigger efficiency reweighting
+			evtWeight *= getEleEff(tree, evtPickLoose);
+			// b-tag SF reweighting
+			evtWeight *= getBtagSF(tree, evtPickLoose);
+		}
 		// fill the histograms
-		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, PUweight);
-		looseCollectNoMET->fill_histograms(selectorLoose, evtPickLooseNoMET, tree, isMC, PUweight);
-		//fourjCollect->fill_histograms(selectorLoose, evtPickLoose4j, tree, isMC, PUweight);
+		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, evtWeight);
+		looseCollectNoMET->fill_histograms(selectorLoose, evtPickLooseNoMET, tree, isMC, evtWeight);
+		//fourjCollect->fill_histograms(selectorLoose, evtPickLoose4j, tree, isMC, evtWweight);
 	}
 	
 	looseCollect->write_histograms(evtPickLoose, isMC, av[2]);
@@ -151,6 +167,30 @@ int main(int ac, char** av){
 	
 	delete tree;
 	return 0;
+}
+
+// AN2012_438_v10 page9
+double getEleEff(EventTree* tree, EventPick* evt){
+	static double trigEffSF_PtEta[3][3] = { {0.984, 0.967, 0.991}, {0.999, 0.983, 1.018}, {0.999, 0.988, 0.977} };
+	static double trigEffSFerr_PtEta[3][3] = { {0.002, 0.002, 0.007}, {0.003, 0.002, 0.012}, {0.002, 0.003, 0.015} };
+	static double idEffSF_PtEta[3][3] = { {0.950, 0.957, 0.922}, {0.966, 0.961, 0.941}, {0.961, 0.963, 0.971} };
+	static double idEffSFerr_PtEta[3][3] = { {0.003, 0.002, 0.004}, {0.001, 0.002, 0.007}, {0.002, 0.003, 0.0} };
+	
+	if( evt->Electrons.size() < 1 ) return 1.0; // no electrons, no weight
+	int eleInd = evt->Electrons[0];
+	double pt = tree->elePt_->at(eleInd);
+	double eta = tree->eleSCEta_->at(eleInd);
+	int etaRegion = 0;
+	if( eta > 0.80) etaRegion++;
+	if( eta > 1.48) etaRegion++;
+
+	int ptRegion = 0;
+	if( pt > 40 ) ptRegion++;
+	if( pt > 50 ) ptRegion++;
+
+	if(eleeff012_g == 1) return trigEffSF_PtEta[ptRegion][etaRegion] * idEffSF_PtEta[ptRegion][etaRegion];
+	if(eleeff012_g == 0) return (trigEffSF_PtEta[ptRegion][etaRegion] - trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] - idEffSFerr_PtEta[ptRegion][etaRegion]);
+	if(eleeff012_g == 2) return (trigEffSF_PtEta[ptRegion][etaRegion] + trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] + idEffSFerr_PtEta[ptRegion][etaRegion]);	
 }
 
 
@@ -215,28 +255,31 @@ double JERcorrection(double JetEta){
 	if(jervar012_g == 2) return corrUp[region];
 }
 
-
+// https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagSFMethods
 // https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_NOttbar_payload_EPS13.txt
+// weight for >=1 btag :  1 - prod(1-SFi) over all b-tagged jets
 
-// weight for >=1 btag :  1 - sum(1-SFi) over all b-tagged jets
+double getBtagSF(EventTree* tree, EventPick* evt){
+	//Tagger: CSVM within 20 < pt < 800 GeV, abs(eta) < 2.4, x = pt
+	static double ptmax[16] = {30, 40, 50, 60, 70, 80,100, 120, 160, 210, 260, 320, 400, 500, 600, 800};	
+	static double SFb_error[16] = {0.0415694, 0.023429, 0.0261074, 0.0239251, 0.0232416, 0.0197251, 0.0217319, 0.0198108, 0.0193, 0.0276144, 0.020583, 0.026915, 0.0312739, 0.0415054, 0.074056, 0.0598311};
+	
+	double prod = 1.0;
+	double jetpt;
+	int ptInd=0;
+	double SFb;
+	for(std::vector<int>::const_iterator bjetInd = evt->bJets.begin(); bjetInd != evt->bJets.end(); bjetInd++){
+		jetpt = tree->jetPt_->at(*bjetInd);
+		SFb = (0.939158+(0.000158694*jetpt))+(-2.53962e-07*(jetpt*jetpt));
+		ptInd = 0;
+		if( btagvar012_g != 1){
+			for(int ipt=0; ipt<15; ipt++) if(jetpt > ptmax[ipt]) ptInd++;
 
-//Tagger: CSVM within 20 < pt < 800 GeV, abs(eta) < 2.4, x = pt
-// SFb = (0.939158+(0.000158694*x))+(-2.53962e-07*(x*x));
-// SFb_error[] = {
-// 0.0415694,
-// 0.023429,
-// 0.0261074,
-// 0.0239251,
-// 0.0232416,
-// 0.0197251,
-// 0.0217319,
-// 0.0198108,
-// 0.0193,
-// 0.0276144,
-// 0.0205839,
-// 0.026915,
-// 0.0312739,
-// 0.0415054,
-// 0.0740561,
-// 0.0598311 };
-//
+			if( btagvar012_g == 0 ) SFb -= SFb_error[ptInd];
+			if( btagvar012_g == 2 ) SFb += SFb_error[ptInd];
+		}
+		prod *= 1.0 - SFb;
+	}
+	return 1.0 - prod;
+}
+
