@@ -55,60 +55,81 @@ def get1DHist(filename, histname):
 	#hist.Sumw2()
 	return hist
 
+qcdMETfile = 'templates_presel_nomet_qcd.root'
+normMETfile = 'templates_presel_nomet.root'
 
-varToFit = 'MET'
-qcdDataHist = get1DHist('templates_presel_nomet_qcd.root', 'Data_'+varToFit)
-# remove MC contribution
-qcdDataHist.Add(get1DHist('templates_presel_nomet_qcd.root', 'TTJets_'+varToFit), -1)
-qcdDataHist.Add(get1DHist('templates_presel_nomet_qcd.root', 'WJets_'+varToFit), -1)
+M3file = 'templates_presel.root'
+
+def doQCDfit():
+	varToFit = 'MET'
+
+	qcdDataHist = get1DHist(qcdMETfile, 'Data_'+varToFit)
+	# remove MC contribution
+	qcdDataHist.Add(get1DHist(qcdMETfile, 'TTJets_'+varToFit), -1)
+	#qcdDataHist.Add(get1DHist(qcdMETfile, 'WJets_'+varToFit), -1)
 
 
-DataHist = get1DHist('templates_presel_nomet.root', 'Data_'+varToFit)
+	DataHist = get1DHist(normMETfile, 'Data_'+varToFit)
 
-MCHist = get1DHist('templates_presel_nomet.root', 'TTJets_'+varToFit)
-MCHist.Add(get1DHist('templates_presel_nomet.root', 'WHIZARD_'+varToFit))
-MCHist.Add(get1DHist('templates_presel_nomet.root', 'WJets_'+varToFit))
-MCHist.Add(get1DHist('templates_presel_nomet.root', 'ZJets_'+varToFit))
-MCHist.Add(get1DHist('templates_presel_nomet.root', 'SingleTop_'+varToFit))
+	MCHist = get1DHist(normMETfile, 'TTJets_'+varToFit)
+	MCHist.Add(get1DHist(normMETfile, 'WHIZARD_'+varToFit))
+	MCHist.Add(get1DHist(normMETfile, 'WJets_'+varToFit))
+	MCHist.Add(get1DHist(normMETfile, 'ZJets_'+varToFit))
+	MCHist.Add(get1DHist(normMETfile, 'SingleTop_'+varToFit))
 
-(metFrac, metFracErr) = makeFit(varToFit, 0.0, 300.0, qcdDataHist, MCHist, DataHist, varToFit+'_QCD_fit.png')
+	(metFrac, metFracErr) = makeFit(varToFit, 0.0, 300.0, qcdDataHist, MCHist, DataHist, varToFit+'_QCD_fit.png')
 
-# recalculate data-driven QCD normalization
-lowbin = 1   #DataHist.FindBin(20.01)
-highbin = DataHist.GetNbinsX()+1 # overflow bin included
+	# recalculate data-driven QCD normalization
+	lowbin = 1   #DataHist.FindBin(20.01)
+	highbin = DataHist.GetNbinsX()+1 # overflow bin included
 
-print 'Will calculate integral in the bin range:', lowbin, highbin
-dataInt = DataHist.Integral(lowbin, highbin)
-print 'Integral of Data in the desired range: ', dataInt
-qcdInt = qcdDataHist.Integral(lowbin, highbin)
-print 'Integral of data-driven QCD in the desired range: ', qcdInt
-print '#'*80
-# take into account only fit error
-# stat errors on histograms are treated while calculating the final answer
-print 'Scale factor for QCD in nominal MET range: ', metFrac*dataInt/qcdInt,' +-',metFracErr*dataInt/qcdInt,'(fit error only)'
-print '#'*80
+	print 'Will calculate integral in the bin range:', lowbin, highbin
+	dataInt = DataHist.Integral(lowbin, highbin)
+	print 'Integral of Data in the desired range: ', dataInt
+	qcdInt = qcdDataHist.Integral(lowbin, highbin)
+	mcInt = MCHist.Integral(lowbin, highbin)
+	print 'Integral of data-driven QCD in the desired range: ', qcdInt
+	print '#'*80
+	# take into account only fit error
+	# stat errors on histograms are treated while calculating the final answer
+	QCDSF = metFrac*dataInt/qcdInt
+	QCDSFerror = metFracErr*dataInt/qcdInt
+	print 'Scale factor for QCD in nominal MET range: ', QCDSF,' +-',QCDSFerror,'(fit error only)'
+	print 'Correction to all MC scale factors: ', (1-metFrac)*dataInt/mcInt, ' +-',metFracErr*dataInt/mcInt,'(fit error only)'
+	print '#'*80
+	return (QCDSF, QCDSFerror)
 
-print 'now do M3 fit'
 
-varToFit = 'M3'
+def doM3fit():
+	print 'now do M3 fit'
 
-DataHist = get1DHist('templates_presel.root', 'Data_'+varToFit)
+	varToFit = 'M3'
 
-TopHist = get1DHist('templates_presel.root', 'TTJets_'+varToFit)
-TopHist.Add(get1DHist('templates_presel.root', 'WHIZARD_'+varToFit))
+	DataHist = get1DHist(M3file, 'Data_'+varToFit)
 
-WJHist = get1DHist('templates_presel.root', 'WJets_'+varToFit)
+	TopHist = get1DHist(M3file, 'TTJets_'+varToFit)
+	TopHist.Add(get1DHist(M3file, 'WHIZARD_'+varToFit))
 
-# remove other suspects from data
-DataHist.Add(get1DHist('templates_presel.root', 'ZJets_'+varToFit), -1.0)
-DataHist.Add(get1DHist('templates_presel.root', 'SingleTop_'+varToFit), -1.0)
-DataHist.Add(get1DHist('templates_presel.root', 'QCD_'+varToFit), -1.0)
+	WJHist = get1DHist(M3file, 'WJets_'+varToFit)
 
-(m3TopFrac, m3TopFracErr) = makeFit(varToFit, 70.0, 500.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
-dataInt = DataHist.Integral()
-topInt = TopHist.Integral()
-WJInt = WJHist.Integral()
+	# remove other suspects from data
+	DataHist.Add(get1DHist(M3file, 'ZJets_'+varToFit), -1.0)
+	DataHist.Add(get1DHist(M3file, 'SingleTop_'+varToFit), -1.0)
+	DataHist.Add(get1DHist(M3file, 'QCD_'+varToFit), -1.0)
+	DataHist.Add(get1DHist(M3file, 'Vgamma_'+varToFit), -1.0)
 
-print 'Correction to the Top scale factor: ', m3TopFrac * dataInt / topInt, ' +-',m3TopFracErr * dataInt / topInt,'(fit error only)'
-print 'Correction to WJets scale factor: ', (1.0-m3TopFrac) * dataInt / WJInt, ' +-',m3TopFracErr * dataInt / WJInt,'(fit error only)'
+	(m3TopFrac, m3TopFracErr) = makeFit(varToFit, 70.0, 500.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
+	dataInt = DataHist.Integral()
+	topInt = TopHist.Integral()
+	WJInt = WJHist.Integral()
+	TopSF = m3TopFrac * dataInt / topInt
+	TopSFerror = m3TopFracErr * dataInt / topInt
+	print '#'*80
+	print 'Correction to the Top scale factor: ', TopSF, ' +-', TopSFerror, '(fit error only)'
+	WJetsSF = (1.0-m3TopFrac) * dataInt / WJInt
+	WJetsSFerror = m3TopFracErr * dataInt / WJInt
+	print 'Correction to WJets scale factor: ', WJetsSF, ' +-',WJetsSFerror,'(fit error only)'
+	print '#'*80
+	return (TopSF, TopSFerror, WJetsSF, WJetsSFerror)
+
 
