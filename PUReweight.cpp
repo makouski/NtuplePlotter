@@ -1,12 +1,22 @@
 #include"PUReweight.h"
 
-PUReweight::PUReweight(int nFiles, char** fileNames){
+PUReweight::PUReweight(int nFiles, char** fileNames, std::string PUfilename){
 	PUweightSum = 0.0;
 	events = 0;
-	TFile* pileupFile = new TFile(PUFileName_Def,"READ");
+	TFile* pileupFile = new TFile(PUfilename.c_str(),"READ");
 	PUweightHist = (TH1D*)pileupFile->Get("pileup");
 	PUweightHist->SetDirectory(0);
 	pileupFile->Close();
+	TH1D* PUbackup;
+	if(PUweightHist->GetNbinsX() != 100){
+		std::cout << "Wrong number of bins in the pileup histogram" << std::endl;
+		PUbackup = new TH1D("pileup_new","pileup_new",100,0,100);
+		for(int ibin=1; ibin <= PUweightHist->GetNbinsX(); ibin++){
+			PUbackup->SetBinContent(ibin, PUweightHist->GetBinContent(ibin));
+			// assuming the same scale
+		}
+		PUweightHist = PUbackup;
+	}
 	double PUweightInt = PUweightHist->Integral();
 	TH1F* mcPU = NULL;
 	for(int nmcfile = 0; nmcfile<nFiles; nmcfile++){

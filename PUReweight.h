@@ -5,12 +5,11 @@
 #include<TFile.h>
 #include<iostream>
 #include<vector>
-
-#define PUFileName_Def "Pileup_Observed_69300.root"
+#include<string>
 
 class PUReweight{
 public:
-	PUReweight(int nFiles, char** fileNames);
+	PUReweight(int nFiles, char** fileNames, std::string PUfilename);
 	~PUReweight();
 	double getWeight(int nPUInfo, std::vector<int> *puBX, std::vector<int> *nPU);
 	double getAvgWeight();

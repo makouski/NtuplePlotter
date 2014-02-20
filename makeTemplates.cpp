@@ -31,9 +31,25 @@ int main(int ac, char** av){
 		std::cout << "usage: ./makeTemplates sampleName outputDir inputFile[s]" << std::endl;
 		return -1;
 	}
+	std::string PUfilename = "Pileup_Observed_69300.root";
+	bool systematics = false;
+
+	std::string outDirName(av[2]);
+	if( outDirName.find("JEC_up") != std::string::npos) {systematics=true; jecvar012_g = 2;}
+	if( outDirName.find("JEC_down") != std::string::npos) {systematics=true; jecvar012_g = 0;}
+	if( outDirName.find("JER_up") != std::string::npos) {systematics=true; jervar012_g = 2;}
+	if( outDirName.find("JER_down") != std::string::npos) {systematics=true; jervar012_g = 0;}
+	if( outDirName.find("EleEff_up") != std::string::npos) {systematics=true; eleeff012_g = 2;}
+	if( outDirName.find("EleEff_down") != std::string::npos) {systematics=true; eleeff012_g = 0;}
+	if( outDirName.find("Btag_up") != std::string::npos) {systematics=true; btagvar012_g = 2;}
+	if( outDirName.find("Btag_down") != std::string::npos) {systematics=true; btagvar012_g = 0;}
+	if( outDirName.find("phosmear") != std::string::npos) {systematics=true; phosmear01_g = 1;}
+	if( outDirName.find("elesmear") != std::string::npos) {systematics=true; elesmear01_g = 1;}
+	if( outDirName.find("PU_up") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_p5.root";}
+	if( outDirName.find("PU_down") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_m5.root";}
 
 	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  EleEff: " << eleeff012_g << "  BtagVar: " << btagvar012_g << "  ";
-	std::cout << "  PhoSmear: " << phosmear01_g << "  EleSmear: " << elesmear01_g << std::endl;
+	std::cout << "  PhoSmear: " << phosmear01_g << "  EleSmear: " << elesmear01_g << "  pileup: " << PUfilename << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
 	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
@@ -102,12 +118,19 @@ int main(int ac, char** av){
 	bool isMC = false;
 	
 	// initialize PU reweighting here
-	PUReweight* PUweighter = new PUReweight(ac-3, av+3);
+	PUReweight* PUweighter = new PUReweight(ac-3, av+3, PUfilename);
 	
 	tree->GetEntry(0);
 	isMC = !(tree->isData_);
 	JECvariation* jecvar;
 	jecvar = new JECvariation("./jecAK5PF/Summer12_V7", isMC);
+
+	// we don't need systematics variations for Data
+	if(!isMC && systematics) {
+		std::cout << "Systematics on Data is not applied" << std::endl;
+		delete tree;
+		return 0;
+	}
 	
 	Long64_t nEntr = tree->GetEntries();
 	for(Long64_t entry=0; entry<nEntr; entry++){
