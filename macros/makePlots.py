@@ -1,6 +1,10 @@
 from distribution_mod import distribution
 import ROOT
 
+import templateFits
+import qcd_fit
+import calc_the_answer
+
 # initialize variables, assign values later
 WJetsSF = 1.0
 TopSF = 1.0
@@ -27,6 +31,12 @@ def saveTemplatesToFile(templateList, varlist, outFileName):
 def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varlist, outDirName):
 	canvas = ROOT.TCanvas('c1','c1',640,800)
 	
+	latex = ROOT.TLatex()
+	latex.SetNDC()
+	latex.SetTextAlign(12)
+	latex.SetTextSize(0.037)
+	latex.SetLineWidth(2)
+	
 	for var in varlist:
 		legend = ROOT.TLegend(0.7, 1 - 0.05*(1 + len(MCTemplateList) + len(SignalTemplateZoomList)), 0.99, 1.00)
 		legend.SetBorderSize(0)
@@ -45,14 +55,14 @@ def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varlist,
 		MCTemplateList.reverse()
 		for mc in MCTemplateList:
 			mcHist = mc.histList[var]
-			#if var == 'nub':
-			#	mcHist.Rebin(5)
+			#if var == 'M3pho':
+			#	mcHist.Rebin(2)
 			stack.Add(mcHist)
 		MCTemplateList.reverse()
 
 		if dataTemplate is not None:
-			#if var == 'nub':
-			#	dataTemplate.histList[var].Rebin(5)
+			#if var == 'M3pho':
+			#	dataTemplate.histList[var].Rebin(2)
 			if dataTemplate.histList[var].GetMaximum() > stack.GetMaximum():
 				stack.SetMaximum(dataTemplate.histList[var].GetMaximum())
 
@@ -86,6 +96,8 @@ def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varlist,
 				legend.AddEntry(sigHist, signal.name, 'f')
 		if 'cut_flow' not in var:
 			legend.Draw()
+		
+		latex.DrawLatex(0.1,0.94,'CMS Preliminary #sqrt{s} = 8 TeV')
 		canvas.SaveAs(outDirName+'/'+var+'.png')
 		
 def loadDataTemplate(varlist, inputDir, prefix):
@@ -109,7 +121,7 @@ def loadQCDTemplate(varlist, inputDir, prefix):
 		(templPrefix+'Data_d.root', QCD_sf),
 		(templPrefix+'TTJets1l.root', -1 * QCD_sf * gSF * TTJets1l_xs/TTJets1l_num),
 		(templPrefix+'TTJets2l.root', -1 * QCD_sf * gSF * TTJets2l_xs/TTJets2l_num),
-		(templPrefix+'WJets.root', -1 * QCD_sf * gSF * WJets_xs/WJets_num),
+		#(templPrefix+'WJets.root', -1 * QCD_sf * gSF * WJets_xs/WJets_num),
 	], varlist, 46)
 	return QCDTempl
 
@@ -154,7 +166,7 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 		(templPrefix+'ZJets.root', gSF*ZJets_xs/ZJets_num)], varList, 9, fillStyle)
 
 	
-	MCtemplates['Other'] = distribution('Other'+titleSuffix, [
+	MCtemplates['Other'] = distribution('Diboson'+titleSuffix, [
 
         (templPrefix+'WZ_3lnu.root', gSF*WZ_3lnu_xs/WZ_3lnu_num),
         (templPrefix+'WZ_2l2q.root', gSF*WZ_2l2q_xs/WZ_2l2q_num),
@@ -170,14 +182,14 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 
           #(templPrefix+'TTW.root', gSF*TTW_xs/TTW_num),
           #(templPrefix+'TTZ.root', gSF*TTZ_xs/TTZ_num),
-		], varList, 7, fillStyle)
+		], varList, 49, fillStyle)
 
 	return MCtemplates
 
 
-def saveNoMETTemplates(inputDir, outFileName):
+def saveNoMETTemplates(inputDir, inputData, outFileName):
 	varList = ['MET','M3']
-	DataTempl = loadDataTemplate(varList, inputDir, 'hist_1phoNoMET_top_')
+	DataTempl = loadDataTemplate(varList, inputData, 'hist_1phoNoMET_top_')
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1phoNoMET_top_','',1001)
 	MCTempl = []
 	MCTempl.append(MCTemplDict['WHIZARD'])
@@ -190,9 +202,9 @@ def saveNoMETTemplates(inputDir, outFileName):
 	saveTemplatesToFile([DataTempl] + MCTempl, varList, outFileName)
 
 
-def saveBarrelFitTemplates(inputDir, outFileName):
+def saveBarrelFitTemplates(inputDir, inputData,  outFileName):
 	varList = ['MET','M3','photon1ChHadSCRIso', 'photon1ChHadRandIso', 'photon1_Sigma_ChSCRIso']
-	DataTempl_b = loadDataTemplate(varList, inputDir, 'hist_1pho_barrel_top_')
+	DataTempl_b = loadDataTemplate(varList, inputData, 'hist_1pho_barrel_top_')
 	
 	MCTempl_b = loadMCTemplates(varList, inputDir, 'hist_1pho_barrel_top_','',1001)	
 	MCTempl_rs_b = loadMCTemplates(varList, inputDir, 'hist_1pho_rs_barrel_top_', '_signal', 1001)
@@ -206,16 +218,16 @@ def saveBarrelFitTemplates(inputDir, outFileName):
 		MCTempl_fjrb_b['WHIZARD'],MCTempl_fjrb_b['TTJets'],
 	], varList, outFileName)
 
-def savePreselTemplates(inputDir, outFileName):
+def savePreselTemplates(inputDir, qcdDir, inputData, outFileName):
 	if WJetsSF != 1.0 or TopSF != 1.0:
 		print 'We want to save templates for M3 fit, but the SFs are not 1.0'
 		print 'exiting'
 		return
 	
 	varList = ['MET','M3']
-	DataTempl = loadDataTemplate(varList, inputDir, 'hist_1pho_top_')
+	DataTempl = loadDataTemplate(varList, inputData, 'hist_1pho_top_')
 	if QCDSF > 0.0001:
-		QCDTempl = loadQCDTemplate(varList, inputDir[:-1]+'_qcd/', 'hist_1pho_top_')
+		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_')
 	else:
 		print 'The purpose of this function is to save templates for M3 fit, without QCD it is useless'
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001)
@@ -232,15 +244,15 @@ def savePreselTemplates(inputDir, outFileName):
 	saveTemplatesToFile([DataTempl] + MCTempl, varList, outFileName)
 
 
-def makeAllPlots(varList, inputDir, outDirName):
+def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	shortVarList = varList[:]
 	shortVarList.remove('cut_flow')
 
 	# load templates PreSel
 	
-	DataTempl = loadDataTemplate(varList, inputDir, 'hist_1pho_top_')
+	DataTempl = loadDataTemplate(varList, dataDir, 'hist_1pho_top_')
 	if QCDSF > 0.0001:
-		QCDTempl = loadQCDTemplate(varList, inputDir[:-1]+'_qcd/', 'hist_1pho_top_')
+		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_')
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001)
 	MCTempl = []
 	#MCTempl.append(MCTemplDict['mst_510_200'])
@@ -264,9 +276,9 @@ def makeAllPlots(varList, inputDir, outDirName):
 	
 	region = 'barrel'
 	# load templates
-	DataTempl_b = loadDataTemplate(shortVarList, inputDir, 'hist_1pho_'+region+'_top_')
+	DataTempl_b = loadDataTemplate(shortVarList, dataDir, 'hist_1pho_'+region+'_top_')
 	if QCDSF > 0.0001:
-		QCDTempl_b = loadQCDTemplate(shortVarList, inputDir[:-1]+'_qcd/', 'hist_1pho_'+region+'_top_')
+		QCDTempl_b = loadQCDTemplate(shortVarList, qcdDir, 'hist_1pho_'+region+'_top_')
 	MCTemplDict_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_'+region+'_top_','',1001)
 	MCTempl_b = []
 	#MCTempl_b.append(MCTemplDict_b['mst_510_200'])
@@ -337,37 +349,9 @@ def makeAllPlots(varList, inputDir, outDirName):
 	
 	plotTemplates( DataTempl_b, MCTempl_c, [], shortVarList, outDirName+'/'+region+'_categories')
 
-# main part ##############################################################################################
-# templates for data drive fit or closure test. No rescaling necessary
-#saveBarrelFitTemplates('/Users/makouski/dis/plotting_trees/hist/', 'templates_barrel.root')
-
-# for MET fit. No rescaling
-#if WJetsSF == 1.0 and TopSF == 1.0:
-#	saveNoMETTemplates('/Users/makouski/dis/plotting_trees/hist/', 'templates_presel_nomet.root')
-#	saveNoMETTemplates('/Users/makouski/dis/plotting_trees/hist_qcd/', 'templates_presel_nomet_qcd.root')
-
-# after doing MET fit, update the QCDSF
-
-# ==3j 
-#QCDSF = 0.14
-
-# >=4j
-QCDSF = 0.1048
-
-# save templates for M3 fit
-savePreselTemplates('/Users/makouski/dis/plotting_trees/hist/', 'templates_presel.root')
-# do M3 fit, update SF for Top and WJets
-
-# ==3j 
-#TopSF = 1.15
-#WJetsSF = 1.10
-
-# >=4j
-TopSF = 0.936
-WJetsSF = 1.59
 
 varList_all = ['nVtx',
-			'MET','Ht','WtransMass','M3','M3first','minM3','enub','eb','nub','enubjj',
+			'MET','Ht','WtransMass','M3','M3first','minM3','M3pho','dRpho3j','M3phoMulti',
 			'ele1Pt','ele1Eta','ele1RelIso',
 			'ele1D0','ele1MVA','ele1Dz',
 			'ele2Pt','ele2RelIso',
@@ -385,6 +369,71 @@ varList_all = ['nVtx',
 			'photon1MotherID','photon1GMotherID','photon1DrMCbquark','GenPhotonEt',
 			#'photon1_Sigma_ChSCRIso'
 			]
+# main part ##############################################################################################
+# templates for data driven fit or closure test. No rescaling necessary
+outSuffix = ''
 
-makeAllPlots(varList_all, '/Users/makouski/dis/plotting_trees/hist/', 'plots')
+InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+outSuffix+'/'
+QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd/'
+DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist/'
 
+
+#saveBarrelFitTemplates(InputHist, DataHist, 'templates_barrel.root')
+#templateFits.InputFilename = 'templates_barrel.root'
+
+#phoPurity,phoPurityError = templateFits.doTheFit()
+phoPurity,phoPurityError = 0.561220079533, 0.0529980243576
+
+# for MET fit. No rescaling
+if WJetsSF == 1.0 and TopSF == 1.0:
+	saveNoMETTemplates(InputHist, DataHist, 'templates_presel_nomet'+outSuffix+'.root')
+	#saveNoMETTemplates(QCDHist, DataHist, 'templates_presel_nomet_qcd.root')
+
+qcd_fit.qcdMETfile = 'templates_presel_nomet_qcd.root'
+qcd_fit.normMETfile = 'templates_presel_nomet'+outSuffix+'.root'
+
+QCDSF,QCDSFerror = qcd_fit.doQCDfit()
+
+# after doing MET fit, update the QCDSF
+# ==3j 
+#QCDSF = 0.14
+
+# >=4j
+#QCDSF = 0.1048
+
+# >=3j
+#QCDSF = 0.1429
+#QCDSF = 1.37 # new QCD selection
+
+# save templates for M3 fit
+savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel'+outSuffix+'.root')
+
+# do M3 fit, update SF for Top and WJets
+qcd_fit.M3file = 'templates_presel'+outSuffix+'.root'
+TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
+
+# ==3j 
+#TopSF = 1.15
+#WJetsSF = 1.10
+
+# >=4j
+#TopSF = 0.936
+#WJetsSF = 1.59
+
+# >=3j
+#TopSF = 0.93 #0.931
+#WJetsSF = 1.62 #1.595
+
+makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
+
+calc_the_answer.photnPurity = phoPurity
+calc_the_answer.photnPurityErr = phoPurityError
+calc_the_answer.QCDSF = QCDSF
+calc_the_answer.QCDSFErr = QCDSFerror
+calc_the_answer.M3TopSF = TopSF
+calc_the_answer.M3TopSFErr = TopSFerror
+calc_the_answer.M3WJetsSF = WJetsSF
+calc_the_answer.M3WJetsSFErr = WJetsSFerror
+calc_the_answer.doTheCalculation()
+
+#makeAllPlots(varList_all, QCDHist, QCDHist, QCDHist, 'plots_QCD')

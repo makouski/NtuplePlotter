@@ -1,6 +1,7 @@
 
-luminosity = 19.63*1000
-gSF = luminosity * 0.97
+luminosity = 19.78*1000 # check runC lumi!
+gSF = luminosity
+# trigger and electron ID SF are included in event weights
 
 TTJets1l_num        = 24849110 #
 TTJets2l_num        = 12086717 #
