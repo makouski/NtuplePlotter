@@ -15,7 +15,7 @@ int jecvar012_g = 1; // 0:down, 1:norm, 2:up
 int jervar012_g = 1; // 0:down, 1:norm, 2:up
 int eleeff012_g = 1; // 0:down, 1:norm, 2:up
 int btagvar012_g = 1; // 0:down, 1:norm, 2:up
-int phosmear01_g = 0; // 1 : do it, 0 : don't do it
+int phosmear012_g = 1; // 0:down, 1:norm, 2:up 
 int elesmear01_g = 0; // 1 : do it, 0 : don't do it
 
 double getEleEff(EventTree* tree, EventPick* evt);
@@ -43,13 +43,14 @@ int main(int ac, char** av){
 	if( outDirName.find("EleEff_down") != std::string::npos) {systematics=true; eleeff012_g = 0;}
 	if( outDirName.find("Btag_up") != std::string::npos) {systematics=true; btagvar012_g = 2;}
 	if( outDirName.find("Btag_down") != std::string::npos) {systematics=true; btagvar012_g = 0;}
-	if( outDirName.find("phosmear") != std::string::npos) {systematics=true; phosmear01_g = 1;}
+	if( outDirName.find("pho_up") != std::string::npos) {systematics=true; phosmear012_g = 2;}
+	if( outDirName.find("pho_down") != std::string::npos) {systematics=true; phosmear012_g = 0;}
 	if( outDirName.find("elesmear") != std::string::npos) {systematics=true; elesmear01_g = 1;}
 	if( outDirName.find("PU_up") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_p5.root";}
 	if( outDirName.find("PU_down") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_m5.root";}
 
 	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  EleEff: " << eleeff012_g << "  BtagVar: " << btagvar012_g << "  ";
-	std::cout << "  PhoSmear: " << phosmear01_g << "  EleSmear: " << elesmear01_g << "  pileup: " << PUfilename << std::endl;
+	std::cout << "  PhoSmear: " << phosmear012_g << "  EleSmear: " << elesmear01_g << "  pileup: " << PUfilename << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
 	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
@@ -202,7 +203,7 @@ double getEleEff(EventTree* tree, EventPick* evt){
 	if( evt->Electrons.size() < 1 ) return 1.0; // no electrons, no weight
 	int eleInd = evt->Electrons[0];
 	double pt = tree->elePt_->at(eleInd);
-	double eta = tree->eleSCEta_->at(eleInd);
+	double eta = TMath::Abs(tree->eleSCEta_->at(eleInd));
 	int etaRegion = 0;
 	if( eta > 0.80) etaRegion++;
 	if( eta > 1.48) etaRegion++;
@@ -231,15 +232,15 @@ void doEleSmearing(EventTree* tree){
 }
 
 void doPhoSmearing(EventTree* tree){
-	static TRandom3 rand;
-	if(phosmear01_g == 0) return;
+	if(phosmear012_g == 1) return;
 	for(int phoInd = 0; phoInd < tree->nPho_; ++phoInd){
 		if(tree->phoEt_->at(phoInd) < 15) continue;
 		//std::cout << "photon Et before " << tree->phoEt_->at(phoInd) << "   "; 
-		double factor = rand.Gaus(1.0,0.01);
+		double factor = 1.0;
+		if(phosmear012_g == 0) factor = 0.99;
+		if(phosmear012_g == 2) factor = 1.01;
 		//std::cout << "factor " << factor << "  ";
 		tree->phoEt_->at(phoInd) *= factor;
-		//std::cout << "photon Et after " << tree->phoEt_->at(phoInd) << std::endl;
 	}
 }
 
