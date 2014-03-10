@@ -130,7 +130,7 @@ random = ROOT.TRandom3()
 def makeRandUniformHist(hist):
 	nbins = hist.GetNbinsX()
 	#print 'nbins',nbins
-	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,1,nbins)
+	outhist = ROOT.TH1F(hist.GetName()+'_uni',hist.GetName()+'_uni',nbins,1,nbins+1)
 	for ind in xrange(1,nbins+1):
 		outhist.SetBinContent(ind, random.Poisson(hist.GetBinContent(ind)))
 	return outhist
@@ -202,7 +202,7 @@ if usePhoIso:
 
 
 # nominal selection cut
-sihihSelCut = 0.012
+sihihSelCut = 0.01199
 
 # sideband in sigmaIetaIeta
 sbLeft = 0.012
@@ -250,6 +250,11 @@ def doTheFit():
 
 	#boundaries = optimizeBinBoundaries(pseudodata,15,lowFitrange,highFitrange)
 	boundaries = optimizeBinBoundaries(bckg_templ, 10, lowFitrange, highFitrange)
+	if fitData:
+		binlist = [-0.5, 0.8, 2.2, 5.0, 10.0, 20.0]
+		print 'using custom bins for Data:',binlist
+		boundaries = array.array('d')
+		boundaries.fromlist(binlist)
 
 	#### test with MC truth shapes ###
 	#sig_templ = pseudosignal
@@ -293,6 +298,7 @@ def doTheFit():
 
 	# pseudo-experiments:
 	pe_results = ROOT.TH1F('pe_results','Pseudo-experiments',100,0,1)
+	pe_pull = ROOT.TH1F('pe_pull','Pseudo-experiments pull',80,-4,4)
 	#pe_results = ROOT.TH1F('pe_results','Pseudo-experiments',50,0.4,0.9)
 	for npi in xrange(NpseudoExp):
 		print '-'*80
@@ -300,8 +306,12 @@ def doTheFit():
 		pseudodataUrand = makeRandUniformHist(pseudodataR)
 		bckg_templUrand = makeRandUniformHist(bckg_templR)
 		sig_templUrand  = makeRandUniformHist(sig_templR)
+		#bckg_templUrand = bckg_templU
+		#sig_templUrand  = sig_templU
 		(fitSigFracRand,fitSigFracErrRand) = makeFit(FitVarname+' bin number',lowUFitRange, highUFitRange, sig_templUrand, bckg_templUrand, pseudodataUrand, '')
 		pe_results.Fill(fitSigFracRand)
+		pe_pull.Fill( (fitSigFracRand - fitSigFrac)/fitSigFracErr )
+		
 
 	# draw the result
 	ROOT.gStyle.SetOptFit(111)
@@ -317,6 +327,10 @@ def doTheFit():
 
 	if NpseudoExp > 0:
 		c1.SaveAs('fitplots/pe_results.png')
+		pe_pull.GetXaxis().SetTitle('signal fraction pull')
+		pe_pull.Draw()
+		pe_pull.Fit('gaus')
+		c1.SaveAs('fitplots/pe_pull.png')
 
 	ROOT.gStyle.SetOptStat(0)
 
@@ -507,3 +521,4 @@ def doTheFit():
 
 	print 'MC truth signal fraction afetr Nominal selection is ', trueSignalInt/totalSigInt
 	print 'MC truth signal fraction if SCR iso in fit range used as selection: ',MCtrueSelSignalFraction
+	return (SFNomSel, SFNomSelError)

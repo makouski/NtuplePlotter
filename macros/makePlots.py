@@ -370,24 +370,28 @@ varList_all = ['nVtx',
 			#'photon1_Sigma_ChSCRIso'
 			]
 # main part ##############################################################################################
-# templates for data driven fit or closure test. No rescaling necessary
 outSuffix = ''
 
 InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+outSuffix+'/'
 QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd/'
 DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist/'
 
-
+### templates for data driven fit or closure test. No rescaling necessary
 #saveBarrelFitTemplates(InputHist, DataHist, 'templates_barrel.root')
 #templateFits.InputFilename = 'templates_barrel.root'
-
+#templateFits.fitData = False ## to do closure test
+#templateFits.NpseudoExp = 0
+phoPurity,phoPurityError = 0.5619563459, 0.061619598645 ## auto binsize: 0.561220079533, 0.0529980243576
 #phoPurity,phoPurityError = templateFits.doTheFit()
-phoPurity,phoPurityError = 0.561220079533, 0.0529980243576
+#exit()
+
+# QCD selection histograms
+#makeAllPlots(varList_all, QCDHist, QCDHist, QCDHist, 'plots_QCD')
 
 # for MET fit. No rescaling
 if WJetsSF == 1.0 and TopSF == 1.0:
 	saveNoMETTemplates(InputHist, DataHist, 'templates_presel_nomet'+outSuffix+'.root')
-	#saveNoMETTemplates(QCDHist, DataHist, 'templates_presel_nomet_qcd.root')
+	saveNoMETTemplates(QCDHist, QCDHist, 'templates_presel_nomet_qcd.root')
 
 qcd_fit.qcdMETfile = 'templates_presel_nomet_qcd.root'
 qcd_fit.normMETfile = 'templates_presel_nomet'+outSuffix+'.root'
@@ -411,6 +415,7 @@ savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel'+outSuffix+'
 # do M3 fit, update SF for Top and WJets
 qcd_fit.M3file = 'templates_presel'+outSuffix+'.root'
 TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
+#TopSF, TopSFerror, WJetsSF, WJetsSFerror = (1.0, 0.01, 1.0, 0.01)
 
 # ==3j 
 #TopSF = 1.15
@@ -435,5 +440,3 @@ calc_the_answer.M3TopSFErr = TopSFerror
 calc_the_answer.M3WJetsSF = WJetsSF
 calc_the_answer.M3WJetsSFErr = WJetsSFerror
 calc_the_answer.doTheCalculation()
-
-#makeAllPlots(varList_all, QCDHist, QCDHist, QCDHist, 'plots_QCD')
