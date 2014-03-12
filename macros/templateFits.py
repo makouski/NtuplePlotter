@@ -67,10 +67,10 @@ def getTemplFrom2Dhist(filename, histname, auxAxis, minval, maxval):
 	
 	if auxAxis == 'Y':
 		firstBin = hist2d.GetYaxis().FindBin(minval)
-		lastBin = hist2d.GetYaxis().FindBin(maxval) - 1
+		lastBin = hist2d.GetYaxis().FindBin(maxval)# - 1
 	elif auxAxis == 'X':
 		firstBin = hist2d.GetXaxis().FindBin(minval)
-		lastBin = hist2d.GetXaxis().FindBin(maxval) - 1
+		lastBin = hist2d.GetXaxis().FindBin(maxval)# - 1
 	else:
 		print 'ERROR: valid values for auxAxis are X or Y'
 		return None
@@ -165,9 +165,9 @@ def getWeightedHist(selection, filename, histName, leftCut=None, rightCut=None):
 		return sumHistp
 
 # fit range
-lowFitrange = -0.5
+lowFitrange = -0.6
 highFitrange = 19.99
-#highFitrange = 5.0
+#highFitrange = 4.99
 
 selectionRange = 4.99
 
@@ -232,6 +232,7 @@ def doTheFit():
 	leftbin = pseudodata.FindBin(lowFitrange)
 	rightbin = pseudodata.FindBin(highFitrange)
 	print 'calculating integrals in bins',leftbin,rightbin
+	#print 'MC truth signal integral in fitrnge',pseudosignal.Integral(leftbin, rightbin)
 	MCtrueSelSignalFraction = pseudosignal.Integral(leftbin, rightbin)/pseudodata.Integral(leftbin, rightbin)
 	########################################
 
@@ -518,7 +519,7 @@ def doTheFit():
 	# extract "rs" parts, divide by "photon1ChHadSCRIso" sum
 	totalSigInt = getWeightedHist('', InputFilename, hist_sig_name).Integral()
 	trueSignalInt = getWeightedHist('rs', InputFilename, hist_sig_name).Integral()
-
+	#print 'MC truth signal integral',trueSignalInt
 	print 'MC truth signal fraction afetr Nominal selection is ', trueSignalInt/totalSigInt
 	print 'MC truth signal fraction if SCR iso in fit range used as selection: ',MCtrueSelSignalFraction
 	return (SFNomSel, SFNomSelError)
