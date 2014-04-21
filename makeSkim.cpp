@@ -1,4 +1,5 @@
 #include<iostream>
+#include<string>
 
 #include"EventTree.h"
 #include"Selector.h"
@@ -21,9 +22,14 @@ int main(int ac, char** av){
 	
 	// no MET cut, for QCD fits
 	evtPick->MET_cut = -1.0;
-
+	
 	// antiselection for QCD fit
-	//selector->ele_Iso_MVA_invert = true;
+	std::string outDirName(av[1]);
+	if( outDirName.find("QCD") != std::string::npos){
+		std::cout << "electron antiselection is on" << std::endl;
+		selector->ele_Iso_MVA_invert = true;
+	}
+
 	evtPick->NBjet_ge = 0;
 
 	// add more branches to be saved

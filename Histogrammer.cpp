@@ -85,6 +85,7 @@ Histogrammer::Histogrammer(std::string titleIn){
 
 	make_hist("M3first","Mass of 3 highest Pt jets",100,0,1000,"highest pt M3 (Gev)","Events / 10 GeV");
 	make_hist("minM3","Minimal Mass of 3 jets",60,0,600,"min M3 (Gev)","Events / 10 GeV");
+	make_hist("M3minPt","Mass of 3 jets with smallest total Pt",60,0,600,"M3 min Pt (Gev)","Events / 10 GeV");
 	make_hist("M3","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
 	make_hist("M3pho","Mass of 3 jets + photon with highest total Pt",40,0,400,"M(3jets+#gamma) (Gev)","Events / 10 GeV");
 	make_hist("M3phoMulti","Mass of all combinations 3 jets + photon",40,0,400,"M(all 3jets+#gamma) (Gev)","Events / 10 GeV");
@@ -270,6 +271,8 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		
 		double minM3 = 99999.9;
 		double M3maxPt = 99999.9;
+		double M3minPt = 99999.9;
+		double minPt = 99999.9;
 		double M4maxPt = 99999.9;
 		double max4Pt = 0.0;
 		double maxPt = 0.0;
@@ -296,9 +299,14 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 
 					if(jet1I==0 && jet2I==1 && jet3I==2) M3first = m3;
 					if(m3 < minM3) minM3 = m3;
+					
+					if(minPt > totalPt){
+						minPt = totalPt;
+						M3minPt = m3;
+					}
 					if(maxPt < totalPt){
-						maxPt=totalPt; 
-						M3maxPt=m3; 
+						maxPt = totalPt; 
+						M3maxPt = m3; 
 						maxPtsystem = (j1+j2+j3);
 					}
 
@@ -321,6 +329,7 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		
 		hists["M3first"]->Fill(M3first, weight);
 		hists["M3"]->Fill(M3maxPt, weight);
+		hists["M3minPt"]->Fill(M3minPt, weight);
 		if( selEvent->Photons.size() > 0 ) {
 			hists["M3pho"]->Fill(M4maxPt, weight);
 			hists["dRpho3j"]->Fill(phovec.DrEtaPhi(maxPtsystem), weight);

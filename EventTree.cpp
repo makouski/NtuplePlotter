@@ -48,11 +48,11 @@ EventTree::EventTree(int nFiles, char** fileNames){
 	chain->SetBranchStatus("nVtx",1);
 	chain->SetBranchAddress("nVtx", &nVtx_);
 
-	chain->SetBranchStatus("pfMET",1);
-	chain->SetBranchAddress("pfMET", &pfMET_);
+	chain->SetBranchStatus("pfType01MET",1);    // FIXME
+	chain->SetBranchAddress("pfType01MET", &pfMET_); // FIXME
 
-	chain->SetBranchStatus("pfMETPhi",1);
-	chain->SetBranchAddress("pfMETPhi", &pfMETPhi_);
+	chain->SetBranchStatus("pfType01METPhi",1); // FIXME
+	chain->SetBranchAddress("pfType01METPhi", &pfMETPhi_);  // FIXME
 
 	chain->SetBranchStatus("pfMET*",1);
 	chain->SetBranchStatus("pfType01MET*",1);
