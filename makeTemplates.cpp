@@ -16,7 +16,11 @@ int jervar012_g = 1; // 0:down, 1:norm, 2:up
 int eleeff012_g = 1; // 0:down, 1:norm, 2:up
 int btagvar012_g = 1; // 0:down, 1:norm, 2:up
 int phosmear012_g = 1; // 0:down, 1:norm, 2:up 
-int elesmear01_g = 0; // 1 : do it, 0 : don't do it
+int elesmear012_g = 1; // 0:down, 1:norm, 2: up
+
+int top_sample_g = 0; // 0: no ttbar, 1: ttjets_1l, 2: ttjets_2l, 3: ttjets_had
+
+double topPtWeight(EventTree* tree);
 
 double getEleEff(EventTree* tree, EventPick* evt);
 double getBtagSF(EventTree* tree, EventPick* evt);
@@ -33,7 +37,13 @@ int main(int ac, char** av){
 	}
 	std::string PUfilename = "Pileup_Observed_69300.root";
 	bool systematics = false;
-
+	
+	std::string inpFileName(av[3]);
+	if( inpFileName.find("ttjets_1l") != std::string::npos) top_sample_g = 1;
+	if( inpFileName.find("ttjets_2l") != std::string::npos) top_sample_g = 2;
+	if( inpFileName.find("ttjets_had") != std::string::npos) top_sample_g = 3;
+	std::cout << "top_sample: " << top_sample_g << std::endl;
+	
 	std::string outDirName(av[2]);
 	if( outDirName.find("JEC_up") != std::string::npos) {systematics=true; jecvar012_g = 2;}
 	if( outDirName.find("JEC_down") != std::string::npos) {systematics=true; jecvar012_g = 0;}
@@ -45,12 +55,13 @@ int main(int ac, char** av){
 	if( outDirName.find("Btag_down") != std::string::npos) {systematics=true; btagvar012_g = 0;}
 	if( outDirName.find("pho_up") != std::string::npos) {systematics=true; phosmear012_g = 2;}
 	if( outDirName.find("pho_down") != std::string::npos) {systematics=true; phosmear012_g = 0;}
-	if( outDirName.find("elesmear") != std::string::npos) {systematics=true; elesmear01_g = 1;}
+	if( outDirName.find("elesmear_up") != std::string::npos) {systematics=true; elesmear012_g = 2;}
+	if( outDirName.find("elesmear_down") != std::string::npos) {systematics=true; elesmear012_g = 0;}
 	if( outDirName.find("PU_up") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_p5.root";}
 	if( outDirName.find("PU_down") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_m5.root";}
 
 	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  EleEff: " << eleeff012_g << "  BtagVar: " << btagvar012_g << "  ";
-	std::cout << "  PhoSmear: " << phosmear012_g << "  EleSmear: " << elesmear01_g << "  pileup: " << PUfilename << std::endl;
+	std::cout << "  PhoSmear: " << phosmear012_g << "  EleSmear: " << elesmear012_g << "  pileup: " << PUfilename << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
 	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
@@ -176,6 +187,11 @@ int main(int ac, char** av){
 			// b-tag SF reweighting
 			evtWeight *= getBtagSF(tree, evtPickLoose);
 		}
+		// top pt reweighting
+		if(isMC){
+			evtWeight *= topPtWeight(tree);
+		}
+
 		// fill the histograms
 		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, evtWeight);
 		looseCollectNoMET->fill_histograms(selectorLoose, evtPickLooseNoMET, tree, isMC, evtWeight);
@@ -217,14 +233,34 @@ double getEleEff(EventTree* tree, EventPick* evt){
 	if(eleeff012_g == 2) return (trigEffSF_PtEta[ptRegion][etaRegion] + trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] + idEffSFerr_PtEta[ptRegion][etaRegion]);	
 }
 
+// https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
+double SFtop(double pt){
+	if(top_sample_g==1) return exp(0.159 - 0.00141*pt);
+	if(top_sample_g==2) return exp(0.148 - 0.00129*pt);
+	return 1.0;
+}
+double topPtWeight(EventTree* tree){
+	double toppt=0.0;
+	double antitoppt=0.0;
+	double weight = 1.0;
+	for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+		if(tree->mcPID->at(mcInd)==6) toppt = tree->mcPt->at(mcInd);
+		if(tree->mcPID->at(mcInd)==-6) antitoppt = tree->mcPt->at(mcInd);
+	}
+	if(toppt > 0.001 && antitoppt > 0.001)
+		weight = sqrt( SFtop(toppt) * SFtop(antitoppt) );
+	return weight;
+}
 
 void doEleSmearing(EventTree* tree){
 	static TRandom3 rand;
-	if(elesmear01_g == 0) return;
+	if(elesmear012_g == 1) return;
 	for(int eleInd = 0; eleInd < tree->nEle_; ++eleInd){
 		if(tree->elePt_->at(eleInd) < 15) continue;
 		//std::cout << "electron Pt before " << tree->elePt_->at(eleInd) << "   "; 
-		double factor = rand.Gaus(1.0,0.01);
+		double factor = 1.0;
+		if(elesmear012_g == 0) factor = 0.99;
+		if(elesmear012_g == 2) factor = 1.01;
 		//std::cout << "factor " << factor << "  ";
 		tree->elePt_->at(eleInd) *= factor;
 		//std::cout << "electron Pt after " << tree->elePt_->at(eleInd) << std::endl;
@@ -246,21 +282,30 @@ void doPhoSmearing(EventTree* tree){
 
 // https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
 void doJER(EventTree* tree){
-	// scale
+	// correct MET when jets are smeared
+	TLorentzVector tMET;
+	tMET.SetPtEtaPhiM(tree->pfMET_,0.0,tree->pfMETPhi_,0.0);
+	//std::cout << "before correction MET " << tree->pfMET_ << " " << tree->pfMETPhi_ << "    ";
+	// scale jets
 	for(int jetInd = 0; jetInd < tree->nJet_ ; ++jetInd){
 		if(tree->jetPt_->at(jetInd) < 20) continue;
 		if(tree->jetGenJetIndex_->at(jetInd)>0){
+			TLorentzVector tjet;
+			tjet.SetPtEtaPhiM(tree->jetPt_->at(jetInd), tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), 0.0);
+			tMET+=tjet;
 			double oldPt = tree->jetPt_->at(jetInd);
 			double genPt = tree->jetGenJetPt_->at(jetInd);
 			double eta = tree->jetEta_->at(jetInd);
 			tree->jetPt_->at(jetInd) = std::max(0.0, genPt + JERcorrection(eta)*(oldPt-genPt));
+			tjet.SetPtEtaPhiM(tree->jetPt_->at(jetInd), tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), 0.0);			
+			tMET-=tjet;
 			//std::cout << "old " << oldPt << "  new " << tree->jetPt_->at(jetInd) << std::endl;
 		}
 	}
-	// reorder if needed
-	//for(int jetInd = 0; jetInd < tree->nJet_ ; ++jetInd){
-	//	
-	//}
+	// save updated MET values
+	tree->pfMET_ = tMET.Pt();
+	tree->pfMETPhi_ = tMET.Phi();
+	//std::cout << "after corrections " << tree->pfMET_ << " " << tree->pfMETPhi_ << std::endl;
 }
 
 
