@@ -17,6 +17,7 @@ int eleeff012_g = 1; // 0:down, 1:norm, 2:up
 int btagvar012_g = 1; // 0:down, 1:norm, 2:up
 int phosmear012_g = 1; // 0:down, 1:norm, 2:up 
 int elesmear012_g = 1; // 0:down, 1:norm, 2: up
+int toppt012_g = 1; // 0:down, 1:norm, 2: up
 
 int top_sample_g = 0; // 0: no ttbar, 1: ttjets_1l, 2: ttjets_2l, 3: ttjets_had
 
@@ -59,6 +60,8 @@ int main(int ac, char** av){
 	if( outDirName.find("elesmear_down") != std::string::npos) {systematics=true; elesmear012_g = 0;}
 	if( outDirName.find("PU_up") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_p5.root";}
 	if( outDirName.find("PU_down") != std::string::npos) {systematics=true; PUfilename = "Pileup_observed_69300_m5.root";}
+	if( outDirName.find("toppt_up") != std::string::npos) {systematics=true; toppt012_g = 2;}
+	if( outDirName.find("toppt_down") != std::string::npos) {systematics=true; toppt012_g = 0;}
 
 	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  EleEff: " << eleeff012_g << "  BtagVar: " << btagvar012_g << "  ";
 	std::cout << "  PhoSmear: " << phosmear012_g << "  EleSmear: " << elesmear012_g << "  pileup: " << PUfilename << std::endl;
@@ -102,12 +105,14 @@ int main(int ac, char** av){
 	EventPick* evtPickLoose = new EventPick("LoosePhotonID");
 	//evtPickLoose->veto_pho_jet_dR = 0.05;
 	//evtPickLoose->Njet_ge = 4;
+	//evtPickLoose->NBjet_ge = 2;
 	EventPick* evtPickLooseNoMET = new EventPick("LoosePhotonID");
 	evtPickLooseNoMET->MET_cut = -1.0;
 	//evtPickLooseNoMET->veto_pho_jet_dR = 0.05;
 	//evtPickLooseNoMET->Njet_ge = 4;
+	//evtPickLooseNoMET->NBjet_ge = 2;
+
 	//evtPickLoose->no_trigger = true;
-	//evtPickLoose->NBjet_ge = 0;
 	//evtPickLoose->Nele_eq = 1;
 	//evtPickLoose->NlooseMuVeto_le = 99;
 	
@@ -249,7 +254,10 @@ double topPtWeight(EventTree* tree){
 	}
 	if(toppt > 0.001 && antitoppt > 0.001)
 		weight = sqrt( SFtop(toppt) * SFtop(antitoppt) );
-	return weight;
+	
+	if(toppt012_g == 1) return weight;
+	if(toppt012_g == 0) return 1.0;
+	if(toppt012_g == 2) return weight*weight;
 }
 
 void doEleSmearing(EventTree* tree){

@@ -91,6 +91,12 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("M3phoMulti","Mass of all combinations 3 jets + photon",40,0,400,"M(all 3jets+#gamma) (Gev)","Events / 10 GeV");
 	make_hist("ele1D0","electron 1 Dxy_PV",80,-0.2,0.2,"Electron Dxy_PV (cm)","Events / 0.005 cm");
 	make_hist("dRpho3j","dR photon to 3 jets",65,0.0,6.5,"#DeltaR(#gamma,3jets)","Events / 0.1");
+
+	make_hist("M3_0_30","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
+	make_hist("M3_30_100","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
+	make_hist("M3_100_200","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
+	make_hist("M3_200_300","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
+	make_hist("M3_300_up","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
 }
 
 void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree, double weight){
@@ -327,6 +333,19 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 			}
 		}
 		
+		double toppt=0.0;
+		double antitoppt=0.0;
+		for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+			if(tree->mcPID->at(mcInd)==6) toppt = tree->mcPt->at(mcInd);
+			if(tree->mcPID->at(mcInd)==-6) antitoppt = tree->mcPt->at(mcInd);
+		}
+		double maxtoppt = std::max(toppt,antitoppt);
+		if( maxtoppt < 30 ) hists["M3_0_30"]->Fill(M3maxPt, weight);
+		else if( maxtoppt < 100) hists["M3_30_100"]->Fill(M3maxPt, weight);
+		else if( maxtoppt < 200) hists["M3_100_200"]->Fill(M3maxPt, weight);
+		else if( maxtoppt < 300) hists["M3_200_300"]->Fill(M3maxPt, weight);
+		else hists["M3_300_up"]->Fill(M3maxPt, weight);
+
 		hists["M3first"]->Fill(M3first, weight);
 		hists["M3"]->Fill(M3maxPt, weight);
 		hists["M3minPt"]->Fill(M3minPt, weight);
