@@ -64,7 +64,8 @@ int main(int ac, char** av){
 	if( outDirName.find("toppt_down") != std::string::npos) {systematics=true; toppt012_g = 0;}
 
 	std::cout << "JEC: " << jecvar012_g << "  JER: " << jervar012_g << "  EleEff: " << eleeff012_g << "  BtagVar: " << btagvar012_g << "  ";
-	std::cout << "  PhoSmear: " << phosmear012_g << "  EleSmear: " << elesmear012_g << "  pileup: " << PUfilename << std::endl;
+	std::cout << "  PhoSmear: " << phosmear012_g << "  EleSmear: " << elesmear012_g << "  pileup: " << PUfilename << "  ";
+	std::cout << "  topPt: " << toppt012_g << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
 	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
