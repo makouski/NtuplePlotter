@@ -441,4 +441,5 @@ Long64_t EventTree::GetEntries(){
 
 Int_t EventTree::GetEntry(Long64_t entry){
 	chain->GetEntry(entry);
+	return 0;
 }

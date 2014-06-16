@@ -237,6 +237,9 @@ double getEleEff(EventTree* tree, EventPick* evt){
 	if(eleeff012_g == 1) return trigEffSF_PtEta[ptRegion][etaRegion] * idEffSF_PtEta[ptRegion][etaRegion];
 	if(eleeff012_g == 0) return (trigEffSF_PtEta[ptRegion][etaRegion] - trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] - idEffSFerr_PtEta[ptRegion][etaRegion]);
 	if(eleeff012_g == 2) return (trigEffSF_PtEta[ptRegion][etaRegion] + trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] + idEffSFerr_PtEta[ptRegion][etaRegion]);	
+	
+	// should not get here
+	return 1.0;
 }
 
 // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting
@@ -259,6 +262,8 @@ double topPtWeight(EventTree* tree){
 	if(toppt012_g == 1) return weight;
 	if(toppt012_g == 0) return 1.0;
 	if(toppt012_g == 2) return weight*weight;
+	// should not get here
+	return 1.0;
 }
 
 void doEleSmearing(EventTree* tree){
@@ -331,6 +336,9 @@ double JERcorrection(double JetEta){
 	if(jervar012_g == 0) return corrDown[region];
 	if(jervar012_g == 1) return corr[region];
 	if(jervar012_g == 2) return corrUp[region];
+	
+	// should not get here
+	return 1.0;
 }
 
 // https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagSFMethods

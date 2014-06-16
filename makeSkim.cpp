@@ -59,7 +59,7 @@ int main(int ac, char** av){
 		TFile* tempFile = new TFile(av[fileInd], "READ");
 		TIter next(((TDirectory*)tempFile->Get("ggNtuplizer"))->GetListOfKeys());
 		TObject* obj;
-		while (obj = next()){
+		while ((obj = next())){
 			std::string objName(obj->GetName());
 			if( objName != "EventTree"){
 				TH1F* hist = (TH1F*)tempFile->Get(("ggNtuplizer/"+objName).c_str());
