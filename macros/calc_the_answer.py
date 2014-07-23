@@ -54,14 +54,14 @@ def doTheCalculation():
 	topPreselErr = (topPreselErr**2 + (topPreselInt*M3TopSFErr/M3TopSF)**2 )**0.5
 	print 'taking into account fit error: ',topPreselInt,' +-',topPreselErr,'(MC stat+fit)'
 	print
-	whizPreselInt,whizPreselErr = integral(preselfile,'WHIZARD_MET')
+	whizPreselInt,whizPreselErr = integral(preselfile,'TTGamma_MET')
 	print 'WHIZARD presel events expected ',whizPreselInt,' +-',whizPreselErr,'(MC stat)'
 	print
 	print 'Opening file with photon in barrel'
 	barrelfile = ROOT.TFile(barrelFileName,'READ')
 	print 'File was last modified: ',barrelfile.GetModificationDate().AsString()
 	print
-	whizBarrInt,whizBarrErr = integral(barrelfile,'WHIZARD_MET')
+	whizBarrInt,whizBarrErr = integral(barrelfile,'TTGamma_MET')
 	print 'WHIZARD barrel events expected ',whizBarrInt, ' +-',whizBarrErr,'(MC stat)'
 	print
 
@@ -76,11 +76,17 @@ def doTheCalculation():
 	print 'Data events',DataBarrInt,' +-',DataBarrErr
 
 	print 'Now getting expected background events from MC'
+	print 'Vgamma:'
 	VgammaBarrInt,VgammaBarrErr = integral(barrelfile,'Vgamma_MET')
+	print 'SingleTop:'
 	SingleTopBarrInt,SingleTopBarrErr = integral(barrelfile,'SingleTop_MET')
+	print 'WJets:'
 	WJetsBarrInt,WJetsBarrErr = integral(barrelfile,'WJets_MET')
+	print 'ZJets:'
 	ZJetsBarrInt,ZJetsBarrErr = integral(barrelfile,'ZJets_MET')
+	print 'Diboson:'
 	OtherBarrInt,OtherBarrErr = integral(barrelfile,'Diboson_MET')
+	print 'QCD:'
 	QCDBarrInt,QCDBarrErr = integral(barrelfile,'QCD_MET')
 	bckgExp = VgammaBarrInt+SingleTopBarrInt+WJetsBarrInt+ZJetsBarrInt+OtherBarrInt+QCDBarrInt
 	SqBckgErr = 0.0
@@ -96,9 +102,24 @@ def doTheCalculation():
 	print 'total background expected',bckgExp,' +-',bckgExpErr
 	print
 	xsRatio = (DataBarrInt - bckgExp) * photnPurity / phoAcc / topPreselInt
-	xsRatioRelErr = ( (DataBarrErr**2 + bckgExpErr**2)/(DataBarrInt - bckgExp)**2 + (photnPurityErr/photnPurity)**2 + (phoAccErr/phoAcc)**2 + (topPreselErr/topPreselInt)**2 )**0.5
+	xsRatioRelErr = ( (DataBarrErr**2 + bckgExpErr**2)/(DataBarrInt - bckgExp)**2 + 
+						(photnPurityErr/photnPurity)**2 + 
+						(phoAccErr/phoAcc)**2 + 
+						(topPreselErr/topPreselInt)**2 
+					)**0.5
 	print '*'*80
-	print 'final answer: cross-section ratio:'
+	print 'final answer: cross section ratio:'
 	print xsRatio,' +-',xsRatio*xsRatioRelErr
 	print '*'*80
+	
+	vis_xsRatio = (DataBarrInt - bckgExp) * photnPurity / topPreselInt
+	vis_xsRatioErr = ( (DataBarrErr**2 + bckgExpErr**2)/(DataBarrInt - bckgExp)**2 + 
+						(photnPurityErr/photnPurity)**2 + 
+						(topPreselErr/topPreselInt)**2 
+					)**0.5
+	print 'visible cross section ratio:'
+	print vis_xsRatio,' +-',vis_xsRatio*vis_xsRatioErr
+	print '*'*80
 	return (xsRatio, xsRatio*xsRatioRelErr)
+	
+	

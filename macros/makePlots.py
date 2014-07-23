@@ -5,6 +5,8 @@ import templateFits
 import qcd_fit
 import calc_the_answer
 
+ROOT.gROOT.SetBatch()
+
 # initialize variables, assign values later
 WJetsSF = 1.0
 TopSF = 1.0
@@ -131,54 +133,64 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	
 	MCtemplates = {}
 	
-	#MCtemplates['mst_510_200'] = distribution('mst_510_200'+titleSuffix,[(templPrefix+'mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)],varList, 620,3244)
+	#MCtemplates['mst_510_200'] = distribution('mst_510_200'+titleSuffix,[
+	#		(templPrefix+'mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)
+	#	],varList, 620,3244)
 	
-	MCtemplates['WHIZARD'] = distribution('WHIZARD'+titleSuffix, [(templPrefix+'WHIZARD.root', TopSF*gSF*TTgamma_xs/WHIZARD_num)], varList, 98, fillStyle)
+	MCtemplates['WHIZARD'] = distribution('TTGamma'+titleSuffix, [
+		(templPrefix+'WHIZARD.root', TopSF*gSF*TTgamma_xs/WHIZARD_num)
+		], varList, 98, fillStyle)
 	
 	MCtemplates['TTJets'] = distribution('TTJets'+titleSuffix, [
 		(templPrefix+'TTJets1l.root', TopSF*gSF*TTJets1l_xs/TTJets1l_num),
 		(templPrefix+'TTJets2l.root', TopSF*gSF*TTJets2l_xs/TTJets2l_num),
+		(templPrefix+'TTJetsHad.root', TopSF*gSF*TTJetsHad_xs/TTJetsHad_num),
 		], varList ,11, fillStyle)
 	
 	###################################
 	#return MCtemplates
 	###################################
+	nonWJetsSF = 1.0
+	#nonWJetsSF = WJetsSF
 	
 	MCtemplates['Vgamma'] = distribution('Vgamma'+titleSuffix, [
-        (templPrefix+'Zgamma.root', gSF*Zgamma_xs/Zgamma_num),
-        (templPrefix+'Wgamma.root', gSF*Wgamma_xs/Wgamma_num),
+        (templPrefix+'Zgamma.root', nonWJetsSF*gSF*Zgamma_xs/Zgamma_num),
+        (templPrefix+'Wgamma.root', nonWJetsSF*gSF*Wgamma_xs/Wgamma_num),
     #    (templPrefix+'WWgamma.root', gSF*WWgamma_xs/WWgamma_num),
         ], varList, 90, fillStyle)
 
 	MCtemplates['SingleTop'] = distribution('SingleTop'+titleSuffix, [
-		(templPrefix+'SingleT_t.root',      gSF*SingTopT_xs/SingTopT_num),
-        (templPrefix+'SingleT_s.root',      gSF*SingTopS_xs/SingTopS_num),
-        (templPrefix+'SingleT_tw.root',     gSF*SingToptW_xs/SingToptW_num),
-        (templPrefix+'SingleTbar_t.root',   gSF*SingTopbarT_xs/SingTopbarT_num),
-        (templPrefix+'SingleTbar_s.root',   gSF*SingTopbarS_xs/SingTopbarS_num),
-        (templPrefix+'SingleTbar_tw.root',  gSF*SingTopbartW_xs/SingTopbartW_num),
+		(templPrefix+'SingleT_t.root',      nonWJetsSF*gSF*SingTopT_xs/SingTopT_num),
+        (templPrefix+'SingleT_s.root',      nonWJetsSF*gSF*SingTopS_xs/SingTopS_num),
+        (templPrefix+'SingleT_tw.root',     nonWJetsSF*gSF*SingToptW_xs/SingToptW_num),
+        (templPrefix+'SingleTbar_t.root',   nonWJetsSF*gSF*SingTopbarT_xs/SingTopbarT_num),
+        (templPrefix+'SingleTbar_s.root',   nonWJetsSF*gSF*SingTopbarS_xs/SingTopbarS_num),
+        (templPrefix+'SingleTbar_tw.root',  nonWJetsSF*gSF*SingTopbartW_xs/SingTopbartW_num),
 		], varList, 8, fillStyle)
 	
 	MCtemplates['WJets'] = distribution('WJets'+titleSuffix, [
-        (templPrefix+'WJets.root', WJetsSF*gSF*WJets_xs/WJets_num)], varList, 7, fillStyle)
+        #(templPrefix+'WJets.root', WJetsSF*gSF*WJets_xs/WJets_num),
+		(templPrefix+'W3Jets.root', WJetsSF*gSF*W3Jets_xs/W3Jets_num),
+		(templPrefix+'W4Jets.root', WJetsSF*gSF*W4Jets_xs/W4Jets_num),
+		], varList, 7, fillStyle)
 		
 	MCtemplates['ZJets'] = distribution('ZJets'+titleSuffix, [
-		(templPrefix+'ZJets.root', gSF*ZJets_xs/ZJets_num)], varList, 9, fillStyle)
+		(templPrefix+'ZJets.root', nonWJetsSF*gSF*ZJets_xs/ZJets_num)], varList, 9, fillStyle)
 
 	
 	MCtemplates['Other'] = distribution('Diboson'+titleSuffix, [
 
-        (templPrefix+'WZ_3lnu.root', gSF*WZ_3lnu_xs/WZ_3lnu_num),
-        (templPrefix+'WZ_2l2q.root', gSF*WZ_2l2q_xs/WZ_2l2q_num),
+        (templPrefix+'WZ_3lnu.root', nonWJetsSF*gSF*WZ_3lnu_xs/WZ_3lnu_num),
+        (templPrefix+'WZ_2l2q.root', nonWJetsSF*gSF*WZ_2l2q_xs/WZ_2l2q_num),
         
-        (templPrefix+'ZZ_2e2mu.root', gSF*ZZ_2e2mu_xs/ZZ_2e2mu_num),
-        (templPrefix+'ZZ_2e2tau.root', gSF*ZZ_2e2tau_xs/ZZ_2e2tau_num),
-        (templPrefix+'ZZ_2mu2tau.root', gSF*ZZ_2mu2tau_xs/ZZ_2mu2tau_num),
-        (templPrefix+'ZZ_4e.root', gSF*ZZ_4e_xs/ZZ_4e_num),
-        (templPrefix+'ZZ_4mu.root', gSF*ZZ_4mu_xs/ZZ_4mu_num),
-        (templPrefix+'ZZ_4tau.root', gSF*ZZ_4tau_xs/ZZ_4tau_num),
+        (templPrefix+'ZZ_2e2mu.root', nonWJetsSF*gSF*ZZ_2e2mu_xs/ZZ_2e2mu_num),
+        (templPrefix+'ZZ_2e2tau.root', nonWJetsSF*gSF*ZZ_2e2tau_xs/ZZ_2e2tau_num),
+        (templPrefix+'ZZ_2mu2tau.root', nonWJetsSF*gSF*ZZ_2mu2tau_xs/ZZ_2mu2tau_num),
+        (templPrefix+'ZZ_4e.root', nonWJetsSF*gSF*ZZ_4e_xs/ZZ_4e_num),
+        (templPrefix+'ZZ_4mu.root', nonWJetsSF*gSF*ZZ_4mu_xs/ZZ_4mu_num),
+        (templPrefix+'ZZ_4tau.root', nonWJetsSF*gSF*ZZ_4tau_xs/ZZ_4tau_num),
         
-        (templPrefix+'WW_2l2nu.root', gSF*WW_2l2nu_xs/WW_2l2nu_num),
+        (templPrefix+'WW_2l2nu.root', nonWJetsSF*gSF*WW_2l2nu_xs/WW_2l2nu_num),
 
           #(templPrefix+'TTW.root', gSF*TTW_xs/TTW_num),
           #(templPrefix+'TTZ.root', gSF*TTZ_xs/TTZ_num),
@@ -250,10 +262,10 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 
 	# load templates PreSel
 	
-	DataTempl = loadDataTemplate(varList, dataDir, 'hist_1pho_top_')
+	DataTempl = loadDataTemplate(varList, dataDir, 'hist_1pho_top_') #NoMET
 	if QCDSF > 0.0001:
-		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_')
-	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001)
+		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_') #NoMET
+	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001) #NoMET
 	MCTempl = []
 	#MCTempl.append(MCTemplDict['mst_510_200'])
 	MCTempl.append(MCTemplDict['WHIZARD'])
@@ -293,7 +305,10 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 		MCTempl_b.append(QCDTempl_b)
 	
 	#susysignal = [
-	#		(distribution('mst_510_M3_5050_M1_200', [('/Users/makouski/dis/plotting_trees/Hist/hist_1pho_barrel_top_mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)],shortVarList,620,3244),1),
+	#		(distribution('mst_510_M3_5050_M1_200', 
+	#			[ ('/Users/makouski/dis/plotting_trees/Hist/hist_1pho_barrel_top_mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)],
+	#			shortVarList,620,3244),1
+	#		),
 	#		#(,1),
 	#		#(,1)
 	#		]
@@ -351,7 +366,8 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 
 
 varList_all = ['nVtx',
-			'MET','Ht','WtransMass','M3','M3first','minM3','M3pho','dRpho3j','M3phoMulti',
+			'MET','Ht','WtransMass','M3','M3first','minM3','M3pho','dRpho3j','M3phoMulti', 
+			#'M3_0_30', 'M3_30_100', 'M3_100_200', 'M3_200_300', 'M3_300_up', #'M3minPt',
 			'ele1Pt','ele1Eta','ele1RelIso',
 			'ele1D0','ele1MVA','ele1Dz',
 			'ele2Pt','ele2RelIso',
@@ -380,21 +396,23 @@ DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist/'
 #saveBarrelFitTemplates(InputHist, DataHist, 'templates_barrel.root')
 #templateFits.InputFilename = 'templates_barrel.root'
 #templateFits.fitData = False ## to do closure test
-#templateFits.NpseudoExp = 0
-phoPurity,phoPurityError = 0.5619563459, 0.061619598645 ## auto binsize: 0.561220079533, 0.0529980243576
+#templateFits.NpseudoExp = 3000
+phoPurity,phoPurityError = 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
 #phoPurity,phoPurityError = templateFits.doTheFit()
 #exit()
 
 # QCD selection histograms
 #makeAllPlots(varList_all, QCDHist, QCDHist, QCDHist, 'plots_QCD')
+#exit()
 
+#WJetsSF = 1.84
 # for MET fit. No rescaling
 if WJetsSF == 1.0 and TopSF == 1.0:
-	saveNoMETTemplates(InputHist, DataHist, 'templates_presel_nomet'+outSuffix+'.root')
+	saveNoMETTemplates(InputHist, DataHist, 'templates_presel_nomet.root')
 	saveNoMETTemplates(QCDHist, QCDHist, 'templates_presel_nomet_qcd.root')
 
 qcd_fit.qcdMETfile = 'templates_presel_nomet_qcd.root'
-qcd_fit.normMETfile = 'templates_presel_nomet'+outSuffix+'.root'
+qcd_fit.normMETfile = 'templates_presel_nomet.root'
 
 QCDSF,QCDSFerror = qcd_fit.doQCDfit()
 
@@ -410,10 +428,10 @@ QCDSF,QCDSFerror = qcd_fit.doQCDfit()
 #QCDSF = 1.37 # new QCD selection
 
 # save templates for M3 fit
-savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel'+outSuffix+'.root')
+savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel.root')
 
 # do M3 fit, update SF for Top and WJets
-qcd_fit.M3file = 'templates_presel'+outSuffix+'.root'
+qcd_fit.M3file = 'templates_presel.root'
 TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
 #TopSF, TopSFerror, WJetsSF, WJetsSFerror = (1.0, 0.01, 1.0, 0.01)
 

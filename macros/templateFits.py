@@ -147,7 +147,7 @@ def getWeightedHist(selection, filename, histName, leftCut=None, rightCut=None):
 		print '#############################  wrong parameter!!!'
 		return None
 
-	Snames = ['WHIZARD','TTJets'] #,'Vgamma','SingleTop','Other']
+	Snames = ['TTGamma','TTJets'] #,'Vgamma','SingleTop','Other']
 	if selection=='data':
 		Snames = ['Data']
 	
@@ -172,7 +172,7 @@ highFitrange = 19.99
 selectionRange = 4.99
 
 # number of pseudo experiments. off by default reasonable resuts for 1000 or so
-NpseudoExp = 3000
+NpseudoExp = 0
 
 # use MC (closure test) or Data
 fitData = True
@@ -206,7 +206,7 @@ sihihSelCut = 0.01199
 
 # sideband in sigmaIetaIeta
 sbLeft = 0.012
-sbRight = 0.016
+sbRight = 0.01599
 
 #sbLeft = 0.011
 #sbRight = 0.014
@@ -485,8 +485,8 @@ def doTheFit():
 	#true_sel_bckg.Scale(1.0/true_sel_bckg.Integral())
 	#true_sel_bckg.SetLineColor(3)
 
-	leg.AddEntry(true_bckg,'MC truth backg','lf')
-	leg.AddEntry(sbIso,'sihih side band', 'lf')
+	leg.AddEntry(true_bckg,'MC truth bckg','lf')
+	leg.AddEntry(sbIso,'#sigma_{i#etai#eta} side band', 'lf')
 	#leg.AddEntry(true_sel_bckg,'MC truth backg, nom. selection', 'lf')
 
 	#true_sel_bckg.Draw()
@@ -512,6 +512,10 @@ def doTheFit():
 	sbIso.Draw('same')
 	leg.Draw()
 	c1.SaveAs('fitplots/'+hist_sig_name+phoEtrange+'_bckg_fitrange.png')
+	c1.SetLogy(1)
+	c1.SaveAs('fitplots/'+hist_sig_name+phoEtrange+'_bckg_fitrange_log.png')
+	c1.SetLogy(0)
+
 	leg.Clear()
 
 

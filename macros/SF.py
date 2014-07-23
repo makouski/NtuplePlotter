@@ -5,10 +5,15 @@ gSF = luminosity
 
 TTJets1l_num        = 24849110 #
 TTJets2l_num        = 12086717 #
+TTJetsHad_num       = 31178278
+
 
 TTgamma_num      =  1719954 #
 
 WJets_num      = 57709905 #
+
+W4Jets_num     = 11742268 # 7026978 # PART of the statistics!
+W3Jets_num     = 15408303
 
 ZJets_num      = 30458871 #
 
@@ -24,6 +29,7 @@ ZZ_4tau_num        = 824466
 
 #WW_num            = 10000431 #AODSIM
 WW_2l2nu_num       = 1933120 # 1903235 #
+
 
 #WZ_num            = 10000283 #AODSIM
 #WZ_num            = 5233969 # 
@@ -67,11 +73,18 @@ WWgamma_xs        = 1.44 #0.528 # PREP
 # https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat8TeV
 
 #Top_xs            = 239 # new measurement #227 #CMS measurement
-TTJets1l_xs       = 104.7 # 227*0.676*(1-0.676)*2
-TTJets2l_xs       = 25.09 # 227*(1-0.676)*(1-0.676)
+TTJets1l_xs       = 104.7 # 239*0.676*(1-0.676)*2
+TTJets2l_xs       = 25.09 # 239*(1-0.676)*(1-0.676)
+TTJetsHad_xs      = 109.2 # 239*0.676*0.676
+
 TTgamma_xs        = 0.9081 * 2  # https://twiki.cern.ch/twiki/bin/view/CMS/WhizardMCTeeTeeGamma
 WJets_xs          = 36257.0 # 35640.0 # CMS measurement. was: 36257.0  # 
 ZJets_xs          = 3350.0 # CMS measurement. was: 3533.0 # 3503.71 #
+
+#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=W4JetsToLNu*&campid=Summer12
+W3Jets_xs         = 519.0 # PREP
+W4Jets_xs         = 214.0 # PREP
+
 
 #WZ_xs             = 33.21 # inclusive
 WZ_3lnu_xs        = 1.057 # 0.8674 # PREP
