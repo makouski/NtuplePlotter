@@ -424,6 +424,9 @@ double getBtagSF(EventTree* tree, EventPick* evt){
 	double jeteta;
 	int jetflavor;
 	double SFb;
+
+	if(evt->bJets.size() == 0) return 1.0;
+
 	for(std::vector<int>::const_iterator bjetInd = evt->bJets.begin(); bjetInd != evt->bJets.end(); bjetInd++){
 		jetpt = tree->jetPt_->at(*bjetInd);
 		jeteta = fabs(tree->jetEta_->at(*bjetInd));
