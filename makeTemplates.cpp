@@ -109,6 +109,10 @@ int main(int ac, char** av){
 	//evtPickLoose->NBjet_ge = 2;
 	EventPick* evtPickLooseNoMET = new EventPick("LoosePhotonID");
 	evtPickLooseNoMET->MET_cut = -1.0;
+	if( outDirName.find("zeroB") != std::string::npos){
+		evtPickLoose->NBjet_ge = 0;
+		evtPickLooseNoMET->NBjet_ge = 0;
+	}
 	//evtPickLooseNoMET->veto_pho_jet_dR = 0.05;
 	//evtPickLooseNoMET->Njet_ge = 4;
 	//evtPickLooseNoMET->NBjet_ge = 2;
