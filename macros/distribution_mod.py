@@ -56,7 +56,7 @@ class distribution:
 					else:
 						self.histList[histName].Add(tempHist)
 				tf.Close()
-		self.shiftUnderOverFlow(histNameList)
+		#self.shiftUnderOverFlow(histNameList)
 	
 	def mergeWith(self, other):
 		for histName in self.histList:

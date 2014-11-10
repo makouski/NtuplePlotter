@@ -28,16 +28,17 @@ def makeFit(varname, varmin, varmax, signalHist, backgroundHist, dataHist, plotN
 	if plotName!='':
 		# plot results
 		c1 = ROOT.TCanvas('c1', 'c1', 800, 600)
-		plotter = ROOT.RooPlot(sihihVar,varmin,varmax,20) # nBins is dummy 
+		plotter = ROOT.RooPlot('myplot','',sihihVar,varmin,varmax,20) # nBins is dummy
 		dataDataHist.plotOn(plotter, ROOT.RooFit.Name('data'))
 		sumPdf.plotOn(plotter, ROOT.RooFit.Name('sum'), ROOT.RooFit.LineColor(ROOT.kRed))
 		sumPdf.plotOn(plotter, ROOT.RooFit.Components('signalPdf'), ROOT.RooFit.Name('signal'), 
 			ROOT.RooFit.LineColor(ROOT.kGreen))
 		sumPdf.plotOn(plotter, ROOT.RooFit.Components('backgroundPdf'), ROOT.RooFit.Name('background'), 
 			ROOT.RooFit.LineColor(ROOT.kBlue))
-		sumPdf.paramOn(plotter)
+		sumPdf.paramOn(plotter) # fix
 
 		plotter.Draw()
+		plotter.GetYaxis().SetTitleOffset(1.4)
 		c1.SaveAs(plotName)
 	print 'fit returned value ',signalFractionVar.getVal(),' +- ',signalFractionVar.getError()
 	return (signalFractionVar.getVal(),signalFractionVar.getError())
@@ -72,7 +73,7 @@ def doQCDfit():
 	DataHist = get1DHist(normMETfile, 'Data_'+varToFit)
 
 	MCHist = get1DHist(normMETfile, 'TTJets_'+varToFit)
-	MCHist.Add(get1DHist(normMETfile, 'WHIZARD_'+varToFit))
+	MCHist.Add(get1DHist(normMETfile, 'TTGamma_'+varToFit))
 	MCHist.Add(get1DHist(normMETfile, 'WJets_'+varToFit))
 	MCHist.Add(get1DHist(normMETfile, 'ZJets_'+varToFit))
 	MCHist.Add(get1DHist(normMETfile, 'SingleTop_'+varToFit))
@@ -108,17 +109,21 @@ def doM3fit():
 	DataHist = get1DHist(M3file, 'Data_'+varToFit)
 
 	TopHist = get1DHist(M3file, 'TTJets_'+varToFit)
-	TopHist.Add(get1DHist(M3file, 'WHIZARD_'+varToFit))
+	TopHist.Add(get1DHist(M3file, 'TTGamma_'+varToFit))
 
 	WJHist = get1DHist(M3file, 'WJets_'+varToFit)
-
+	#WJHist.Add(get1DHist(M3file, 'ZJets_'+varToFit)) #     fix
+	#WJHist.Add(get1DHist(M3file, 'SingleTop_'+varToFit)) #     fix
+	#WJHist.Add(get1DHist(M3file, 'QCD_'+varToFit)) #     fix
+	#WJHist.Add(get1DHist(M3file, 'Vgamma_'+varToFit)) #     fix
+	
 	# remove other suspects from data
 	DataHist.Add(get1DHist(M3file, 'ZJets_'+varToFit), -1.0)
 	DataHist.Add(get1DHist(M3file, 'SingleTop_'+varToFit), -1.0)
 	DataHist.Add(get1DHist(M3file, 'QCD_'+varToFit), -1.0)
 	DataHist.Add(get1DHist(M3file, 'Vgamma_'+varToFit), -1.0)
 
-	(m3TopFrac, m3TopFracErr) = makeFit(varToFit, 70.0, 500.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
+	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV)', 70.0, 500.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
 	dataInt = DataHist.Integral()
 	topInt = TopHist.Integral()
 	WJInt = WJHist.Integral()
