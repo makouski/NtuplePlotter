@@ -132,6 +132,9 @@ int main(int ac, char** av){
 	bool WHIZARD = false;
 	if( std::string(av[1]).find("WHIZARD") != std::string::npos) WHIZARD = true;
 
+	bool MGttgamma = false;
+	if( std::string(av[1]).find("TTgamma") != std::string::npos) MGttgamma = true;
+
 	bool doOverlapRemoval = false;
 	if( std::string(av[1]).find("TTJets") != std::string::npos || std::string(av[1]).find("TTgamma") != std::string::npos ) doOverlapRemoval = true;
 
@@ -175,11 +178,15 @@ int main(int ac, char** av){
 			doEleSmearing(tree);
 		}
 		// do overlap removal here
-		if( isMC && doOverlapRemoval && overlapWHIZARD(tree)){
+		if( isMC && WHIZARD && doOverlapRemoval && overlapWHIZARD(tree)){
 			// overlapping part, not needed
 			continue;
 		}
-		
+		if( isMC && MGttgamma && doOverlapRemoval && !overlapWHIZARD(tree)){
+			// do not need MadGraph ttgamma events that are outside WHIZARD phase space
+			continue;
+		}		
+
 		selectorLoose->process_objects(tree);
 		//selectorTight->process_objects(tree);
 		
