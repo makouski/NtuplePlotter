@@ -32,6 +32,13 @@ int main(int ac, char** av){
 
 	evtPick->NBjet_ge = 0;
 
+	// for zjets and zgamma fitting
+	
+	if( outDirName.find("twoEle") != std::string::npos){
+		std::cout << "selecting events with 2 electrons" << std::endl;
+		evtPick->Nele_eq = 2;
+	}
+
 	// add more branches to be saved
 	//tree->chain->SetBranchStatus("*",1);
 

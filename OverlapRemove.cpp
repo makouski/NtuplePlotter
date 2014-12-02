@@ -34,3 +34,9 @@ bool overlapWHIZARD(EventTree* tree){
 	}
 	return haveOverlap;
 }
+
+bool IsrFsr(EventTree* tree){
+	const double Et_cut = 20;
+	
+}
+

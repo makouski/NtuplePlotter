@@ -76,7 +76,8 @@ Histogrammer::Histogrammer(std::string titleIn){
 	// event
 	make_hist("looseEleDrGenPho","dR loose electron to Gen Photon",60,0,6,"#DeltaR(e_{loose},#gamma_{MC})","Events / 0.1");
 	make_hist("WtransMass","W transverse mass",20,0,200,"M(W_{T})(GeV)","Events / 10 GeV");
-	make_hist("ele1pho1Mass","electron + photon mass",20,0,200,"M(e,#gamma)(GeV)","Events / 10 GeV");	
+	make_hist("ele1pho1Mass","electron + photon mass",20,0,200,"M(e,#gamma)(GeV)","Events / 10 GeV");
+	make_hist("ele1ele2Mass","Di-electron mass",20,0,200,"M(e,e)(GeV)","Events / 10 GeV");
 	make_hist("Ht","Ht",30,0,1500,"H_{T} (GeV)","Events / 50 GeV");
 	make_hist("MET","Missing Transverse Momentum",30,0,300,"MET (GeV)","Events / 10 GeV");
 	make_hist("nVtx","Number of Primary Vertices",50,0.5,50.5,"N_{PV}","Events");
@@ -172,9 +173,14 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 			else hists["ele1MotherID"]->Fill( 0.0, weight );
 		}
 		if( selEvent->Electrons.size() > 1 ){
-			ind = selEvent->Electrons[1];
-			hists["ele2Pt"]->Fill( tree->elePt_->at(ind), weight );
-			hists["ele2RelIso"]->Fill( selector->Ele03RelIso[ind], weight );
+			int ind2 = selEvent->Electrons[1];
+			hists["ele2Pt"]->Fill( tree->elePt_->at(ind2), weight );
+			hists["ele2RelIso"]->Fill( selector->Ele03RelIso[ind2], weight );
+			TLorentzVector ele1;
+			TLorentzVector ele2;
+			ele1.SetPtEtaPhiM(tree->elePt_->at(ind), tree->eleSCEta_->at(ind), tree->elePhi_->at(ind), 0.0);
+			ele2.SetPtEtaPhiM(tree->elePt_->at(ind2), tree->eleSCEta_->at(ind2), tree->elePhi_->at(ind2), 0.0);
+			hists["ele1ele2Mass"]->Fill( (ele1+ele2).M(), weight);
 		}
 		
 		if(selEvent->Photons.size() > 0){
