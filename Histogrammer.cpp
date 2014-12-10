@@ -77,7 +77,7 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("looseEleDrGenPho","dR loose electron to Gen Photon",60,0,6,"#DeltaR(e_{loose},#gamma_{MC})","Events / 0.1");
 	make_hist("WtransMass","W transverse mass",20,0,200,"M(W_{T})(GeV)","Events / 10 GeV");
 	make_hist("ele1pho1Mass","electron + photon mass",20,0,200,"M(e,#gamma)(GeV)","Events / 10 GeV");
-	make_hist("ele1ele2Mass","Di-electron mass",20,0,200,"M(e,e)(GeV)","Events / 10 GeV");
+	make_hist("ele1ele2Mass","Di-electron mass",40,0,200,"M(e,e)(GeV)","Events / 5 GeV");
 	make_hist("Ht","Ht",30,0,1500,"H_{T} (GeV)","Events / 50 GeV");
 	make_hist("MET","Missing Transverse Momentum",30,0,300,"MET (GeV)","Events / 10 GeV");
 	make_hist("nVtx","Number of Primary Vertices",50,0.5,50.5,"N_{PV}","Events");
@@ -166,9 +166,9 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 		hists["WtransMass"]->Fill( MTW, weight );
 		if( tree->isData_ == 0 ){
 			if( tree->eleGenIndex_->at(ind) >= 0 ){
-				hists["ele1MotherID"]->Fill( tree->eleGenMomPID_->at(ind), weight );
-				if( TMath::Abs(tree->eleGenMomPID_->at(ind)) == 11 )
-					hists["ele1GMotherID"]->Fill( tree->eleGenGMomPID_->at(ind), weight );
+				hists["ele1MotherID"]->Fill( fabs(tree->eleGenMomPID_->at(ind)), weight );
+				//if( TMath::Abs(tree->eleGenMomPID_->at(ind)) == 11 )
+				hists["ele1GMotherID"]->Fill( fabs(tree->eleGenGMomPID_->at(ind)), weight );
 			}
 			else hists["ele1MotherID"]->Fill( 0.0, weight );
 		}
@@ -244,10 +244,9 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 
 		if( tree->isData_ == 0 ){
 			if( tree->phoGenIndex_->at(ind) >= 0 ){
-				hists["photon1MotherID"]->Fill( tree->phoGenMomPID_->at(ind), weight );
-				if( TMath::Abs(tree->phoGenMomPID_->at(ind)) == 22 ){
-					hists["photon1GMotherID"]->Fill( tree->phoGenGMomPID_->at(ind), weight );
-				}
+				hists["photon1MotherID"]->Fill( fabs(tree->phoGenMomPID_->at(ind)), weight );
+				//if( TMath::Abs(tree->phoGenMomPID_->at(ind)) == 22 )
+				hists["photon1GMotherID"]->Fill( fabs(tree->phoGenGMomPID_->at(ind)), weight );
 			}
 			else {
 				hists["photon1MotherID"]->Fill( 0.0, weight );
