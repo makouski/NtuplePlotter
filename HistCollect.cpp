@@ -155,16 +155,26 @@ void HistCollect::findPhotonCategory(int phoInd, EventTree* tree, bool* rs, bool
 	for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
 		bool etetamatch = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) < 0.2 && 
 			fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd) < 1.0;
-		if( etetamatch && mcPhotonInd < 0 && tree->mcPID->at(mcInd) == 22)
+		if( etetamatch && mcPhotonInd < 0 && 
+		tree->mcPID->at(mcInd) == 22 &&
+		tree->mcPt->at(mcInd) > 13.0 &&
+		fabs(tree->mcEta->at(mcInd)) < 3.0 && 
+		dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->mcMomEta->at(mcInd),tree->mcMomPhi->at(mcInd)) > 0.3 &&
+		(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26)
+		)
 			mcPhotonInd = mcInd; 
 		if( etetamatch && mcEleInd < 0 && abs(tree->mcPID->at(mcInd)) == 11 )
 			mcEleInd = mcInd;
 	}
 	
 	if(mcPhotonInd >= 0){
-		// signal: parents are quarks, gluons or bosons
-		if(tree->mcParentage->at(mcPhotonInd)==2 || tree->mcParentage->at(mcPhotonInd)==10 ) *rs = true;
-		else *rb = true;
+		// signal: parents are quarks, gluons, bosons or leptons
+		if(tree->mcParentage->at(mcPhotonInd)==2 || 
+			tree->mcParentage->at(mcPhotonInd)==10 || 
+			tree->mcParentage->at(mcPhotonInd)==26
+			) 
+			*rs = true;
+		else *rb = true; // should not happen
 	}
 	else{
 		// no good matched Gen Photon found - our photon is fake

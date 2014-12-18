@@ -30,6 +30,8 @@ void doPhoSmearing(EventTree* tree);
 void doJER(EventTree* tree);
 double JERcorrection(double eta);
 bool overlapWHIZARD(EventTree* tree);
+bool overlapMadGraph(EventTree* tree);
+
 
 int main(int ac, char** av){
 	if(ac < 4){
@@ -142,7 +144,7 @@ int main(int ac, char** av){
 	if( std::string(av[1]).find("TTgamma") != std::string::npos) MGttgamma = true;
 
 	bool doOverlapRemoval = false;
-	if( std::string(av[1]).find("TTJets") != std::string::npos || std::string(av[1]).find("TTgamma") != std::string::npos ) doOverlapRemoval = true;
+	if( std::string(av[1]).find("TTJets") != std::string::npos) doOverlapRemoval = true;
 
 	EventTree* tree = new EventTree(ac-3, av+3);
 	double PUweight = 1.0;
@@ -183,15 +185,17 @@ int main(int ac, char** av){
 			// electron energy smearing
 			doEleSmearing(tree);
 		}
-		// do overlap removal here
-		if( isMC && WHIZARD && doOverlapRemoval && overlapWHIZARD(tree)){
+		// do overlap removal here: overlapMadGraph(tree) or overlapWHIZARD(tree)
+		if( isMC && doOverlapRemoval && overlapMadGraph(tree)){
+			//std::cout << "overlap!" << std::endl;
 			// overlapping part, not needed
 			continue;
 		}
-		if( isMC && MGttgamma && doOverlapRemoval && !overlapWHIZARD(tree)){
-			// do not need MadGraph ttgamma events that are outside WHIZARD phase space
-			continue;
-		}		
+		// this part cuts MadGraph ttgamma phase space to match WHIZARD, for comparison
+		//if( isMC && MGttgamma && doOverlapRemoval && !overlapWHIZARD(tree)){
+		//	// do not need MadGraph ttgamma events that are outside WHIZARD phase space
+		//	continue;
+		//}		
 
 		selectorLoose->process_objects(tree);
 		//selectorTight->process_objects(tree);
