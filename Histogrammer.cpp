@@ -82,8 +82,8 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("MET","Missing Transverse Momentum",30,0,300,"MET (GeV)","Events / 10 GeV");
 	make_hist("nVtx","Number of Primary Vertices",50,0.5,50.5,"N_{PV}","Events");
 	make_hist("nJets","number of jets",15,-0.5,14.5,"N_{jets}","Events");
-	make_hist("PUweight","PU weight",30,0,3,"PUweight","Events / 10");
-
+	make_hist("PUweight","Event weight",30,0,3,"EventWeight","Events / 10");
+	
 	make_hist("M3first","Mass of 3 highest Pt jets",100,0,1000,"highest pt M3 (Gev)","Events / 10 GeV");
 	make_hist("minM3","Minimal Mass of 3 jets",60,0,600,"min M3 (Gev)","Events / 10 GeV");
 	make_hist("M3minPt","Mass of 3 jets with smallest total Pt",60,0,600,"M3 min Pt (Gev)","Events / 10 GeV");
@@ -98,6 +98,19 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist("M3_100_200","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
 	make_hist("M3_200_300","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
 	make_hist("M3_300_up","Mass of 3 jets with highest total Pt",100,0,1000,"M3 (Gev)","Events / 10 GeV");
+	
+	make_hist("MCcategory","MC category",11,0.5,11.5,"category","Events");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(1,"Total");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(2,"AllHad");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(3,"1 lepton");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(4,"2 leptons");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(5,"");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(6,"1 e");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(7,"2 e");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(8,"1 #mu");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(9,"2 #mu");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(10,"1 #tau");
+	hists["MCcategory"]->GetXaxis()->SetBinLabel(11,"2 #tau");
 }
 
 void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree, double weight){
@@ -148,6 +161,42 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	//std::cout << "here1" << std::endl;
 	// full event selection histograms
 	if(!selEvent->passAll) return;
+
+	// mc category
+	if( tree->isData_ == 0 ){
+		int EleP = 0;
+		int EleM = 0;
+		int MuP = 0;
+		int MuM = 0;
+		int TauP = 0;
+		int TauM = 0;
+		for( int mcI = 0; mcI < tree->nMC_; ++mcI){
+			if(abs(tree->mcMomPID->at(mcI))==24 && tree->mcParentage->at(mcI)==10){
+				if( tree->mcPID->at(mcI) == 11 ) EleP = 1;
+				if( tree->mcPID->at(mcI) == -11 ) EleM = 1;
+				if( tree->mcPID->at(mcI) == 13 ) MuP = 1;
+				if( tree->mcPID->at(mcI) == -13 ) MuM = 1;
+				if( tree->mcPID->at(mcI) == 15) TauP = 1;
+				if( tree->mcPID->at(mcI) == -15) TauM = 1;
+			}
+		}
+		hists["MCcategory"]->Fill(1.0, weight); // Total
+		int nEle = EleP + EleM;
+		int nMu = MuP + MuM;
+		int nTau = TauP + TauM;
+		if( nEle + nMu + nTau == 0) hists["MCcategory"]->Fill(2.0, weight); // All Had
+		if( nEle + nMu + nTau == 1) hists["MCcategory"]->Fill(3.0, weight); // Single Lepton
+		if( nEle + nMu + nTau == 2) hists["MCcategory"]->Fill(4.0, weight); // Di Lepton
+		
+		if(nEle==1 && nMu==0 && nTau==0) hists["MCcategory"]->Fill(6.0, weight); // 1 e
+		if(nEle==2 && nMu==0 && nTau==0) hists["MCcategory"]->Fill(7.0, weight); // 2 e
+		if(nEle==0 && nMu==1 && nTau==0) hists["MCcategory"]->Fill(8.0, weight); // 1 mu
+		if(nEle==0 && nMu==2 && nTau==0) hists["MCcategory"]->Fill(9.0, weight); // 2 mu
+		if(nEle==0 && nMu==0 && nTau==1) hists["MCcategory"]->Fill(10.0, weight); // 1 tau
+		if(nEle==0 && nMu==0 && nTau==2) hists["MCcategory"]->Fill(11.0, weight); // 2 tau
+		//std::cout << "EleP " << EleP << "  EleM " << EleM << "  MuP " << MuP << "  MuM " << MuM << "  TauP " << TauP << "  TauM " << TauM << std::endl;
+	}
+
 	double MTW = 0.0;
 	// electrons
 	if( selEvent->Electrons.size() > 0 ){
