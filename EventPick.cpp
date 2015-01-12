@@ -93,7 +93,8 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		bool goodPhoton = true;
 		// remove photons close to jets
 		for(std::vector<int>::iterator jetInd = Jets.begin(); jetInd != Jets.end(); jetInd++){		
-			if(dR_jet_pho(*jetInd, selector->PhotonsPresel.at(phoVi)) < veto_pho_jet_dR) goodPhoton = false;
+			double drjp = dR_jet_pho(*jetInd, selector->PhotonsPresel.at(phoVi));
+			if(veto_jet_dR <= drjp && drjp < veto_pho_jet_dR) goodPhoton = false;
 		}
 		// and electrons
 		for(std::vector<int>::iterator eleInd = Electrons.begin(); eleInd != Electrons.end(); eleInd++)
