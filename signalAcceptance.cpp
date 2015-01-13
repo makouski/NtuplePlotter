@@ -4,7 +4,10 @@
 #include"Selector.h"
 #include"EventPick.h"
 
-void fillCategory(EventTree* tree, TH1F* hist){
+void doJER(EventTree* tree);
+double JERcorrection(double eta);
+
+void fillCategory(EventTree* tree, TH1F* hist, double weight){
 	int EleP = 0;
 	int EleM = 0;
 	int MuP = 0;
@@ -21,13 +24,13 @@ void fillCategory(EventTree* tree, TH1F* hist){
 			if( tree->mcPID->at(mcI) == -15) TauM = 1;
 		}
 	}
-	hist->Fill(1.0); // Total
+	hist->Fill(1.0, weight); // Total
 	int nEle = EleP + EleM;
 	int nMu = MuP + MuM;
 	int nTau = TauP + TauM;
-	if( nEle + nMu + nTau == 0) hist->Fill(2.0); // All Had
-	if( nEle + nMu + nTau == 1) hist->Fill(3.0); // Single Lepton
-	if( nEle + nMu + nTau == 2) hist->Fill(4.0); // Di Lepton
+	if( nEle + nMu + nTau == 0) hist->Fill(2.0, weight); // All Had
+	if( nEle + nMu + nTau == 1) hist->Fill(3.0, weight); // Single Lepton
+	if( nEle + nMu + nTau == 2) hist->Fill(4.0, weight); // Di Lepton
 	return;
 }
 
@@ -36,7 +39,7 @@ int main(int ac, char** av){
 		std::cout << "usage: ./signalAcceptance inputFile[s]" << std::endl;
 		return -1;
 	}
-
+	
 	TH1F* allCategory = new TH1F("allCategory","all Category",11,0.5,11.5);
 	TH1F* preselCategory = new TH1F("preselCategory","presel Category",11,0.5,11.5);
 	TH1F* photonCategory = new TH1F("photonCategory"," photon Category",11,0.5,11.5);
@@ -54,15 +57,17 @@ int main(int ac, char** av){
 		if(entry%10000 == 0) std::cout << "processing entry " << entry << " out of " << nEntr << std::endl;
 		tree->GetEntry(entry);
 		
+		doJER(tree);
+
 		selectorLoose->process_objects(tree);
 		evtPickLoose->process_event(tree, selectorLoose, PUweight);
 
 		// fill the histograms
-		fillCategory(tree, allCategory);
-		if(evtPickLoose->passPreSel) fillCategory(tree, preselCategory);
-		if(evtPickLoose->passAll) fillCategory(tree, photonCategory);
+		fillCategory(tree, allCategory, PUweight);
+		if(evtPickLoose->passPreSel) fillCategory(tree, preselCategory, PUweight);
+		if(evtPickLoose->passAll) fillCategory(tree, photonCategory, PUweight);
 	}
-	
+
 	evtPickLoose->print_cutflow();
 
 	// write histograms
@@ -83,5 +88,51 @@ int main(int ac, char** av){
 
 	delete tree;
 	return 0;
+}
+
+
+// https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
+void doJER(EventTree* tree){
+	// correct MET when jets are smeared
+	TLorentzVector tMET;
+	tMET.SetPtEtaPhiM(tree->pfMET_,0.0,tree->pfMETPhi_,0.0);
+	//std::cout << "before correction MET " << tree->pfMET_ << " " << tree->pfMETPhi_ << "    ";
+	// scale jets
+	for(int jetInd = 0; jetInd < tree->nJet_ ; ++jetInd){
+		if(tree->jetPt_->at(jetInd) < 20) continue;
+		if(tree->jetGenJetIndex_->at(jetInd)>0){
+			TLorentzVector tjet;
+			tjet.SetPtEtaPhiM(tree->jetPt_->at(jetInd), tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), 0.0);
+			tMET+=tjet;
+			double oldPt = tree->jetPt_->at(jetInd);
+			double genPt = tree->jetGenJetPt_->at(jetInd);
+			double eta = tree->jetEta_->at(jetInd);
+			tree->jetPt_->at(jetInd) = std::max(0.0, genPt + JERcorrection(eta)*(oldPt-genPt));
+			tjet.SetPtEtaPhiM(tree->jetPt_->at(jetInd), tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), 0.0);			
+			tMET-=tjet;
+			//std::cout << "old " << oldPt << "  new " << tree->jetPt_->at(jetInd) << std::endl;
+		}
+	}
+	// save updated MET values
+	tree->pfMET_ = tMET.Pt();
+	tree->pfMETPhi_ = tMET.Phi();
+	//std::cout << "after corrections " << tree->pfMET_ << " " << tree->pfMETPhi_ << std::endl;
+}
+
+
+double JERcorrection(double JetEta){
+	double eta = TMath::Abs(JetEta);
+	static const double corr[5] = {1.052, 1.057, 1.096, 1.134, 1.288};
+	static const double corrDown[5] = {0.990, 1.001, 1.032, 1.042, 1.089};
+	static const double corrUp[5] = {1.115, 1.114, 1.161, 1.228, 1.488};
+	int region = 0;
+	if( eta >= 0.5 ) region++;
+	if( eta >= 1.1 ) region++;
+	if( eta >= 1.7 ) region++;
+	if( eta >= 2.3 ) region++;
+	return corr[region];
+	
+	// should not get here
+	return 1.0;
 }
 
