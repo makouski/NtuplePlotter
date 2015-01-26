@@ -1,11 +1,21 @@
 #include<iostream>
+#include<cmath>
 
 #include"EventTree.h"
 #include"Selector.h"
 #include"EventPick.h"
 
+void saveHist(TH1F* hist, TFile* file);
 void doJER(EventTree* tree);
 double JERcorrection(double eta);
+int minDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis);
+int secondMinDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis);
+
+bool overlapMadGraph(EventTree* tree);
+
+double dPhi(double dphi){	
+	return fabs( fabs( fabs(dphi) - M_PI ) - M_PI);
+}
 
 void fillCategory(EventTree* tree, TH1F* hist, double weight){
 	int EleP = 0;
@@ -42,12 +52,35 @@ int main(int ac, char** av){
 	
 	TH1F* allCategory = new TH1F("allCategory","all Category",11,0.5,11.5);
 	TH1F* preselCategory = new TH1F("preselCategory","presel Category",11,0.5,11.5);
-	TH1F* photonCategory = new TH1F("photonCategory"," photon Category",11,0.5,11.5);
+	TH1F* photonCategory = new TH1F("photonCategory","reco photon Category",11,0.5,11.5);
 	
+	TH1F* VisAllCategory = new TH1F("VisAllCategory","all Category, Vis",11,0.5,11.5);
+	TH1F* VisPreselCategory = new TH1F("VisPreselCategory","presel Category, Vis",11,0.5,11.5);
+	TH1F* VisPhotonCategory = new TH1F("VisPhotonCategory","reco photon Category, Vis",11,0.5,11.5);
+	
+	
+	TH1F* dROtherGen = new TH1F("dROtherGen", "dROtherGen", 400, 0.0, 1.0);
+	TH1F* parentage = new TH1F("parentage","parentage",30, 0, 30);	
+	TH1F* dptOverpt = new TH1F("dptOverpt","dptOverpt", 400, -2.0, 2.0);
+	TH1F* dRrecoGen = new TH1F("dRrecoGen","dRrecoGen", 200, 0.0, 0.2);
+	TH1F* dPhiRecoGen = new TH1F("dPhiRecoGen","dPhiRecoGen", 400, 0.0, 0.2);
+	TH1F* dEtaRecoGen = new TH1F("dEtaRecoGen","dEtaRecoGen", 800, -0.2, 0.2);
+	
+	TH1F* dRGenNearJet = new TH1F("dRGenNearJet","dRGenNearJet", 200, 0.0, 1.0);
+	TH1F* dPhiGenNearJet = new TH1F("dPhiGenNearJet","dPhiGenNearJet", 100, 0.0, 0.5);
+	TH1F* dEtaGenNearJet = new TH1F("dEtaGenNearJet","dEtaGenNearJet", 200, -0.5, 0.5);
+
+	TH1F* dRGenNextNearJet = new TH1F("dRGenNextNearJet","dRGenNextNearJet", 600, 0.0, 6.0);
+	TH1F* dPhiGenNextNearJet = new TH1F("dPhiGenNextNearJet","dPhiGenNextNearJet", 300, 0.0, 3.0);
+	TH1F* dEtaGenNextNearJet = new TH1F("dEtaGenNextNearJet","dEtaGenNextNearJet", 600, -3.0, 3.0);
+
 	// object selector
 	Selector* selectorLoose = new Selector();
 	// create event selectors here
 	EventPick* evtPickLoose = new EventPick("LoosePhotonID");
+	// do not do jet to photon dR cleaning
+	evtPickLoose->veto_pho_jet_dR = 0.0;
+	
 	
 	EventTree* tree = new EventTree(ac-1, av+1);
 	double PUweight = 1.0;
@@ -66,29 +99,129 @@ int main(int ac, char** av){
 		fillCategory(tree, allCategory, PUweight);
 		if(evtPickLoose->passPreSel) fillCategory(tree, preselCategory, PUweight);
 		if(evtPickLoose->passAll) fillCategory(tree, photonCategory, PUweight);
+
+		// fill histograms for gen photon passing the acceptance cuts defined in analysis
+		bool inAcc = false;
+		for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+			if(tree->mcPID->at(mcInd) == 22 && 
+			(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10) && 
+			tree->mcPt->at(mcInd) > 25 && 
+			fabs(tree->mcEta->at(mcInd)) < 1.4442){
+				inAcc = true;
+			}
+		}
+		if(inAcc){
+			fillCategory(tree, VisAllCategory, PUweight);
+			if(evtPickLoose->passPreSel) fillCategory(tree, VisPreselCategory, PUweight);
+			if(evtPickLoose->passAll) fillCategory(tree, VisPhotonCategory, PUweight);
+		}
+		
+		// have at least one good photon
+		if(!evtPickLoose->passAll) continue;
+
+		// test
+		//if(overlapMadGraph(tree)) continue;
+
+		int phoInd = evtPickLoose->Photons.at(0);
+		// experiment with delta R cuts for photons
+		for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+			bool etetamatch = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) < 0.2 && 
+			(fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd)) < 1.0;
+			if( etetamatch && tree->mcPID->at(mcInd) == 22){
+				// fill histograms for mathced photon candidate
+				parentage->Fill( tree->mcParentage->at(mcInd) );
+				dptOverpt->Fill( (tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd));
+				dRrecoGen->Fill( dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) );
+				dPhiRecoGen->Fill( dPhi( tree->phoPhi_->at(phoInd) - tree->mcPhi->at(mcInd) ) );
+				dEtaRecoGen->Fill( tree->phoEta_->at(phoInd) - tree->mcEta->at(mcInd) );
+				
+				int closestGenInd = secondMinDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->mcEta, tree->mcPhi );
+				dROtherGen->Fill( dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->mcEta->at(closestGenInd), tree->mcPhi->at(closestGenInd)) );
+	
+				int closestJetInd = minDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_, tree->jetPhi_ );
+				dRGenNearJet->Fill( dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_->at(closestJetInd), tree->jetPhi_->at(closestJetInd) ) );
+				dPhiGenNearJet->Fill( dPhi( tree->jetPhi_->at(closestJetInd) - tree->mcPhi->at(mcInd) ) );
+				dEtaGenNearJet->Fill( tree->jetEta_->at(closestJetInd) - tree->mcEta->at(mcInd) );
+				
+				closestJetInd = secondMinDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_, tree->jetPhi_ );	
+				dRGenNextNearJet->Fill( dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_->at(closestJetInd), tree->jetPhi_->at(closestJetInd) ) );
+				dPhiGenNextNearJet->Fill( dPhi( tree->jetPhi_->at(closestJetInd) - tree->mcPhi->at(mcInd) ) );
+				dEtaGenNextNearJet->Fill( tree->jetEta_->at(closestJetInd) - tree->mcEta->at(mcInd) );
+			}
+		}
 	}
 
 	evtPickLoose->print_cutflow();
 
 	// write histograms
 	TFile outFile("signalAcc.root","RECREATE");
-	allCategory->SetDirectory(outFile.GetDirectory(""));
-	allCategory->Write();
-	allCategory->SetDirectory(0);
+	
+	saveHist(allCategory, &outFile);
+	saveHist(preselCategory, &outFile);
+	saveHist(photonCategory, &outFile);
+	
+	saveHist(VisAllCategory, &outFile);
+	saveHist(VisPreselCategory, &outFile);
+	saveHist(VisPhotonCategory, &outFile);
+	
+	saveHist(dROtherGen, &outFile);
+	saveHist(parentage, &outFile);
+	saveHist(dptOverpt, &outFile);
+	saveHist(dRrecoGen, &outFile);
+	saveHist(dPhiRecoGen, &outFile);
+	saveHist(dEtaRecoGen, &outFile);
+	saveHist(dRGenNearJet, &outFile);
+	saveHist(dPhiGenNearJet, &outFile);
+	saveHist(dEtaGenNearJet, &outFile);
+	saveHist(dRGenNextNearJet, &outFile);
+	saveHist(dPhiGenNextNearJet, &outFile);
+	saveHist(dEtaGenNextNearJet, &outFile);
 
-	preselCategory->SetDirectory(outFile.GetDirectory(""));
-	preselCategory->Write();
-	preselCategory->SetDirectory(0);
-	
-	photonCategory->SetDirectory(outFile.GetDirectory(""));
-	photonCategory->Write();
-	photonCategory->SetDirectory(0);
-	
 	outFile.Close();
 
 	delete tree;
 	return 0;
 }
+
+void saveHist(TH1F* hist, TFile* file){
+	hist->SetDirectory(file->GetDirectory(""));
+	hist->Write();
+	hist->SetDirectory(0);
+}
+
+int minDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis){
+	double mindr = 999.0;
+	double dr;
+	int bestInd = -1;
+	for( int oind = 0; oind < etas->size(); oind++){
+		dr = dR(myEta, myPhi, etas->at(oind), phis->at(oind));
+		if( mindr > dr ) {
+			mindr = dr;
+			bestInd = oind;
+		}
+	}
+	return bestInd;
+}
+
+int secondMinDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis){
+	int VetoInd = minDrIndex(myEta, myPhi, etas, phis);
+	
+	double mindr = 999.0;
+	double dr;
+	int bestInd = -1;
+	for( int oind = 0; oind < etas->size(); oind++){
+		if(oind == VetoInd) continue;
+
+		dr = dR(myEta, myPhi, etas->at(oind), phis->at(oind));
+		if( mindr > dr ) {
+			mindr = dr;
+			bestInd = oind;
+		}
+	}
+	return bestInd;
+}
+
+
 
 
 // https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution

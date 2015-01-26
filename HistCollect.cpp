@@ -1,5 +1,6 @@
 #include"HistCollect.h"
-
+bool isSignalPhoton(EventTree* tree, int mcInd, int recoPhoInd);
+bool isGoodElectron(EventTree* tree, int mcInd, int recoPhoInd);
 
 HistCollect::HistCollect(std::string namePrefix, std::string nameSuffix){
 	// book histogrammers:
@@ -149,36 +150,39 @@ void HistCollect::findPhotonCategory(int phoInd, EventTree* tree, bool* rs, bool
 	*rb = false;
 	*fe = false;
 	*fj = false;
+
+	//std::cout << "\n\n\n start matching photon\n";
+
 	// try to match with MC photons and electrons
 	int mcPhotonInd = -1;
 	int mcEleInd = -1;
 	for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+		// crude matching to get candidates
 		bool etetamatch = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) < 0.2 && 
-			fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd) < 1.0;
-		if( etetamatch && mcPhotonInd < 0 && 
-		tree->mcPID->at(mcInd) == 22 &&
-		tree->mcPt->at(mcInd) > 13.0 &&
-		fabs(tree->mcEta->at(mcInd)) < 3.0 && 
-		dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->mcMomEta->at(mcInd),tree->mcMomPhi->at(mcInd)) > 0.3 &&
-		(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26)
-		)
+			(fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd)) < 1.0;
+		
+		//if(etetamatch) {
+		//	std::cout << "mc candidate:\n";
+		//	std::cout << "dPt/pt " << ((tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd)) << "\n";
+		//	std::cout << "PID " << tree->mcPID->at(mcInd) << "\n";
+		//	std::cout << "parentage " << tree->mcParentage->at(mcInd) << "\n";
+		//	std::cout << "mom Dr " << dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->mcMomEta->at(mcInd),tree->mcMomPhi->at(mcInd)) << "\n";
+		//}
+
+		if( etetamatch && mcPhotonInd < 0 && tree->mcPID->at(mcInd) == 22)
 			mcPhotonInd = mcInd; 
 		if( etetamatch && mcEleInd < 0 && abs(tree->mcPID->at(mcInd)) == 11 )
 			mcEleInd = mcInd;
 	}
-	
+	// see OverlapRemove.cpp for definitions of isSignalPhoton and isGoodElectron	
 	if(mcPhotonInd >= 0){
 		// signal: parents are quarks, gluons, bosons or leptons
-		//if(tree->mcParentage->at(mcPhotonInd)==2 || 
-		//	tree->mcParentage->at(mcPhotonInd)==10 || 
-		//	tree->mcParentage->at(mcPhotonInd)==26
-		//	) 
-		*rs = true;
-		//else *rb = true; // should not happen
+		if(isSignalPhoton(tree, mcPhotonInd, phoInd)) *rs = true;
+		else *rb = true;
 	}
 	else{
 		// no good matched Gen Photon found - our photon is fake
-		if(mcEleInd >= 0) *fe = true;
+		if(mcEleInd >= 0 && isGoodElectron(tree, mcEleInd, phoInd)) *fe = true;
 		else *fj = true;
 	}
 }
