@@ -104,7 +104,7 @@ int main(int ac, char** av){
 		bool inAcc = false;
 		for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
 			if(tree->mcPID->at(mcInd) == 22 && 
-			(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10) && 
+			(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26) && 
 			tree->mcPt->at(mcInd) > 25 && 
 			fabs(tree->mcEta->at(mcInd)) < 1.4442){
 				inAcc = true;

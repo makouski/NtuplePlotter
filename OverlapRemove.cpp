@@ -66,7 +66,7 @@ bool overlapMadGraph(EventTree* tree){
 		if(tree->mcPID->at(mcInd)==22 &&
 		tree->mcPt->at(mcInd) > Et_cut &&
 		fabs(tree->mcEta->at(mcInd)) < Eta_cut &&
-		(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10) ) {
+		(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26) ) {
 			// candidate for signal photon. check dR to other gen particles to confirm
 			if(secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05) haveOverlap = true;
 		}
@@ -76,7 +76,7 @@ bool overlapMadGraph(EventTree* tree){
 
 
 bool isSignalPhoton(EventTree* tree, int mcInd, int recoPhoInd){
-	bool parentagePass = tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10;
+	bool parentagePass = tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26;
 	double dptpt = (tree->phoEt_->at(recoPhoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd);
 	bool dptptPass = dptpt < 0.1;
 	bool drotherPass = secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05;

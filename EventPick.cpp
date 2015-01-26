@@ -146,7 +146,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	if(passPreSel && !(tree->isData_)){
 		for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
 			if(tree->mcPID->at(mcInd) == 22 &&
-			   (tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10) &&
+			   (tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26) &&
 			   tree->mcPt->at(mcInd) > selector->pho_Et_cut){		
 				if(secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05){
 					double fabsEta = TMath::Abs(tree->mcEta->at(mcInd));
