@@ -146,20 +146,24 @@ def getWeightedHist(selection, filename, histName, leftCut=None, rightCut=None):
 	if suffix==None: 
 		print '#############################  wrong parameter!!!'
 		return None
-
-	Snames = ['TTGamma','TTJets'] #,'Vgamma','SingleTop','Other']
+	global datasetsToMix
+	Snames = datasetsToMix
 	if selection=='data':
 		Snames = ['Data']
 	
+	global signalSF
+    
 	if leftCut==None and rightCut==None:
 		# 1d histogram 
 		sumHist = get1DHist(filename, Snames[0]+suffix+histName)
+		sumHist.Scale(signalSF)
 		for sampl in Snames[1:]:
 			sumHist.Add(get1DHist(filename, sampl+suffix+histName))
 		return sumHist
 	else:
 		# 2d histogram projection
 		sumHistp = getTemplFrom2Dhist(filename, Snames[0]+suffix+histName, 'X', leftCut, rightCut)
+		sumHistp.Scale(signalSF)
 		for sampl in Snames[1:]:
 			sumHistp.Add(getTemplFrom2Dhist(filename, sampl+suffix+histName, 'X', leftCut, rightCut))
 		return sumHistp
@@ -170,6 +174,11 @@ highFitrange = 19.99
 #highFitrange = 4.99
 
 selectionRange = 4.99
+
+# signal scale factor. for procedure linearity test
+signalSF = 1.0
+# datasets to mix
+datasetsToMix = ['TTGamma','TTJets']  #,'Vgamma','SingleTop','Other']
 
 # number of pseudo experiments. off by default reasonable resuts for 1000 or so
 NpseudoExp = 0
@@ -228,7 +237,8 @@ def doTheFit():
 
 	### MC truth for SCR isolation selection, for true signal fraction calculation
 	pseudosignal = getWeightedHist('rs', InputFilename, hist2d_name, 0.0, sihihSelCut)
-
+	pseudosignal.Add( getWeightedHist('fe', InputFilename, hist2d_name, 0.0, sihihSelCut) )
+	
 	leftbin = pseudodata.FindBin(lowFitrange)
 	rightbin = pseudodata.FindBin(highFitrange)
 	print 'calculating integrals in bins',leftbin,rightbin
@@ -425,7 +435,7 @@ def doTheFit():
 
 	if fitData:
 		print 'Fitting of Data is done'
-		return (SFNomSel, SFNomSelError)
+		return (SFNomSel, SFNomSelError, -1.0)
 
 
 	leg.Clear()
@@ -522,8 +532,8 @@ def doTheFit():
 	# find MC truth signal fraction in nominal selection #############################################################################
 	# extract "rs" parts, divide by "photon1ChHadSCRIso" sum
 	totalSigInt = getWeightedHist('', InputFilename, hist_sig_name).Integral()
-	trueSignalInt = getWeightedHist('rs', InputFilename, hist_sig_name).Integral()
+	trueSignalInt = getWeightedHist('rs', InputFilename, hist_sig_name).Integral() + getWeightedHist('fe', InputFilename, hist_sig_name).Integral()
 	#print 'MC truth signal integral',trueSignalInt
 	print 'MC truth signal fraction afetr Nominal selection is ', trueSignalInt/totalSigInt
 	print 'MC truth signal fraction if SCR iso in fit range used as selection: ',MCtrueSelSignalFraction
-	return (SFNomSel, SFNomSelError)
+	return (SFNomSel, SFNomSelError, trueSignalInt/totalSigInt)

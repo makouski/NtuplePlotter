@@ -8,7 +8,10 @@ TTJets2l_num        = 12086717 #
 TTJetsHad_num       = 31178278
 
 
-TTgamma_num      =  1719954 #
+#TTgamma_num      =  1719954 #
+
+# /TTGamma_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_RD1_START53_V7N-v1/AODSIM
+newTTgamma_num   =  832989 # new MG ttgamma sample 
 
 WJets_num      = 57709905 #
 
@@ -78,6 +81,7 @@ TTJets2l_xs       = 25.09 # 239*(1-0.676)*(1-0.676)
 TTJetsHad_xs      = 109.2 # 239*0.676*0.676
 
 TTgamma_xs        = 0.9081 * 2  # https://twiki.cern.ch/twiki/bin/view/CMS/WhizardMCTeeTeeGamma
+newTTgamma_xs     = 0.033 * 9 + 0.148 * 12 * 2 # 2l(NLO) + l+jets(NLO) + all_had (approx same as l+jets)  
 WJets_xs          = 36257.0 # 35640.0 # CMS measurement. was: 36257.0  # 
 ZJets_xs          = 3350.0 # CMS measurement. was: 3533.0 # 3503.71 #
 
