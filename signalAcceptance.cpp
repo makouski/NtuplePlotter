@@ -128,6 +128,9 @@ int main(int ac, char** av){
 			bool etetamatch = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(phoInd),tree->phoPhi_->at(phoInd)) < 0.2 && 
 			(fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd)) < 1.0;
 			if( etetamatch && tree->mcPID->at(mcInd) == 22){
+				// test
+				//if(!(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26)) continue;
+				
 				// fill histograms for mathced photon candidate
 				parentage->Fill( tree->mcParentage->at(mcInd) );
 				dptOverpt->Fill( (tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd));

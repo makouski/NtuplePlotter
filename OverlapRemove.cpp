@@ -68,7 +68,8 @@ bool overlapMadGraph(EventTree* tree){
 		fabs(tree->mcEta->at(mcInd)) < Eta_cut &&
 		(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26) ) {
 			// candidate for signal photon. check dR to other gen particles to confirm
-			if(secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05) haveOverlap = true;
+			if(secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05) 
+				haveOverlap = true;
 		}
 	}
 	return haveOverlap;
@@ -83,6 +84,7 @@ bool isSignalPhoton(EventTree* tree, int mcInd, int recoPhoInd){
 	bool detarecogenPass = fabs(tree->phoEta_->at(recoPhoInd) - tree->mcEta->at(mcInd)) < 0.005;
 	bool drrecogenPass = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(recoPhoInd),tree->phoPhi_->at(recoPhoInd)) < 0.01;
 	if(parentagePass && dptptPass && drotherPass && detarecogenPass && drrecogenPass) return true;
+	//if(parentagePass) return true;
 	else return false;
 }
 
@@ -94,6 +96,7 @@ bool isGoodElectron(EventTree* tree, int mcInd, int recoPhoInd){
 	bool detarecogenPass = fabs(tree->phoEta_->at(recoPhoInd) - tree->mcEta->at(mcInd)) < 0.005;
 	bool drrecogenPass = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(recoPhoInd),tree->phoPhi_->at(recoPhoInd)) < 0.04;
 	if(parentagePass && dptptPass && drotherPass && detarecogenPass && drrecogenPass) return true;
+	//if(parentagePass) return true;
 	else return false;
 }
 

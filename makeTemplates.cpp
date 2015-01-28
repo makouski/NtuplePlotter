@@ -145,6 +145,12 @@ int main(int ac, char** av){
 
 	bool doOverlapRemoval = false;
 	if( std::string(av[1]).find("TTJets") != std::string::npos) doOverlapRemoval = true;
+	if( std::string(av[1]).find("ZJets") != std::string::npos) doOverlapRemoval = true;
+	if( std::string(av[1]).find("WJets") != std::string::npos) doOverlapRemoval = true;
+	if( std::string(av[1]).find("W3Jets") != std::string::npos) doOverlapRemoval = true;
+	if( std::string(av[1]).find("W4Jets") != std::string::npos) doOverlapRemoval = true;
+	
+	if(doOverlapRemoval) std::cout << "########## Will apply overlap removal ###########" << std::endl;
 
 	EventTree* tree = new EventTree(ac-3, av+3);
 	double PUweight = 1.0;
@@ -236,17 +242,11 @@ int main(int ac, char** av){
 	return 0;
 }
 
-// AN2012_438_v10 page9
-double getEleEff(EventTree* tree, EventPick* evt){
+
+double eleTrigSF(double pt, double eta){
 	static double trigEffSF_PtEta[3][3] = { {0.984, 0.967, 0.991}, {0.999, 0.983, 1.018}, {0.999, 0.988, 0.977} };
 	static double trigEffSFerr_PtEta[3][3] = { {0.002, 0.002, 0.007}, {0.003, 0.002, 0.012}, {0.002, 0.003, 0.015} };
-	static double idEffSF_PtEta[3][3] = { {0.950, 0.957, 0.922}, {0.966, 0.961, 0.941}, {0.961, 0.963, 0.971} };
-	static double idEffSFerr_PtEta[3][3] = { {0.003, 0.002, 0.004}, {0.001, 0.002, 0.007}, {0.002, 0.003, 0.0} };
 	
-	if( evt->Electrons.size() < 1 ) return 1.0; // no electrons, no weight
-	int eleInd = evt->Electrons[0];
-	double pt = tree->elePt_->at(eleInd);
-	double eta = TMath::Abs(tree->eleSCEta_->at(eleInd));
 	int etaRegion = 0;
 	if( eta > 0.80) etaRegion++;
 	if( eta > 1.48) etaRegion++;
@@ -255,11 +255,48 @@ double getEleEff(EventTree* tree, EventPick* evt){
 	if( pt > 40 ) ptRegion++;
 	if( pt > 50 ) ptRegion++;
 
-	if(eleeff012_g == 1) return trigEffSF_PtEta[ptRegion][etaRegion] * idEffSF_PtEta[ptRegion][etaRegion];
-	if(eleeff012_g == 0) return (trigEffSF_PtEta[ptRegion][etaRegion] - trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] - idEffSFerr_PtEta[ptRegion][etaRegion]);
-	if(eleeff012_g == 2) return (trigEffSF_PtEta[ptRegion][etaRegion] + trigEffSFerr_PtEta[ptRegion][etaRegion]) * (idEffSF_PtEta[ptRegion][etaRegion] + idEffSFerr_PtEta[ptRegion][etaRegion]);	
+	if(eleeff012_g == 1) return trigEffSF_PtEta[ptRegion][etaRegion];
+	if(eleeff012_g == 0) return trigEffSF_PtEta[ptRegion][etaRegion] - trigEffSFerr_PtEta[ptRegion][etaRegion];
+	if(eleeff012_g == 2) return trigEffSF_PtEta[ptRegion][etaRegion] + trigEffSFerr_PtEta[ptRegion][etaRegion];
+	return 1.0;	
+}
+
+double eleIDSF(double pt, double eta){
+	static double idEffSF_PtEta[3][3] = { {0.950, 0.957, 0.922}, {0.966, 0.961, 0.941}, {0.961, 0.963, 0.971} };
+	static double idEffSFerr_PtEta[3][3] = { {0.003, 0.002, 0.004}, {0.001, 0.002, 0.007}, {0.002, 0.003, 0.0} };
+
+	int etaRegion = 0;
+	if( eta > 0.80) etaRegion++;
+	if( eta > 1.48) etaRegion++;
+
+	int ptRegion = 0;
+	if( pt > 40 ) ptRegion++;
+	if( pt > 50 ) ptRegion++;
+
+	if(eleeff012_g == 1) return idEffSF_PtEta[ptRegion][etaRegion];
+	if(eleeff012_g == 0) return idEffSF_PtEta[ptRegion][etaRegion] - idEffSFerr_PtEta[ptRegion][etaRegion];
+	if(eleeff012_g == 2) return idEffSF_PtEta[ptRegion][etaRegion] + idEffSFerr_PtEta[ptRegion][etaRegion];	
+	return 1.0;
+}
+
+// AN2012_438_v10 page9
+double getEleEff(EventTree* tree, EventPick* evt){
+	if( evt->Electrons.size() < 1 ) return 1.0; // no electrons, no weight
+	int eleInd = evt->Electrons[0];
+	double pt = tree->elePt_->at(eleInd);
+	double eta = TMath::Abs(tree->eleSCEta_->at(eleInd));
 	
-	// should not get here
+	double trigSF = eleTrigSF(pt, eta);
+	double idSF = eleIDSF(pt, eta);
+	if(evt->Electrons.size() == 1) return trigSF*idSF;
+	if(evt->Electrons.size() == 2){
+		int eleInd2 = evt->Electrons[1];	
+		double pt2 = tree->elePt_->at(eleInd2);
+		double eta2 = TMath::Abs(tree->eleSCEta_->at(eleInd2));
+		double trigSF2 = eleTrigSF(pt2, eta2);
+		double idSF2 = eleIDSF(pt2, eta2);
+		return ( 1.0 - (1.0-trigSF)*(1.0-trigSF2) )*idSF*idSF2;
+	}
 	return 1.0;
 }
 
