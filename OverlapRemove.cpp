@@ -37,18 +37,20 @@ bool overlapWHIZARD(EventTree* tree){
 }
 
 
-double secondMinDr(int myInd, std::vector<float> *etas, std::vector<float> *phis){
-	int VetoInd = myInd;
-	double myEta = etas->at(VetoInd); 
-	double myPhi = phis->at(VetoInd);
-	
+double secondMinDr(int myInd, const EventTree* tree){
+	double myEta = tree->mcEta->at(myInd); 
+	double myPhi = tree->mcPhi->at(myInd);
+	int myPID = tree->mcPID->at(myInd);
+
 	double mindr = 999.0;
 	double dr;
 	int bestInd = -1;
-	for( int oind = 0; oind < etas->size(); oind++){
-		if(oind == VetoInd) continue;
-
-		dr = dR(myEta, myPhi, etas->at(oind), phis->at(oind));
+	for( int oind = 0; oind < tree->nMC_; oind++){
+		if(oind == myInd) continue;
+		if(tree->mcMass->at(oind) > 10) continue; // this is top or W, not final state particle
+		int opid = abs(tree->mcPID->at(oind));
+		if(opid == 12 || opid == 14 || opid == 16) continue; // skip neutrinos
+		dr = dR(myEta, myPhi, tree->mcEta->at(oind), tree->mcPhi->at(oind));
 		if( mindr > dr ) {
 			mindr = dr;
 			bestInd = oind;
@@ -68,7 +70,7 @@ bool overlapMadGraph(EventTree* tree){
 		fabs(tree->mcEta->at(mcInd)) < Eta_cut &&
 		(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26) ) {
 			// candidate for signal photon. check dR to other gen particles to confirm
-			if(secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05) 
+			if(secondMinDr(mcInd, tree) > 0.2) 
 				haveOverlap = true;
 		}
 	}
@@ -80,11 +82,10 @@ bool isSignalPhoton(EventTree* tree, int mcInd, int recoPhoInd){
 	bool parentagePass = tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26;
 	double dptpt = (tree->phoEt_->at(recoPhoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd);
 	bool dptptPass = dptpt < 0.1;
-	bool drotherPass = secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05;
+	bool drotherPass = secondMinDr(mcInd, tree) > 0.2;
 	bool detarecogenPass = fabs(tree->phoEta_->at(recoPhoInd) - tree->mcEta->at(mcInd)) < 0.005;
 	bool drrecogenPass = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(recoPhoInd),tree->phoPhi_->at(recoPhoInd)) < 0.01;
 	if(parentagePass && dptptPass && drotherPass && detarecogenPass && drrecogenPass) return true;
-	//if(parentagePass) return true;
 	else return false;
 }
 
@@ -92,11 +93,10 @@ bool isGoodElectron(EventTree* tree, int mcInd, int recoPhoInd){
 	bool parentagePass = tree->mcParentage->at(mcInd)==10;
 	double dptpt = (tree->phoEt_->at(recoPhoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd);
 	bool dptptPass = dptpt < 0.1;
-	bool drotherPass = secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05;
+	bool drotherPass = secondMinDr(mcInd, tree) > 0.2;
 	bool detarecogenPass = fabs(tree->phoEta_->at(recoPhoInd) - tree->mcEta->at(mcInd)) < 0.005;
 	bool drrecogenPass = dR(tree->mcEta->at(mcInd),tree->mcPhi->at(mcInd),tree->phoEta_->at(recoPhoInd),tree->phoPhi_->at(recoPhoInd)) < 0.04;
 	if(parentagePass && dptptPass && drotherPass && detarecogenPass && drrecogenPass) return true;
-	//if(parentagePass) return true;
 	else return false;
 }
 

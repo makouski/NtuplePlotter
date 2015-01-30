@@ -9,7 +9,7 @@ void saveHist(TH1F* hist, TFile* file);
 void doJER(EventTree* tree);
 double JERcorrection(double eta);
 int minDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis);
-int secondMinDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis);
+int secondMinDrIndex(int myInd, EventTree* tree);
 
 bool overlapMadGraph(EventTree* tree);
 
@@ -59,7 +59,7 @@ int main(int ac, char** av){
 	TH1F* VisPhotonCategory = new TH1F("VisPhotonCategory","reco photon Category, Vis",11,0.5,11.5);
 	
 	
-	TH1F* dROtherGen = new TH1F("dROtherGen", "dROtherGen", 400, 0.0, 1.0);
+	TH1F* dROtherGen = new TH1F("dROtherGen", "dROtherGen", 800, 0.0, 4.0);
 	TH1F* parentage = new TH1F("parentage","parentage",30, 0, 30);	
 	TH1F* dptOverpt = new TH1F("dptOverpt","dptOverpt", 400, -2.0, 2.0);
 	TH1F* dRrecoGen = new TH1F("dRrecoGen","dRrecoGen", 200, 0.0, 0.2);
@@ -70,9 +70,9 @@ int main(int ac, char** av){
 	TH1F* dPhiGenNearJet = new TH1F("dPhiGenNearJet","dPhiGenNearJet", 100, 0.0, 0.5);
 	TH1F* dEtaGenNearJet = new TH1F("dEtaGenNearJet","dEtaGenNearJet", 200, -0.5, 0.5);
 
-	TH1F* dRGenNextNearJet = new TH1F("dRGenNextNearJet","dRGenNextNearJet", 600, 0.0, 6.0);
-	TH1F* dPhiGenNextNearJet = new TH1F("dPhiGenNextNearJet","dPhiGenNextNearJet", 300, 0.0, 3.0);
-	TH1F* dEtaGenNextNearJet = new TH1F("dEtaGenNextNearJet","dEtaGenNextNearJet", 600, -3.0, 3.0);
+	//TH1F* dRGenNextNearJet = new TH1F("dRGenNextNearJet","dRGenNextNearJet", 600, 0.0, 6.0);
+	//TH1F* dPhiGenNextNearJet = new TH1F("dPhiGenNextNearJet","dPhiGenNextNearJet", 300, 0.0, 3.0);
+	//TH1F* dEtaGenNextNearJet = new TH1F("dEtaGenNextNearJet","dEtaGenNextNearJet", 600, -3.0, 3.0);
 
 	// object selector
 	Selector* selectorLoose = new Selector();
@@ -129,7 +129,7 @@ int main(int ac, char** av){
 			(fabs(tree->phoEt_->at(phoInd) - tree->mcPt->at(mcInd)) / tree->mcPt->at(mcInd)) < 1.0;
 			if( etetamatch && tree->mcPID->at(mcInd) == 22){
 				// test
-				//if(!(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26)) continue;
+				if(!(tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26)) continue;
 				
 				// fill histograms for mathced photon candidate
 				parentage->Fill( tree->mcParentage->at(mcInd) );
@@ -138,7 +138,11 @@ int main(int ac, char** av){
 				dPhiRecoGen->Fill( dPhi( tree->phoPhi_->at(phoInd) - tree->mcPhi->at(mcInd) ) );
 				dEtaRecoGen->Fill( tree->phoEta_->at(phoInd) - tree->mcEta->at(mcInd) );
 				
-				int closestGenInd = secondMinDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->mcEta, tree->mcPhi );
+				int closestGenInd = secondMinDrIndex( mcInd, tree );
+				if(dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->mcEta->at(closestGenInd), tree->mcPhi->at(closestGenInd)) < 0.01){
+					std::cout << "closest PID " << tree->mcPID->at(closestGenInd) << "  MomPID " << tree->mcMomPID->at(closestGenInd) << std::endl;
+					std::cout << "photon mother PID " << tree->mcMomPID->at(mcInd) << std::endl;
+				}
 				dROtherGen->Fill( dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->mcEta->at(closestGenInd), tree->mcPhi->at(closestGenInd)) );
 	
 				int closestJetInd = minDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_, tree->jetPhi_ );
@@ -146,10 +150,10 @@ int main(int ac, char** av){
 				dPhiGenNearJet->Fill( dPhi( tree->jetPhi_->at(closestJetInd) - tree->mcPhi->at(mcInd) ) );
 				dEtaGenNearJet->Fill( tree->jetEta_->at(closestJetInd) - tree->mcEta->at(mcInd) );
 				
-				closestJetInd = secondMinDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_, tree->jetPhi_ );	
-				dRGenNextNearJet->Fill( dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_->at(closestJetInd), tree->jetPhi_->at(closestJetInd) ) );
-				dPhiGenNextNearJet->Fill( dPhi( tree->jetPhi_->at(closestJetInd) - tree->mcPhi->at(mcInd) ) );
-				dEtaGenNextNearJet->Fill( tree->jetEta_->at(closestJetInd) - tree->mcEta->at(mcInd) );
+				//closestJetInd = secondMinDrIndex( tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_, tree->jetPhi_ );	
+				//dRGenNextNearJet->Fill( dR(tree->mcEta->at(mcInd), tree->mcPhi->at(mcInd), tree->jetEta_->at(closestJetInd), tree->jetPhi_->at(closestJetInd) ) );
+				//dPhiGenNextNearJet->Fill( dPhi( tree->jetPhi_->at(closestJetInd) - tree->mcPhi->at(mcInd) ) );
+				//dEtaGenNextNearJet->Fill( tree->jetEta_->at(closestJetInd) - tree->mcEta->at(mcInd) );
 			}
 		}
 	}
@@ -176,9 +180,10 @@ int main(int ac, char** av){
 	saveHist(dRGenNearJet, &outFile);
 	saveHist(dPhiGenNearJet, &outFile);
 	saveHist(dEtaGenNearJet, &outFile);
-	saveHist(dRGenNextNearJet, &outFile);
-	saveHist(dPhiGenNextNearJet, &outFile);
-	saveHist(dEtaGenNextNearJet, &outFile);
+	
+	//saveHist(dRGenNextNearJet, &outFile);
+	//saveHist(dPhiGenNextNearJet, &outFile);
+	//saveHist(dEtaGenNextNearJet, &outFile);
 
 	outFile.Close();
 
@@ -206,16 +211,20 @@ int minDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector
 	return bestInd;
 }
 
-int secondMinDrIndex(double myEta, double myPhi, std::vector<float> *etas, std::vector<float> *phis){
-	int VetoInd = minDrIndex(myEta, myPhi, etas, phis);
+int secondMinDrIndex(int myInd, EventTree* tree){
+	double myEta = tree->mcEta->at(myInd);
+	double myPhi = tree->mcPhi->at(myInd);
+	int myPID = tree->mcPID->at(myInd);
 	
 	double mindr = 999.0;
 	double dr;
 	int bestInd = -1;
-	for( int oind = 0; oind < etas->size(); oind++){
-		if(oind == VetoInd) continue;
-
-		dr = dR(myEta, myPhi, etas->at(oind), phis->at(oind));
+	for( int oind = 0; oind < tree->nMC_; oind++){
+		if(oind == myInd) continue;
+		if(tree->mcMass->at(oind) > 10.0) continue;
+		int opid = abs(tree->mcPID->at(oind));
+		if(opid == 12 || opid == 14 || opid == 16) continue;
+		dr = dR(myEta, myPhi, tree->mcEta->at(oind), tree->mcPhi->at(oind));
 		if( mindr > dr ) {
 			mindr = dr;
 			bestInd = oind;

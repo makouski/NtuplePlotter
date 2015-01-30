@@ -1,6 +1,6 @@
 #include"EventPick.h"
 
-double secondMinDr(int myInd, std::vector<float> *etas, std::vector<float> *phis);
+double secondMinDr(int myInd, const EventTree* tree);
 
 EventPick::EventPick(std::string titleIn){
 	title = titleIn;
@@ -20,7 +20,7 @@ EventPick::EventPick(std::string titleIn){
 	histVector.push_back(genPhoRegionWeight);
 
 	// assign cut values
-	veto_jet_dR = 0.3;
+	veto_jet_dR = 0.1;
 	veto_lep_jet_dR = 0.5;
 	veto_pho_jet_dR = 0.7;
 	veto_pho_lep_dR = 0.7;
@@ -46,8 +46,8 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	passAll = false;
 	
 	// pre-selection: top ref selection
-	// copy jet and electron collections, consiering overlap of jets with electrons, loose electrons, photons:
-	// keep jets not close to electrons and photons (veto_jet_dR)
+	// copy jet and electron collections, consiering overlap of jets with electrons, loose electrons:
+	// keep jets not close to electrons (veto_jet_dR)
 	for(std::vector<int>::const_iterator jetInd = selector->Jets.begin(); jetInd != selector->Jets.end(); jetInd++){
 		bool goodJet = true;
 		
@@ -75,18 +75,20 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	// keep electrons that are not close to jets (veto_lep_jet_dR)
 	for(std::vector<int>::const_iterator eleInd = selector->Electrons.begin(); eleInd != selector->Electrons.end(); eleInd++){
 		bool goodEle = true;
-		for(std::vector<int>::iterator jetInd = Jets.begin(); jetInd != Jets.end(); jetInd++)
-			if(dR_jet_ele(*jetInd, *eleInd) < veto_lep_jet_dR) goodEle = false;
-		
+		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
+			double drje = dR_jet_ele(jetInd, *eleInd);
+			if(veto_jet_dR <= drje && drje < veto_lep_jet_dR) goodEle = false;
+		}
 		if(goodEle) Electrons.push_back(*eleInd);
 	}
 	
 	// loose electrons
 	for(std::vector<int>::const_iterator eleInd = selector->ElectronsLoose.begin(); eleInd != selector->ElectronsLoose.end(); eleInd++){
 		bool goodEle = true;
-		for(std::vector<int>::iterator jetInd = Jets.begin(); jetInd != Jets.end(); jetInd++)
-			if(dR_jet_ele(*jetInd, *eleInd) < veto_lep_jet_dR) goodEle = false;
-		
+		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
+			double drje = dR_jet_ele(jetInd, *eleInd);
+			if(veto_jet_dR <= drje && drje < veto_lep_jet_dR) goodEle = false;
+		}
 		if(goodEle) ElectronsLoose.push_back(*eleInd);
 	}
 	
@@ -94,8 +96,8 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	for(int phoVi = 0; phoVi < selector->PhotonsPresel.size(); phoVi++){
 		bool goodPhoton = true;
 		// remove photons close to jets
-		for(std::vector<int>::iterator jetInd = Jets.begin(); jetInd != Jets.end(); jetInd++){		
-			double drjp = dR_jet_pho(*jetInd, selector->PhotonsPresel.at(phoVi));
+		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
+			double drjp = dR_jet_pho(jetInd, selector->PhotonsPresel.at(phoVi));
 			if(veto_jet_dR <= drjp && drjp < veto_pho_jet_dR) goodPhoton = false;
 		}
 		// and electrons
@@ -148,7 +150,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 			if(tree->mcPID->at(mcInd) == 22 &&
 			   (tree->mcParentage->at(mcInd)==2 || tree->mcParentage->at(mcInd)==10 || tree->mcParentage->at(mcInd)==26) &&
 			   tree->mcPt->at(mcInd) > selector->pho_Et_cut){		
-				if(secondMinDr(mcInd, tree->mcEta, tree->mcPhi) > 0.05){
+				if(secondMinDr(mcInd, tree) > 0.2){
 					double fabsEta = TMath::Abs(tree->mcEta->at(mcInd));
 					if(fabsEta < 1.4442) foundGenPhotonBarrel = true;
 					if( 1.566 < fabsEta && fabsEta < 2.5) foundGenPhotonEndcap = true;
