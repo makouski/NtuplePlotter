@@ -31,7 +31,7 @@ void doJER(EventTree* tree);
 double JERcorrection(double eta);
 bool overlapWHIZARD(EventTree* tree);
 bool overlapMadGraph(EventTree* tree);
-
+bool overlapISR(EventTree* tree);
 
 int main(int ac, char** av){
 	if(ac < 4){
@@ -144,11 +144,12 @@ int main(int ac, char** av){
 	if( std::string(av[1]).find("TTgamma") != std::string::npos) MGttgamma = true;
 
 	bool doOverlapRemoval = false;
+	bool doOverlapRemovalWZ = false;
 	if( std::string(av[1]).find("TTJets") != std::string::npos) doOverlapRemoval = true;
-	if( std::string(av[1]).find("ZJets") != std::string::npos) doOverlapRemoval = true;
-	if( std::string(av[1]).find("WJets") != std::string::npos) doOverlapRemoval = true;
-	if( std::string(av[1]).find("W3Jets") != std::string::npos) doOverlapRemoval = true;
-	if( std::string(av[1]).find("W4Jets") != std::string::npos) doOverlapRemoval = true;
+	if( std::string(av[1]).find("ZJets") != std::string::npos) doOverlapRemovalWZ = true;
+	if( std::string(av[1]).find("WJets") != std::string::npos) doOverlapRemovalWZ = true;
+	if( std::string(av[1]).find("W3Jets") != std::string::npos) doOverlapRemovalWZ = true;
+	if( std::string(av[1]).find("W4Jets") != std::string::npos) doOverlapRemovalWZ = true;
 	
 	if(doOverlapRemoval) std::cout << "########## Will apply overlap removal ###########" << std::endl;
 
@@ -195,6 +196,9 @@ int main(int ac, char** av){
 		if( isMC && doOverlapRemoval && overlapMadGraph(tree)){
 			//std::cout << "overlap!" << std::endl;
 			// overlapping part, not needed
+			continue;
+		}
+		if( isMC && doOverlapRemovalWZ && overlapISR(tree)){
 			continue;
 		}
 		// this part cuts MadGraph ttgamma phase space to match WHIZARD, for comparison

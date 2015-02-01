@@ -59,6 +59,22 @@ double secondMinDr(int myInd, const EventTree* tree){
 	return dr;
 }
 
+bool overlapISR(EventTree* tree){
+	const double Et_cut = 13;
+	const double Eta_cut = 3.0;
+	bool haveOverlap = false;
+	for(int mcInd=0; mcInd<tree->nMC_; ++mcInd){
+		if(tree->mcPID->at(mcInd)==22 &&
+		tree->mcPt->at(mcInd) > Et_cut &&
+		fabs(tree->mcEta->at(mcInd)) < Eta_cut &&
+		tree->mcParentage->at(mcInd)==2){
+			if(secondMinDr(mcInd, tree) > 0.2)
+				haveOverlap = true;
+		}
+	}
+	return haveOverlap;
+}
+
 bool overlapMadGraph(EventTree* tree){
 	const double Et_cut = 13;
 	const double Eta_cut = 3.0;
