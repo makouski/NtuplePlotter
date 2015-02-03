@@ -4,6 +4,7 @@ import ROOT
 import templateFits
 import qcd_fit
 import calc_the_answer
+import vgamma_fit
 
 ROOT.gROOT.SetBatch()
 
@@ -12,7 +13,7 @@ WJetsSF = 1.0
 TopSF = 1.0
 QCDSF = 0.0
 ZJetsSF = 1.15 # +- 0.05
-VgammaSF = 2.2 # +- 0.8
+VgammaSF = 1.0 # 2.2 +- 0.8
 
 #import array
 #binarray = array.array('d')
@@ -102,7 +103,7 @@ def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varlist,
 			legend.Draw()
 		
 		latex.DrawLatex(0.1,0.94,'CMS Preliminary #sqrt{s} = 8 TeV')
-		#canvas.SaveAs(outDirName+'/'+var+'.png')
+		canvas.SaveAs(outDirName+'/'+var+'.png')
 		
 def loadDataTemplate(varlist, inputDir, prefix):
 	templPrefix = inputDir+prefix
@@ -440,7 +441,7 @@ DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+dataSuffix+'/'
 saveAccTemplates(InputHist, 'ttbar_acceptance.root')
 
 ### templates for data driven fit or closure test. No rescaling necessary
-saveBarrelFitTemplates(InputHist, DataHist, 'templates_barrel.root')
+#saveBarrelFitTemplates(InputHist, DataHist, 'templates_barrel.root')
 #templateFits.InputFilename = 'templates_barrel.root'
 #templateFits.fitData = False ## to do closure test
 #templateFits.NpseudoExp = 3000
@@ -476,6 +477,11 @@ qcd_fit.M3file = 'templates_presel.root'
 TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
 #TopSF, TopSFerror, WJetsSF, WJetsSFerror = (1.0, 0.01, 1.0, 0.01)
 
+makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
+
+VgammaSF, VgammaSFError = vgamma_fit.doM3fit_photon()
+
+# re-make the plots with new VgammaSF
 makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
 
 calc_the_answer.TTJets1l_num = TTJets1l_num
