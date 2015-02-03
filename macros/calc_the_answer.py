@@ -21,14 +21,14 @@ def integral_one_bin(file,histname):
 	print integr,err
 	return integr,err
 
-
-
-TTJets_topEffAcc = 0.0409
-TTGamma_topEffAcc = 0.0737
+# for ttbar acceptance
+TTJets1l_num        = 24849110
+TTJets2l_num        = 12086717
+TTJetsHad_num       = 31178278
 
 ## >=3j
-photnPurity = 0.5564
-photnPurityErr = 0.0616
+photnPurity = 0.562
+photnPurityErr = 0.065
 
 #QCDSF = 1.338 #0.1429
 #QCDSFErr = 0.032 #0.0033
@@ -39,7 +39,7 @@ M3TopSFErr = 0.0082
 M3WJetsSF = 2.36
 M3WJetsSFErr = 0.05
 
-eleFakeSF = 1.5
+eleFakeSF = 1.5 
 eleFakeSFErr = 0.2
 
 
@@ -100,12 +100,44 @@ def doTheCalculation():
 	print 'signal photon reconstruction efficiency (with truth matching to photon)', phoRecoEff,' +-',phoRecoEffErr
 	print
 
+	print 'TTJets acceptance calculation'
+	accfile = ROOT.TFile('ttbar_acceptance.root','READ')
+	print 'File was last modified: ',accfile.GetModificationDate().AsString()
+	ttjets1l_top, ttjets1l_topErr = integral_one_bin(accfile,'TTJets1l_presel_MCcategory')
+	ttjets2l_top, ttjets2l_topErr = integral_one_bin(accfile,'TTJets2l_presel_MCcategory')
+	ttjetsHad_top, ttjetsHad_topErr = integral_one_bin(accfile,'TTJetsHad_presel_MCcategory')
+	Whad = 0.676
+	TTJets_topEffAcc = Whad*(1.0-Whad)*2 * ttjets1l_top / TTJets1l_num + (1.0-Whad)*(1.0-Whad) * ttjets2l_top / TTJets2l_num + Whad*Whad * ttjetsHad_top / TTJetsHad_num
+	TTJets_topEffAccErr = ( (Whad*(1.0-Whad)*2 * ttjets1l_topErr / TTJets1l_num)**2 + ((1.0-Whad)*(1.0-Whad) * ttjets2l_topErr / TTJets2l_num)**2 + (Whad*Whad * ttjetsHad_topErr / TTJetsHad_num)**2 )**0.5
+	print 'Inclusive ttbar acceptance ',TTJets_topEffAcc,' +-',TTJets_topEffAccErr
+	print 
+	print 'TTgamma acceptance calculation'
+	sigaccfile = ROOT.TFile('signalAcc.root','READ')
+	print 'File was last modified: ',sigaccfile.GetModificationDate().AsString()
+	ttgamma_1l_2l_num, ttgamma_1l_2l_numErr = integral_bins(sigaccfile,'allCategory',3,4)
+	ttgamma_1l_2l_Visnum, ttgamma_1l_2l_VisnumErr = integral_bins(sigaccfile,'VisAllCategory',3,4)
+	
+	ttgamma_1l_2l_presel, ttgamma_1l_2l_preselErr = integral_bins(accfile, 'TTGamma_presel_MCcategory',3,4)
+	ttgamma_1l_2l_sig, ttgamma_1l_2l_sigErr = integral_bins(accfile, 'TTGamma_signal_MCcategory',3,4)
+	
+	TTGamma_topEffAcc = ttgamma_1l_2l_presel / ttgamma_1l_2l_num
+	TTGamma_topEffAccErr = TTGamma_topEffAcc * ((ttgamma_1l_2l_preselErr/ttgamma_1l_2l_presel)**2 + (ttgamma_1l_2l_numErr/ttgamma_1l_2l_num)**2)**0.5
+	print 'Acceptance for ttgamma after top selection ',TTGamma_topEffAcc, ' +/-',TTGamma_topEffAccErr
+	
+	TTGammaVis_topAcc = ttgamma_1l_2l_presel / ttgamma_1l_2l_Visnum
+	TTGammaVis_topAccErr = TTGammaVis_topAcc * ((ttgamma_1l_2l_preselErr/ttgamma_1l_2l_presel)**2 + (ttgamma_1l_2l_VisnumErr/ttgamma_1l_2l_Visnum)**2)**0.5
+	print 'Acceptance for visible ttgamma after top selection ',TTGammaVis_topAcc, ' +/-',TTGammaVis_topAccErr
+	print
+	print 'Product of ttgamma acceptance for top and photon calculated at once',ttgamma_1l_2l_sig/ttgamma_1l_2l_num
+	print 
+	
 	DataBarrInt,DataBarrErr = integral(barrelfile,'Data_MET')
 	print 'Data events',DataBarrInt,' +-',DataBarrErr
 
 	print 'Getting expected background events with genuine photons from MC'
 	print 'Vgamma:'
 	VgammaBarrInt,VgammaBarrErr = integral(barrelfile,'Vgamma_signal_MET')
+	
 	print 'SingleTop:'
 	SingleTopBarrInt,SingleTopBarrErr = integral(barrelfile,'SingleTop_signal_MET')
 	print 'WJets:'
@@ -125,6 +157,7 @@ def doTheCalculation():
 	TTJetsEleInt,TTJetsEleErr = integral(barrelfile,'TTJets_electron_MET')
 	print 'Vgamma:'
 	VgammaEleInt,VgammaEleErr = integral(barrelfile,'Vgamma_electron_MET')
+	
 	print 'SingleTop:'
 	SingleTopEleInt,SingleTopEleErr = integral(barrelfile,'SingleTop_electron_MET')
 	print 'WJets:'
@@ -138,12 +171,12 @@ def doTheCalculation():
 	print 'background with photon fakes expected',bckgEleExp,' +-',SqBckgEleErr**0.5
 	
 	bckgExp = bckgPhoExp + bckgEleExp*eleFakeSF
-	bckgExpErr = ( SqBckgPhoErr + SqBckgEleErr + (bckgEleExp*eleFakeSFErr/eleFakeSF)**2 )**0.5
+	bckgExpErr = ( SqBckgPhoErr + SqBckgEleErr*eleFakeSF*eleFakeSF )**0.5
 	print 'total background expected',bckgExp,' +-',bckgExpErr
 	print
 
 	xsRatio = (DataBarrInt * photnPurity - bckgExp) / phoAcc / TTGamma_topEffAcc / topPreselInt * TTJets_topEffAcc
-	xsRatioRelErr = (  ( bckgExpErr**2 + (DataBarrInt*photnPurityErr)**2 + (DataBarrErr*photnPurity)**2 ) / (DataBarrInt * photnPurity - bckgExp)**2 + 
+	xsRatioRelErr = (  ( bckgExpErr**2 + (DataBarrErr*photnPurity)**2 ) / (DataBarrInt * photnPurity - bckgExp)**2 + 
 						(phoAccErr/phoAcc)**2 + 
 						(topPreselErr/topPreselInt)**2 
 					)**0.5
@@ -153,8 +186,8 @@ def doTheCalculation():
 	print '*'*80
 	
 	
-	vis_xsRatio = (DataBarrInt * photnPurity - bckgExp) / phoRecoEff / topPreselInt * TTJets_topEffAcc
-	vis_xsRatioErr = ( ( bckgExpErr**2 + (DataBarrInt*photnPurityErr)**2 + (DataBarrErr*photnPurity)**2 ) / (DataBarrInt * photnPurity - bckgExp)**2 + 
+	vis_xsRatio = (DataBarrInt * photnPurity - bckgExp) / phoRecoEff / TTGammaVis_topAcc / topPreselInt * TTJets_topEffAcc
+	vis_xsRatioErr = ( ( bckgExpErr**2 + (DataBarrErr*photnPurity)**2 ) / (DataBarrInt * photnPurity - bckgExp)**2 + 
 						(topPreselErr/topPreselInt)**2 +
 						(phoRecoEffErr/phoRecoEff)**2
 					)**0.5

@@ -231,4 +231,8 @@ varList_all = ['nVtx',
 InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_zeroB_twoEle/'
 DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_zeroB_twoEle/'
 
+#InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_twoEle/'
+#DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_twoEle/'
+
+
 makeAllPlots(varList_all, InputHist, DataHist, 'di_ele_cross_check/plots')

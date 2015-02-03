@@ -150,12 +150,19 @@ def doM3fit():
 	return (TopSF, TopSFerror, WJetsSF, WJetsSFerror)
 
 
+def integral_bins(hist,bin1,bin2):
+	err = ROOT.Double(0.0)
+	integr = hist.IntegralAndError(bin1, bin2, err)
+	print integr,err
+	return integr,err
+
+
 def doM3fit_photon():
 	print 'M3 fit after photon selection'
 	varToFit = 'M3'
 	DataHist = get1DHist(M3file_photon, 'Data_'+varToFit)
 
-	lowfitBin = DataHist.FindBin(80.01)
+	lowfitBin = DataHist.FindBin(50.01)
 	highfitBin = DataHist.FindBin(499.99)
 	
 	TopHist = get1DHist(M3file_photon, 'TTJets_'+varToFit)
@@ -163,21 +170,21 @@ def doM3fit_photon():
 	
 	# remove extra contributions from data
 	WJetsHist = get1DHist(M3file_presel_scaled, 'WJets_'+varToFit)
-	WJetsHist.Scale(get1DHist(M3file_photon, 'WJets_'+varToFit).Integral(lowfitBin,highfitBin) / WJetsHist.Integral(lowfitBin,highfitBin))
+	WJetsHist.Scale(get1DHist(M3file_photon, 'WJets_'+varToFit).Integral() / WJetsHist.Integral())
 	DataHist.Add(WJetsHist, -1.0)
 	
 	ZJetsHist = get1DHist(M3file_presel_scaled, 'ZJets_'+varToFit)
-	ZJetsHist.Scale(get1DHist(M3file_photon, 'ZJets_'+varToFit).Integral(lowfitBin,highfitBin) / ZJetsHist.Integral(lowfitBin,highfitBin))
+	ZJetsHist.Scale(get1DHist(M3file_photon, 'ZJets_'+varToFit).Integral() / ZJetsHist.Integral())
 	DataHist.Add(ZJetsHist, -1.0)
 	
 	SingleTopHist = get1DHist(M3file_presel_scaled, 'SingleTop_'+varToFit)
-	SingleTopHist.Scale(get1DHist(M3file_photon, 'SingleTop_'+varToFit).Integral(lowfitBin,highfitBin) / SingleTopHist.Integral(lowfitBin,highfitBin))
+	SingleTopHist.Scale(get1DHist(M3file_photon, 'SingleTop_'+varToFit).Integral() / SingleTopHist.Integral())
 	DataHist.Add(SingleTopHist, -1.0)
 	
 	
 	#DataHist.Add(get1DHist(M3file_photon, 'Diboson_'+varToFit), -1.0)
 	QCDHist = get1DHist(M3file_presel_scaled, 'QCD_'+varToFit)
-	QCDHist.Scale(get1DHist(M3file_photon, 'QCD_'+varToFit).Integral(lowfitBin,highfitBin) / QCDHist.Integral(lowfitBin,highfitBin))
+	QCDHist.Scale(get1DHist(M3file_photon, 'QCD_'+varToFit).Integral() / QCDHist.Integral())
 	DataHist.Add(QCDHist, -1.0)
 	
 	
@@ -190,24 +197,28 @@ def doM3fit_photon():
 	BGHist = get1DHist(M3file_presel_scaled, 'Vgamma_'+varToFit)
 	BGphotonSel = get1DHist(M3file_photon, 'Vgamma_'+varToFit)
 
-	dataInt = DataHist.Integral(lowfitBin,highfitBin)
-	topInt = TopHist.Integral(lowfitBin,highfitBin)
-	bgInt = BGphotonSel.Integral(lowfitBin,highfitBin)
-
+	dataInt,dataIntErr = integral_bins(DataHist,lowfitBin,highfitBin)
+	topInt,topIntErr = integral_bins(TopHist,lowfitBin,highfitBin)
+	bgInt,bgIntErr = integral_bins(BGphotonSel,lowfitBin,highfitBin)
+	
 	#DataHist.Rebin(2)
 	#TopHist.Rebin(2)
 	#BGHist.Rebin(2)
 	
-	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV), photon selection', 80.0, 500.0, TopHist, BGHist, DataHist, varToFit+'_photon_fit.png')
+	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV), photon selection', 50.0, 500.0, TopHist, BGHist, DataHist, varToFit+'_photon_fit.png')
 				
 	
 	bgSF = (1.0 - m3TopFrac) * dataInt / bgInt
-	bgSFerror = m3TopFracErr * dataInt / bgInt
+	bgSFerror = bgSF * ( (m3TopFracErr / (1.0 - m3TopFrac))**2 + (bgIntErr/bgInt)**2 + (dataIntErr/dataInt)**2 )**0.5
+	
+	topSF = m3TopFrac * dataInt / topInt
+	topSFErr = topSF * ( (m3TopFracErr / m3TopFrac)**2 + (topIntErr/topInt)**2 + (dataIntErr/dataInt)**2 )**0.5
+	
 	print '#'*80
-	print 'Correction to Vgamma samples after M3 fit: ',bgSF, ' +-',bgSFerror, '(fit error only)'
+	print 'Correction to Vgamma samples after M3 fit: ', bgSF, ' +-', bgSFerror, '(fit + stat error)'
+	print 'Correction to ttbar samples after M3 fit: ', topSF, ' +-', topSFErr, '(fit + stat error)'
 	print '#'*80
 	return
-	
 
-
+doM3fit_photon()
 
