@@ -131,9 +131,9 @@ def doM3fit():
 	DataHist.Add(get1DHist(M3file, 'QCD_'+varToFit), -1.0)
 	DataHist.Add(get1DHist(M3file, 'Vgamma_'+varToFit), -1.0)
 
-	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV)', 70.0, 500.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
-	lowfitBin = DataHist.FindBin(70.01)
-	highfitBin = DataHist.FindBin(499.99)
+	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV)', 40.0, 660.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
+	lowfitBin = DataHist.FindBin(40.01)
+	highfitBin = DataHist.FindBin(659.99)
 			
 	dataInt = DataHist.Integral(lowfitBin,highfitBin)
 	topInt = TopHist.Integral(lowfitBin,highfitBin)

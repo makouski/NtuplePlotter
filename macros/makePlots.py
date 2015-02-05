@@ -13,7 +13,7 @@ WJetsSF = 1.0
 TopSF = 1.0
 QCDSF = 0.0
 ZJetsSF = 1.15 # +- 0.05
-VgammaSF = 1.0 # 2.2 +- 0.8
+VgammaSF = 1.0 
 
 #import array
 #binarray = array.array('d')
@@ -126,7 +126,6 @@ def loadQCDTemplate(varlist, inputDir, prefix):
 		(templPrefix+'Data_d.root', QCD_sf),
 		(templPrefix+'TTJets1l.root', -1 * QCD_sf * gSF * TTJets1l_xs/TTJets1l_num),
 		(templPrefix+'TTJets2l.root', -1 * QCD_sf * gSF * TTJets2l_xs/TTJets2l_num),
-		#(templPrefix+'WJets.root', -1 * QCD_sf * gSF * WJets_xs/WJets_num),
 	], varlist, 46)
 	return QCDTempl
 
@@ -135,10 +134,6 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	templPrefix = inputDir+prefix
 	
 	MCtemplates = {}
-	
-	#MCtemplates['mst_510_200'] = distribution('mst_510_200'+titleSuffix,[
-	#		(templPrefix+'mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)
-	#	],varList, 620,3244)
 	
 	#MCtemplates['WHIZARD'] = distribution('TTGamma'+titleSuffix, [
 	#	(templPrefix+'WHIZARD.root', TopSF*gSF*TTgamma_xs/WHIZARD_num)
@@ -158,8 +153,7 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	#return MCtemplates
 	###################################
 	nonWJetsSF = 1.0
-	#nonWJetsSF = WJetsSF
-	
+		
 	MCtemplates['Vgamma'] = distribution('Vgamma'+titleSuffix, [
         (templPrefix+'Zgamma.root', VgammaSF*nonWJetsSF*gSF*Zgamma_xs/Zgamma_num),
         (templPrefix+'Wgamma.root', VgammaSF*nonWJetsSF*gSF*Wgamma_xs/Wgamma_num),
@@ -295,7 +289,6 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_') #NoMET
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001) #NoMET
 	MCTempl = []
-	#MCTempl.append(MCTemplDict['mst_510_200'])
 	MCTempl.append(MCTemplDict['WHIZARD'])
 	MCTempl.append(MCTemplDict['TTJets'])
 	MCTempl.append(MCTemplDict['Vgamma'])
@@ -337,15 +330,6 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	if QCDSF > 0.0001:
 		MCTempl_b.append(QCDTempl_b)
 	
-	#susysignal = [
-	#		(distribution('mst_510_M3_5050_M1_200', 
-	#			[ ('/Users/makouski/dis/plotting_trees/Hist/hist_1pho_barrel_top_mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)],
-	#			shortVarList,620,3244),1
-	#		),
-	#		#(,1),
-	#		#(,1)
-	#		]
-	
 	MCTempl_rs_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_barrel_top_', '_signal', 1001)
 	MCTempl_fe_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_barrel_top_', '_electron', 3005)
 	MCTempl_fjrb_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_barrel_top_', '_fake', 3005)
@@ -353,7 +337,7 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	#if WJetsSF != 1.0 or TopSF != 1.0:
 	# save final templates, exactly as they are on the plots and by categories
 	saveTemplatesToFile([DataTempl_b] + MCTempl_b + MCTempl_rs_b.values() + MCTempl_fe_b.values() + MCTempl_fjrb_b.values(), 
-		['MET','M3','WtransMass','ele1pho1Mass','MCcategory'], 
+		['MET','M3','WtransMass','ele1pho1Mass','MCcategory','nJets'], 
 		'templates_barrel_scaled.root'
 		)
 	
@@ -479,10 +463,10 @@ TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
 
 makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
 
-VgammaSF, VgammaSFError = vgamma_fit.doM3fit_photon()
-
-# re-make the plots with new VgammaSF
-makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
+M3_photon_topFrac, M3_photon_topFracErr = vgamma_fit.doM3fit_photon()
+print '*'*80
+# don't do it this way
+#VgammaSF, VgammaSFError = vgamma_fit.doNjetsfit_photon()
 
 calc_the_answer.TTJets1l_num = TTJets1l_num
 calc_the_answer.TTJets2l_num = TTJets2l_num
@@ -498,6 +482,9 @@ calc_the_answer.M3TopSF = TopSF
 calc_the_answer.M3TopSFErr = TopSFerror
 calc_the_answer.M3WJetsSF = WJetsSF
 calc_the_answer.M3WJetsSFErr = WJetsSFerror
+calc_the_answer.M3_photon_topFrac = M3_photon_topFrac
+calc_the_answer.M3_photon_topFracErr = M3_photon_topFracErr
+
 
 #print '#'*80,'   nominal'
 calc_the_answer.doTheCalculation()
