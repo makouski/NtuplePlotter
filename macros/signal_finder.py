@@ -125,17 +125,21 @@ def calculateTTGamma():
 	ele = readSamples('electron')
 	fake = readSamples('fake')
 	
-	lkhist = ROOT.TH1F('lkhist','Marginalized Likelihood',100,0.4+0.005,1.4+0.005)
+	ttghist = ROOT.TH1F('ttghist','Marginalized Likelihood',140, 0.2+0.005,1.6+0.005)
+	vghist = ROOT.TH1F('vghist','Marginalized Likelihood',270, 0.0+0.005,2.7+0.005)
+	jghist = ROOT.TH1F('jghist','Marginalized Likelihood',120, 0.6+0.005,1.8+0.005)
 	maxlk = -1.0
 	bestttgSF = -1.0
 	bestVgSF = -1.0
 	bestjgSF = -1.0
 	
-	for ttgSF in seq(0.4, 1.4, 0.01):
-		for VgSF in seq(0.2, 2.4, 0.01):
-			for jgSF in seq(0.2, 2.2, 0.01):
+	for ttgSF in seq(0.2, 1.6, 0.01):
+		for VgSF in seq(0.0, 2.7, 0.01):
+			for jgSF in seq(0.6, 1.8, 0.01):
 				lk = getLikelihood(pho,ele,fake,ttgSF, VgSF, jgSF)
-				lkhist.Fill(ttgSF,lk*0.0001)
+				ttghist.Fill(ttgSF,lk*0.0001)
+				vghist.Fill(VgSF,lk*0.0001)
+				jghist.Fill(jgSF,lk*0.0001)
 				if lk > maxlk:
 					maxlk = lk
 					bestttgSF = ttgSF
@@ -155,12 +159,22 @@ def calculateTTGamma():
 	
 	ROOT.gStyle.SetOptFit(111)
 	ccc = ROOT.TCanvas('ccc','ccc',800,800)
-	lkhist.Draw()
-	lkhist.GetXaxis().SetTitle('TTGamma Scale Factor')
-	lkhist.Fit('gaus')
+	ttghist.Draw()
+	ttghist.GetXaxis().SetTitle('TTGamma Scale Factor')
+	ttghist.Fit('gaus')
 	ccc.SaveAs('TTGamma_SF_Lkhood.png')
-	fit = lkhist.GetFunction('gaus')
+	fit = ttghist.GetFunction('gaus')
 	bestttgSFErr = fit.GetParameter(2)
+	
+	vghist.Draw()
+	vghist.GetXaxis().SetTitle('Vgamma Scale Factor')
+	vghist.Fit('gaus')
+	ccc.SaveAs('Vgamma_SF_Lkhood.png')
+	
+	jghist.Draw()
+	jghist.GetXaxis().SetTitle('Jet to Photon Scale Factor')
+	jghist.Fit('gaus')
+	ccc.SaveAs('jet_gamma_SF_Lkhood.png')
 	
 	ttgammaSig = bestttgSF*pho['TTGamma']
 	ttgammaSigErr = bestttgSFErr*pho['TTGamma']
