@@ -126,7 +126,7 @@ def calculateTTGamma():
 	fake = readSamples('fake')
 	
 	ttghist = ROOT.TH1F('ttghist','Marginalized Likelihood',140, 0.2+0.005,1.6+0.005)
-	vghist = ROOT.TH1F('vghist','Marginalized Likelihood',270, 0.0+0.005,2.7+0.005)
+	vghist = ROOT.TH1F('vghist','Marginalized Likelihood',130, -2.0+0.025,4.5+0.025)
 	jghist = ROOT.TH1F('jghist','Marginalized Likelihood',120, 0.6+0.005,1.8+0.005)
 	maxlk = -1.0
 	bestttgSF = -1.0
@@ -134,12 +134,12 @@ def calculateTTGamma():
 	bestjgSF = -1.0
 	
 	for ttgSF in seq(0.2, 1.6, 0.01):
-		for VgSF in seq(0.0, 2.7, 0.01):
+		for VgSF in seq(-2.0, 4.5, 0.05):
 			for jgSF in seq(0.6, 1.8, 0.01):
 				lk = getLikelihood(pho,ele,fake,ttgSF, VgSF, jgSF)
-				ttghist.Fill(ttgSF,lk*0.0001)
+				ttghist.Fill(ttgSF,lk*0.001)
 				vghist.Fill(VgSF,lk*0.0001)
-				jghist.Fill(jgSF,lk*0.0001)
+				jghist.Fill(jgSF,lk*0.001)
 				if lk > maxlk:
 					maxlk = lk
 					bestttgSF = ttgSF
