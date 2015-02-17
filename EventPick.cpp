@@ -77,7 +77,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		bool goodEle = true;
 		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
 			double drje = dR_jet_ele(jetInd, *eleInd);
-			if(veto_jet_dR <= drje && drje < veto_lep_jet_dR) goodEle = false;
+			if(tree->jetPt_->at(jetInd) > 20 && veto_jet_dR <= drje && drje < veto_lep_jet_dR) goodEle = false;
 		}
 		if(goodEle) Electrons.push_back(*eleInd);
 	}
@@ -87,7 +87,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		bool goodEle = true;
 		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
 			double drje = dR_jet_ele(jetInd, *eleInd);
-			if(veto_jet_dR <= drje && drje < veto_lep_jet_dR) goodEle = false;
+			if(tree->jetPt_->at(jetInd) > 20 && veto_jet_dR <= drje && drje < veto_lep_jet_dR) goodEle = false;
 		}
 		if(goodEle) ElectronsLoose.push_back(*eleInd);
 	}
@@ -98,7 +98,7 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		// remove photons close to jets
 		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
 			double drjp = dR_jet_pho(jetInd, selector->PhotonsPresel.at(phoVi));
-			if(veto_jet_dR <= drjp && drjp < veto_pho_jet_dR) goodPhoton = false;
+			if(tree->jetPt_->at(jetInd) > 20 && veto_jet_dR <= drjp && drjp < veto_pho_jet_dR) goodPhoton = false;
 		}
 		// and electrons
 		for(std::vector<int>::iterator eleInd = Electrons.begin(); eleInd != Electrons.end(); eleInd++)

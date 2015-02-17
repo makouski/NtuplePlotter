@@ -31,7 +31,7 @@ void doJER(EventTree* tree);
 double JERcorrection(double eta);
 bool overlapWHIZARD(EventTree* tree);
 bool overlapMadGraph(EventTree* tree);
-bool overlapISR(EventTree* tree);
+bool overlapISRFSR(EventTree* tree);
 
 int main(int ac, char** av){
 	if(ac < 4){
@@ -198,7 +198,7 @@ int main(int ac, char** av){
 			// overlapping part, not needed
 			continue;
 		}
-		if( isMC && doOverlapRemovalWZ && overlapISR(tree)){
+		if( isMC && doOverlapRemovalWZ && overlapISRFSR(tree)){
 			continue;
 		}
 		// this part cuts MadGraph ttgamma phase space to match WHIZARD, for comparison
