@@ -81,7 +81,7 @@ TTJets2l_xs       = 25.09 # 239*(1-0.676)*(1-0.676)
 TTJetsHad_xs      = 109.2 # 239*0.676*0.676
 
 TTgamma_xs        = 0.9081 * 2  # https://twiki.cern.ch/twiki/bin/view/CMS/WhizardMCTeeTeeGamma
-newTTgamma_xs     = 0.033 * 9 + 0.148 * 12 * 2 # 2l(NLO) + l+jets(NLO) + all_had (approx same as l+jets)  
+newTTgamma_xs     = 0.033 * 9 + 0.148 * 12 + 0.8 # 2l(NLO) + l+jets(NLO) + all_had (approx)  
 WJets_xs          = 36257.0 # 35640.0 # CMS measurement. was: 36257.0  # 
 ZJets_xs          = 3350.0 # CMS measurement. was: 3533.0 # 3503.71 #
 

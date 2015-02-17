@@ -178,7 +178,7 @@ selectionRange = 4.99
 # signal scale factor. for procedure linearity test
 signalSF = 1.0
 # datasets to mix
-datasetsToMix = ['TTGamma','TTJets']  #,'Vgamma','SingleTop','Other']
+datasetsToMix = ['TTGamma','TTJets', 'Vgamma', 'ZJets', 'SingleTop']  #,'Vgamma','SingleTop','Other']
 
 # number of pseudo experiments. off by default reasonable resuts for 1000 or so
 NpseudoExp = 0
@@ -197,6 +197,7 @@ hist_sig_templ_name = 'photon1'+phoEtrange+'ChHadRandIso'
 hist_sig_name = 'photon1ChHadSCRIso'
 
 InputFilename =  'templates_barrel.root'
+#ZeroBFilename = 'zerob_templ/templates_barrel.root'
 
 usePhoIso = False
 #usePhoIso = True
@@ -229,8 +230,17 @@ def doTheFit():
 
 	# signal template, data driven, random cone isolation
 	sig_templ = getWeightedHist(reqStr, InputFilename, hist_sig_templ_name)
+	
+	# experiment: MC truth shapes
+	#sig_templ = getWeightedHist('rs', InputFilename, hist2d_name, 0.0, sihihSelCut)
+	#sig_templ.Add(getWeightedHist('fe', InputFilename, hist2d_name, 0.0, sihihSelCut))
+	#bckg_templ = getWeightedHist('fjrb', InputFilename, hist2d_name, 0.0, sihihSelCut)
+	
 	# background template, data driven, sideband in sihih
+	# experiment
+	#bckg_templ = getWeightedHist(reqStr, ZeroBFilename, hist2d_name, sbLeft, sbRight)
 	bckg_templ = getWeightedHist(reqStr, InputFilename, hist2d_name, sbLeft, sbRight)
+	
 	# data, no cut on isolation, cut on sihih
 	pseudodata = getWeightedHist(reqStr, InputFilename, hist2d_name, 0.0, sihihSelCut)
 
@@ -261,6 +271,7 @@ def doTheFit():
 
 	#boundaries = optimizeBinBoundaries(pseudodata,15,lowFitrange,highFitrange)
 	boundaries = optimizeBinBoundaries(bckg_templ, 10, lowFitrange, highFitrange)
+	
 	if fitData:
 		binlist = [-0.5, 0.8, 2.2, 5.0, 10.0, 20.0]
 		print 'using custom bins for Data:',binlist
@@ -282,9 +293,10 @@ def doTheFit():
 	sig_templR  = sig_templ.Rebin(len(boundaries)-1,sig_templ.GetName()+'rebin',boundaries)
 	# to avoid signal going below fit range in the plot
 	print 'sig_templR underflow ', sig_templR.GetBinContent(0)
-	print 'settin to 0'
+	print 'setting to 0'
 	sig_templR.SetBinContent(0,0)
-
+	
+	
 	pseudodataU = makeUniformHist(pseudodataR)
 	bckg_templU = makeUniformHist(bckg_templR)
 	sig_templU  = makeUniformHist(sig_templR)
@@ -331,7 +343,7 @@ def doTheFit():
 	pe_results.Draw()
 	pe_results.Fit('gaus')
 	pefit = pe_results.GetFunction('gaus')
-	fitPEsigma = 0
+	fitPEsigma = fitSigFracErr # start with fit error
 	if NpseudoExp > 500:
 		fitPEsigma = pefit.GetParameter(2)
 		print 'sigma from fit',fitPEsigma
@@ -370,30 +382,30 @@ def doTheFit():
 	sig_templ_Int = sig_templ.IntegralAndError(selleftbinsig,selrightbinsig,sig_templ_IntErr)
 	bckg_templ_IntErr = ROOT.Double()
 	bckg_templ_Int = bckg_templ.IntegralAndError(selleftbinbckg,selrightbinbckg,bckg_templ_IntErr)
-
+	
 	SFNomSel = 1.
 	SFNomSelError = 1.
-
+	
 	print '#'*50
 	print 'Signal fraction in Nominal selected region: ',(sig_templ_Int)/(sig_templ_Int + bckg_templ_Int*(1.0/fitSigFrac - 1))
-	if NpseudoExp > 500:
-		SFNomSel = 1. / (1. + bckg_templ_Int/sig_templ_Int*(1./fitSigFrac - 1) )
-		# all relative uncertainties add in quadratures
-		print 'relative error on signal fraction after PE fit: ',fitPEsigma/fitSigFrac
-		Term1 = (1./fitSigFrac - 1)
-		# relative error of the Term1
-		relErrTerm1 = ((1./fitSigFrac)*fitPEsigma/fitSigFrac)/Term1
-		#print 'relative error on Term1: ',relErrTerm1
-		print 'relative error on sig. and bckg. integrals:',sig_templ_IntErr/sig_templ_Int,bckg_templ_IntErr/bckg_templ_Int
-		Term2 = bckg_templ_Int/sig_templ_Int*(1./fitSigFrac - 1)
-		relErrTerm2 = ((relErrTerm1)**2 + (sig_templ_IntErr/sig_templ_Int)**2 + (bckg_templ_IntErr/bckg_templ_Int)**2)**0.5
-		absErrTerm2 = Term2*relErrTerm2
-		# total relative error, same as relative error of denominator
-		# absolute error of denominator same as absErrTerm2
-		# relative error of denominator:
-		relErrDenom = absErrTerm2 / ( 1. + Term2 )
-		SFNomSelError = SFNomSel * relErrDenom
-		print 'Final Signal Fraction value with error: ', SFNomSel, ' +-',SFNomSelError
+	
+	SFNomSel = 1. / (1. + bckg_templ_Int/sig_templ_Int*(1./fitSigFrac - 1) )
+	# all relative uncertainties add in quadratures
+	print 'relative error on signal fraction after PE fit: ',fitPEsigma/fitSigFrac
+	Term1 = (1./fitSigFrac - 1)
+	# relative error of the Term1
+	relErrTerm1 = ((1./fitSigFrac)*fitPEsigma/fitSigFrac)/Term1
+	#print 'relative error on Term1: ',relErrTerm1
+	print 'relative error on sig. and bckg. integrals:',sig_templ_IntErr/sig_templ_Int,bckg_templ_IntErr/bckg_templ_Int
+	Term2 = bckg_templ_Int/sig_templ_Int*(1./fitSigFrac - 1)
+	relErrTerm2 = ((relErrTerm1)**2 + (sig_templ_IntErr/sig_templ_Int)**2 + (bckg_templ_IntErr/bckg_templ_Int)**2)**0.5
+	absErrTerm2 = Term2*relErrTerm2
+	# total relative error, same as relative error of denominator
+	# absolute error of denominator same as absErrTerm2
+	# relative error of denominator:
+	relErrDenom = absErrTerm2 / ( 1. + Term2 )
+	SFNomSelError = SFNomSel * relErrDenom
+	print 'Final Signal Fraction value with error: ', SFNomSel, ' +-',SFNomSelError
 	print '#'*50
 
 	#######################################################################
@@ -444,6 +456,7 @@ def doTheFit():
 
 	# signal template: compare MC truth photon isolation with random cone isolation
 	trueSignalIso = getWeightedHist('rs', InputFilename, hist2d_name, 0.0, sihihSelCut)
+	trueSignalIso.Add(getWeightedHist('fe', InputFilename, hist2d_name, 0.0, sihihSelCut))
 	trueSignalIso.Rebin(2)
 	trueSignalIso.GetXaxis().SetRangeUser(lowFitrange,highFitrange)
 	trueSignalIso.Scale(1.0/trueSignalIso.Integral())
@@ -469,10 +482,13 @@ def doTheFit():
 
 	# background template comparison:
 	# pseudodata sideband
+	# experiment
+	#sbIso = getWeightedHist('', ZeroBFilename, hist2d_name, sbLeft, sbRight)
 	sbIso = getWeightedHist('', InputFilename, hist2d_name, sbLeft, sbRight)
 	sbIso.Rebin(2)
 	# MC truth signal iso in side-band
 	sbIsoMCtrue = getWeightedHist('rs', InputFilename, hist2d_name, sbLeft, sbRight)
+	sbIsoMCtrue.Add(getWeightedHist('fe', InputFilename, hist2d_name, sbLeft, sbRight))
 	sbIsoMCtrue.Rebin(2)
 	# calculate true signal fraction in side-band
 	print 'Side-band used: ',sbLeft,sbRight
@@ -530,7 +546,7 @@ def doTheFit():
 
 
 	# find MC truth signal fraction in nominal selection #############################################################################
-	# extract "rs" parts, divide by "photon1ChHadSCRIso" sum
+	# extract "rs" and "fe" parts, divide by "photon1ChHadSCRIso" sum
 	totalSigInt = getWeightedHist('', InputFilename, hist_sig_name).Integral()
 	trueSignalInt = getWeightedHist('rs', InputFilename, hist_sig_name).Integral() + getWeightedHist('fe', InputFilename, hist_sig_name).Integral()
 	#print 'MC truth signal integral',trueSignalInt

@@ -65,8 +65,9 @@ qcdMETfile = 'templates_presel_nomet_qcd.root'
 normMETfile = 'templates_presel_nomet.root'
 
 M3file = 'templates_presel.root'
-M3file_photon = 'templates_barrel_scaled.root'
 
+M3file_photon = 'templates_barrel_scaled.root'
+M3file_presel_scaled = 'templates_presel_scaled.root'
 
 def doQCDfit():
 	varToFit = 'MET'
@@ -130,10 +131,14 @@ def doM3fit():
 	DataHist.Add(get1DHist(M3file, 'QCD_'+varToFit), -1.0)
 	DataHist.Add(get1DHist(M3file, 'Vgamma_'+varToFit), -1.0)
 
-	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV)', 70.0, 500.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
-	dataInt = DataHist.Integral()
-	topInt = TopHist.Integral()
-	WJInt = WJHist.Integral()
+	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV)', 40.0, 660.0, TopHist, WJHist, DataHist, varToFit+'_fit.png')
+	lowfitBin = DataHist.FindBin(40.01)
+	highfitBin = DataHist.FindBin(659.99)
+			
+	dataInt = DataHist.Integral(lowfitBin,highfitBin)
+	topInt = TopHist.Integral(lowfitBin,highfitBin)
+	WJInt = WJHist.Integral(lowfitBin,highfitBin)
+	
 	TopSF = m3TopFrac * dataInt / topInt
 	TopSFerror = m3TopFracErr * dataInt / topInt
 	print '#'*80
@@ -149,31 +154,57 @@ def doM3fit_photon():
 	print 'M3 fit after photon selection'
 	varToFit = 'M3'
 	DataHist = get1DHist(M3file_photon, 'Data_'+varToFit)
+
+	lowfitBin = DataHist.FindBin(80.01)
+	highfitBin = DataHist.FindBin(499.99)
 	
 	TopHist = get1DHist(M3file_photon, 'TTJets_'+varToFit)
 	TopHist.Add(get1DHist(M3file_photon, 'TTGamma_'+varToFit))
 	
-	BGHist = get1DHist(M3file_photon, 'WJets_'+varToFit)
-	BGHist.Add(get1DHist(M3file_photon, 'ZJets_'+varToFit))
-	BGHist.Add(get1DHist(M3file_photon, 'Vgamma_'+varToFit))
-	BGHist.Add(get1DHist(M3file_photon, 'SingleTop_'+varToFit))
-	BGHist.Add(get1DHist(M3file_photon, 'Diboson_'+varToFit))
-	BGHist.Add(get1DHist(M3file_photon, 'QCD_'+varToFit))
+	# remove extra contributions from data
+	WJetsHist = get1DHist(M3file_presel_scaled, 'WJets_'+varToFit)
+	WJetsHist.Scale(get1DHist(M3file_photon, 'WJets_'+varToFit).Integral(lowfitBin,highfitBin) / WJetsHist.Integral(lowfitBin,highfitBin))
+	DataHist.Add(WJetsHist, -1.0)
 	
-	DataHist.Rebin(2)
-	TopHist.Rebin(2)
-	BGHist.Rebin(2)
+	ZJetsHist = get1DHist(M3file_presel_scaled, 'ZJets_'+varToFit)
+	ZJetsHist.Scale(get1DHist(M3file_photon, 'ZJets_'+varToFit).Integral(lowfitBin,highfitBin) / ZJetsHist.Integral(lowfitBin,highfitBin))
+	DataHist.Add(ZJetsHist, -1.0)
+	
+	SingleTopHist = get1DHist(M3file_presel_scaled, 'SingleTop_'+varToFit)
+	SingleTopHist.Scale(get1DHist(M3file_photon, 'SingleTop_'+varToFit).Integral(lowfitBin,highfitBin) / SingleTopHist.Integral(lowfitBin,highfitBin))
+	DataHist.Add(SingleTopHist, -1.0)
+	
+	
+	#DataHist.Add(get1DHist(M3file_photon, 'Diboson_'+varToFit), -1.0)
+	QCDHist = get1DHist(M3file_presel_scaled, 'QCD_'+varToFit)
+	QCDHist.Scale(get1DHist(M3file_photon, 'QCD_'+varToFit).Integral(lowfitBin,highfitBin) / QCDHist.Integral(lowfitBin,highfitBin))
+	DataHist.Add(QCDHist, -1.0)
+	
+	
+	#BGHist = get1DHist(M3file_photon, 'WJets_'+varToFit)
+	#BGHist.Add(get1DHist(M3file_photon, 'ZJets_'+varToFit))
+	#BGHist.Add(get1DHist(M3file_photon, 'SingleTop_'+varToFit))
+	#BGHist.Add(get1DHist(M3file_photon, 'Diboson_'+varToFit))
+	#BGHist.Add(get1DHist(M3file_photon, 'QCD_'+varToFit))
+	
+	BGHist = get1DHist(M3file_presel_scaled, 'Vgamma_'+varToFit)
+	BGphotonSel = get1DHist(M3file_photon, 'Vgamma_'+varToFit)
+
+	dataInt = DataHist.Integral(lowfitBin,highfitBin)
+	topInt = TopHist.Integral(lowfitBin,highfitBin)
+	bgInt = BGphotonSel.Integral(lowfitBin,highfitBin)
+
+	#DataHist.Rebin(2)
+	#TopHist.Rebin(2)
+	#BGHist.Rebin(2)
 	
 	(m3TopFrac, m3TopFracErr) = makeFit(varToFit+'(GeV), photon selection', 80.0, 500.0, TopHist, BGHist, DataHist, varToFit+'_photon_fit.png')
-	
-	dataInt = DataHist.Integral()
-	topInt = TopHist.Integral()
-	bgInt = BGHist.Integral()
+				
 	
 	bgSF = (1.0 - m3TopFrac) * dataInt / bgInt
 	bgSFerror = m3TopFracErr * dataInt / bgInt
 	print '#'*80
-	print 'Correction to non-ttbar samples after M3 fit: ',bgSF, ' +-',bgSFerror, '(fit error only)'
+	print 'Correction to Vgamma samples after M3 fit: ',bgSF, ' +-',bgSFerror, '(fit error only)'
 	print '#'*80
 	return
 	

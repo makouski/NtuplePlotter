@@ -4,6 +4,7 @@ import ROOT
 import templateFits
 import qcd_fit
 import calc_the_answer
+import vgamma_fit
 
 ROOT.gROOT.SetBatch()
 
@@ -11,6 +12,8 @@ ROOT.gROOT.SetBatch()
 WJetsSF = 1.0
 TopSF = 1.0
 QCDSF = 0.0
+ZJetsSF = 1.15 # +- 0.05
+VgammaSF = 1.0 
 
 #import array
 #binarray = array.array('d')
@@ -123,7 +126,6 @@ def loadQCDTemplate(varlist, inputDir, prefix):
 		(templPrefix+'Data_d.root', QCD_sf),
 		(templPrefix+'TTJets1l.root', -1 * QCD_sf * gSF * TTJets1l_xs/TTJets1l_num),
 		(templPrefix+'TTJets2l.root', -1 * QCD_sf * gSF * TTJets2l_xs/TTJets2l_num),
-		#(templPrefix+'WJets.root', -1 * QCD_sf * gSF * WJets_xs/WJets_num),
 	], varlist, 46)
 	return QCDTempl
 
@@ -132,10 +134,6 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	templPrefix = inputDir+prefix
 	
 	MCtemplates = {}
-	
-	#MCtemplates['mst_510_200'] = distribution('mst_510_200'+titleSuffix,[
-	#		(templPrefix+'mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)
-	#	],varList, 620,3244)
 	
 	#MCtemplates['WHIZARD'] = distribution('TTGamma'+titleSuffix, [
 	#	(templPrefix+'WHIZARD.root', TopSF*gSF*TTgamma_xs/WHIZARD_num)
@@ -155,11 +153,10 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	#return MCtemplates
 	###################################
 	nonWJetsSF = 1.0
-	#nonWJetsSF = WJetsSF
-	
+		
 	MCtemplates['Vgamma'] = distribution('Vgamma'+titleSuffix, [
-        (templPrefix+'Zgamma.root', nonWJetsSF*gSF*Zgamma_xs/Zgamma_num),
-        (templPrefix+'Wgamma.root', nonWJetsSF*gSF*Wgamma_xs/Wgamma_num),
+        (templPrefix+'Zgamma.root', VgammaSF*nonWJetsSF*gSF*Zgamma_xs/Zgamma_num),
+        (templPrefix+'Wgamma.root', VgammaSF*nonWJetsSF*gSF*Wgamma_xs/Wgamma_num),
     #    (templPrefix+'WWgamma.root', gSF*WWgamma_xs/WWgamma_num),
         ], varList, 90, fillStyle)
 
@@ -179,7 +176,7 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 		], varList, 7, fillStyle)
 		
 	MCtemplates['ZJets'] = distribution('ZJets'+titleSuffix, [
-		(templPrefix+'ZJets.root', nonWJetsSF*gSF*ZJets_xs/ZJets_num)], varList, 9, fillStyle)
+		(templPrefix+'ZJets.root', ZJetsSF*nonWJetsSF*gSF*ZJets_xs/ZJets_num)], varList, 9, fillStyle)
 
 	
 	MCtemplates['Other'] = distribution('Diboson'+titleSuffix, [
@@ -202,7 +199,30 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 
 	return MCtemplates
 
+def saveAccTemplates(inputDir, outFileName):
+	varList = ['MCcategory']
+	AccTemplates = {}
+	
+	AccTemplates['TTGamma'] = distribution('TTGamma_signal', [
+		(inputDir+'hist_1pho_rs_barrel_top_TTGamma.root', 1.0),
+		], varList, 97)
+		
+	AccTemplates['TTGamma_presel'] = distribution('TTGamma_presel', [
+		(inputDir+'hist_1pho_top_TTGamma.root', 1.0),
+		], varList, 97)
+	AccTemplates['TTJets1l'] = distribution('TTJets1l_presel', [
+		(inputDir+'hist_1pho_top_TTJets1l.root', 1.0),
+		], varList ,11)
+	AccTemplates['TTJets2l'] = distribution('TTJets2l_presel', [
+		(inputDir+'hist_1pho_top_TTJets2l.root', 1.0),
+		], varList ,11)
+	AccTemplates['TTJetsHad'] = distribution('TTJetsHad_presel', [
+		(inputDir+'hist_1pho_top_TTJetsHad.root', 1.0),
+		], varList ,11)
+	
+	saveTemplatesToFile(AccTemplates.values(), varList, outFileName)
 
+	
 def saveNoMETTemplates(inputDir, inputData, outFileName):
 	varList = ['MET','M3']
 	DataTempl = loadDataTemplate(varList, inputData, 'hist_1phoNoMET_top_')
@@ -269,7 +289,6 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_') #NoMET
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001) #NoMET
 	MCTempl = []
-	#MCTempl.append(MCTemplDict['mst_510_200'])
 	MCTempl.append(MCTemplDict['WHIZARD'])
 	MCTempl.append(MCTemplDict['TTJets'])
 	MCTempl.append(MCTemplDict['Vgamma'])
@@ -311,15 +330,6 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	if QCDSF > 0.0001:
 		MCTempl_b.append(QCDTempl_b)
 	
-	#susysignal = [
-	#		(distribution('mst_510_M3_5050_M1_200', 
-	#			[ ('/Users/makouski/dis/plotting_trees/Hist/hist_1pho_barrel_top_mst_510_M3_5050_M1_200.root', gSF*0.0751004/15000)],
-	#			shortVarList,620,3244),1
-	#		),
-	#		#(,1),
-	#		#(,1)
-	#		]
-	
 	MCTempl_rs_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_barrel_top_', '_signal', 1001)
 	MCTempl_fe_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_barrel_top_', '_electron', 3005)
 	MCTempl_fjrb_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_barrel_top_', '_fake', 3005)
@@ -327,7 +337,7 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	#if WJetsSF != 1.0 or TopSF != 1.0:
 	# save final templates, exactly as they are on the plots and by categories
 	saveTemplatesToFile([DataTempl_b] + MCTempl_b + MCTempl_rs_b.values() + MCTempl_fe_b.values() + MCTempl_fjrb_b.values(), 
-		['MET','M3','WtransMass','ele1pho1Mass','MCcategory'], 
+		['MET','M3','WtransMass','ele1pho1Mass','MCcategory','nJets'], 
 		'templates_barrel_scaled.root'
 		)
 	
@@ -404,19 +414,25 @@ varList_all = ['nVtx',
 			]
 # main part ##############################################################################################
 outSuffix = ''
+dataSuffix = ''
 
 InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+outSuffix+'/'
 QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd/'
-DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist/'
+DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+dataSuffix+'/'
+
+
+# TTJets and TTGamma acceptance histograms
+saveAccTemplates(InputHist, 'ttbar_acceptance.root')
 
 ### templates for data driven fit or closure test. No rescaling necessary
 #saveBarrelFitTemplates(InputHist, DataHist, 'templates_barrel.root')
 #templateFits.InputFilename = 'templates_barrel.root'
 #templateFits.fitData = False ## to do closure test
 #templateFits.NpseudoExp = 3000
-phoPurity,phoPurityError = 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
+phoPurity,phoPurityError = 0.562, 0.065 #### 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
 #phoPurity,phoPurityError,MCfrac = templateFits.doTheFit()
 #exit()
+
 
 # QCD selection histograms
 #makeAllPlots(varList_all, QCDHist, QCDHist, QCDHist, 'plots_QCD')
@@ -437,17 +453,6 @@ QCDSF,QCDSFerror = qcd_fit.doQCDfit()
 #QCDSF *= 2
 #QCDSF /= 2
 
-# after doing MET fit, update the QCDSF
-# ==3j 
-#QCDSF = 0.14
-
-# >=4j
-#QCDSF = 0.1048
-
-# >=3j
-#QCDSF = 0.1429
-#QCDSF = 1.37 # new QCD selection
-
 # save templates for M3 fit
 savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel.root')
 
@@ -456,26 +461,49 @@ qcd_fit.M3file = 'templates_presel.root'
 TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
 #TopSF, TopSFerror, WJetsSF, WJetsSFerror = (1.0, 0.01, 1.0, 0.01)
 
-# ==3j 
-#TopSF = 1.15
-#WJetsSF = 1.10
-
-# >=4j
-#TopSF = 0.936
-#WJetsSF = 1.59
-
-# >=3j
-#TopSF = 0.93 #0.931
-#WJetsSF = 1.62 #1.595
-
 makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
+
+M3_photon_topFrac, M3_photon_topFracErr = vgamma_fit.doM3fit_photon()
+print '*'*80
+# don't do it this way
+#VgammaSF, VgammaSFError = vgamma_fit.doNjetsfit_photon()
+
+calc_the_answer.TTJets1l_num = TTJets1l_num
+calc_the_answer.TTJets2l_num = TTJets2l_num
+calc_the_answer.TTJetsHad_num = TTJetsHad_num
 
 calc_the_answer.photnPurity = phoPurity
 calc_the_answer.photnPurityErr = phoPurityError
+calc_the_answer.eleFakeSF = 1.5
+calc_the_answer.eleFakeSFErr = 0.2
 #calc_the_answer.QCDSF = QCDSF
 #calc_the_answer.QCDSFErr = QCDSFerror
 calc_the_answer.M3TopSF = TopSF
 calc_the_answer.M3TopSFErr = TopSFerror
 calc_the_answer.M3WJetsSF = WJetsSF
 calc_the_answer.M3WJetsSFErr = WJetsSFerror
+calc_the_answer.M3_photon_topFrac = M3_photon_topFrac
+calc_the_answer.M3_photon_topFracErr = M3_photon_topFracErr
+
+
+#print '#'*80,'   nominal'
 calc_the_answer.doTheCalculation()
+
+#print '#'*80,'   photon Purity Up'
+#calc_the_answer.photnPurity = phoPurity + phoPurityError
+#calc_the_answer.doTheCalculation()
+
+
+#print '#'*80,'   photon Purity Down'
+#calc_the_answer.photnPurity = phoPurity - phoPurityError
+#calc_the_answer.doTheCalculation()
+
+#calc_the_answer.photnPurity = phoPurity
+
+#print '#'*80,'   electron fakes up'
+#calc_the_answer.eleFakeSF = 1.5 + 0.2
+#calc_the_answer.doTheCalculation()
+
+#print '#'*80,'   electron fakes down'
+#calc_the_answer.eleFakeSF = 1.5 - 0.2
+#calc_the_answer.doTheCalculation()
