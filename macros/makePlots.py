@@ -1,5 +1,6 @@
 from distribution_mod import distribution
 import ROOT
+import sys
 
 import templateFits
 import qcd_fit
@@ -8,11 +9,28 @@ import vgamma_fit
 
 ROOT.gROOT.SetBatch()
 
+isSyst = False
+systematic = ''
+if len(sys.argv) > 1:
+	print sys.argv
+	systematic = sys.argv[1]
+	if systematic != 'zeroB':
+		isSyst = True
+		sys.stdout = open('ratio_'+systematic+'.txt','w')
+
 # initialize variables, assign values later
 WJetsSF = 1.0
 TopSF = 1.0
 QCDSF = 0.0
-ZJetsSF = 1.15 # +- 0.05
+ZJetsSF = 1.20 
+ZJetsSFErr = 0.06
+if systematic == 'ZJetsSF_up':
+	ZJetsSF += ZJetsSFErr
+if systematic == 'ZJetsSF_down':
+	ZJetsSF -= ZJetsSFErr
+if systematic == 'zeroB':
+	ZJetsSF = 1.0
+
 VgammaSF = 1.0 
 
 #import array
@@ -103,7 +121,8 @@ def plotTemplates(dataTemplate, MCTemplateList, SignalTemplateZoomList, varlist,
 			legend.Draw()
 		
 		latex.DrawLatex(0.1,0.94,'CMS Preliminary #sqrt{s} = 8 TeV')
-		canvas.SaveAs(outDirName+'/'+var+'.png')
+		if not isSyst:
+			canvas.SaveAs(outDirName+'/'+var+'.png')
 		
 def loadDataTemplate(varlist, inputDir, prefix):
 	templPrefix = inputDir+prefix
@@ -413,12 +432,19 @@ varList_all = ['nVtx',
 			#'photon1_Sigma_ChSCRIso'
 			]
 # main part ##############################################################################################
-outSuffix = ''
-dataSuffix = ''
+if systematic in ['Btag_down','Btag_up','EleEff_down','EleEff_up','JEC_down','JEC_up','JER_down','JER_up','PU_down','PU_up','elesmear_down','elesmear_up','pho_down','pho_up','toppt_down','toppt_up']:
+	outSuffix = '_'+systematic
+else:
+	outSuffix = ''
 
 InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+outSuffix+'/'
 QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd/'
-DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+dataSuffix+'/'
+DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist/'
+
+if systematic == 'zeroB':
+	InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_zeroB/'
+	QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd_zeroB/'
+	DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_zeroB/'
 
 
 # TTJets and TTGamma acceptance histograms
@@ -429,7 +455,7 @@ saveAccTemplates(InputHist, 'ttbar_acceptance.root')
 #templateFits.InputFilename = 'templates_barrel.root'
 #templateFits.fitData = False ## to do closure test
 #templateFits.NpseudoExp = 3000
-phoPurity,phoPurityError = 0.562, 0.065 #### 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
+phoPurity,phoPurityError = 0.564, 0.063 #### 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
 #phoPurity,phoPurityError,MCfrac = templateFits.doTheFit()
 #exit()
 
@@ -450,8 +476,10 @@ qcd_fit.normMETfile = 'templates_presel_nomet.root'
 QCDSF,QCDSFerror = qcd_fit.doQCDfit()
 
 # for systematics of QCD fit
-#QCDSF *= 2
-#QCDSF /= 2
+if systematic == 'QCD_up':
+	QCDSF *= 2
+if systematic == 'QCD_down':
+	QCDSF /= 2
 
 # save templates for M3 fit
 savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel.root')
@@ -461,7 +489,12 @@ qcd_fit.M3file = 'templates_presel.root'
 TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
 #TopSF, TopSFerror, WJetsSF, WJetsSFerror = (1.0, 0.01, 1.0, 0.01)
 
-makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
+if systematic != 'zeroB':
+	makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
+else:
+	makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots_zeroB')
+	exit()
+
 
 M3_photon_topFrac, M3_photon_topFracErr = vgamma_fit.doM3fit_photon()
 print '*'*80
@@ -476,6 +509,11 @@ calc_the_answer.photnPurity = phoPurity
 calc_the_answer.photnPurityErr = phoPurityError
 calc_the_answer.eleFakeSF = 1.5
 calc_the_answer.eleFakeSFErr = 0.2
+if systematic == 'EleFakeSF_up':
+	calc_the_answer.eleFakeSF = 1.5 + 0.2
+if systematic == 'EleFakeSF_down':
+	calc_the_answer.eleFakeSF = 1.5 - 0.2
+
 #calc_the_answer.QCDSF = QCDSF
 #calc_the_answer.QCDSFErr = QCDSFerror
 calc_the_answer.M3TopSF = TopSF
