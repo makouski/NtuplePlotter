@@ -17,6 +17,11 @@ Histogrammer::Histogrammer(std::string titleIn){
 	make_hist2d("photon1_Sigma_Et","photon1 SigmaIetaIeta vs Et",160,0,0.04,40,0,200);
 
 	// creating histograms
+	// muons
+	make_hist("mu1Pt","muon 1 Pt",30,0,300,"Muon p_{T} (GeV)","Events / 10 GeV");
+	make_hist("mu1Eta","muon 1 Eta",26,-2.6,2.6,"Muon #eta","Events / 0.2");
+	make_hist("mu1RelIso","muon 1 relative isolation",120,0,1.2,"Muon RelIso","Events / 0.01");
+	
 	// electrons
 	make_hist("ele1Pt","electron 1 Pt",30,0,300,"Electron p_{T} (GeV)","Events / 10 GeV");
 	make_hist("ele1Eta","electron 1 Eta",26,-2.6,2.6,"Electron #eta","Events / 0.2");
@@ -116,7 +121,6 @@ Histogrammer::Histogrammer(std::string titleIn){
 void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree, double weight){
 	// sanity check: PU weight
 	hists["PUweight"]->Fill(weight);
-	
 	// 2d photon candidate histograms
 	//std::cout << "here0" << std::endl;
 	if(selEvent->PhotonsPresel.size()>0){
@@ -198,6 +202,14 @@ void Histogrammer::fill(Selector* selector, EventPick* selEvent, EventTree* tree
 	}
 
 	double MTW = 0.0;
+	// muons
+	if( selEvent->Muons.size() > 0 ){
+		int ind = selEvent->Muons[0];
+		hists["mu1Pt"]->Fill( tree->muPt_->at(ind), weight );
+		hists["mu1Eta"]->Fill( tree->muEta_->at(ind), weight );
+		hists["mu1RelIso"]->Fill( selector->Mu04RelIso[ind], weight );
+	}
+
 	// electrons
 	if( selEvent->Electrons.size() > 0 ){
 		int ind = selEvent->Electrons[0];

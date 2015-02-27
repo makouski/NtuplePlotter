@@ -28,8 +28,9 @@ EventPick::EventPick(std::string titleIn){
 	no_trigger = false;
 	Njet_ge = 3;
 	NBjet_ge = 1;
-	Nele_eq = 1;
-	NlooseEleVeto_le = 99; // no cut
+	Nele_eq = 0;
+	Nmu_eq = 1;
+	NEleVeto_le = 0;
 	Npho_ge = 1;
 	NlooseMuVeto_le = 0;
 }
@@ -91,6 +92,15 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		}
 		if(goodEle) ElectronsLoose.push_back(*eleInd);
 	}
+	// do cleaning of muons that are close to jets
+	for(std::vector<int>::const_iterator muInd = selector->Muons.begin(); muInd != selector->Muons.end(); muInd++){
+		bool goodMu = true;
+		for(int jetInd = 0; jetInd < tree->nJet_; jetInd++){
+			double drjmu = dR_jet_mu(jetInd, *muInd);
+			if(tree->jetPt_->at(jetInd) > 20 && veto_jet_dR <= drjmu && drjmu < veto_lep_jet_dR) goodMu = false;
+		}
+		if(goodMu) Muons.push_back(*muInd);
+	}
 	
 	// photon cleaning:
 	for(int phoVi = 0; phoVi < selector->PhotonsPresel.size(); phoVi++){
@@ -117,13 +127,13 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 	cutFlow->Fill(0.0); // Input events
 	cutFlowWeight->Fill(0.0,weight);
 	passPreSel = true;
-	if(passPreSel && tree->IsVtxGood_>=0 && (no_trigger || tree->HLT_[tree->HLTIndex_[17]])) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
+	if(passPreSel && tree->IsVtxGood_>=0 && (no_trigger || tree->HLT_[tree->HLTIndex_[18]])) {cutFlow->Fill(1); cutFlowWeight->Fill(1,weight);}
 	else passPreSel = false;
-	if(passPreSel && Electrons.size() == Nele_eq) {cutFlow->Fill(2); cutFlowWeight->Fill(2,weight);}
+	if(passPreSel && Muons.size() == Nmu_eq) {cutFlow->Fill(2); cutFlowWeight->Fill(2,weight);}
 	else passPreSel = false;
 	if(passPreSel && selector->MuonsLoose.size() <= NlooseMuVeto_le) {cutFlow->Fill(3); cutFlowWeight->Fill(3,weight);}
 	else passPreSel = false;
-	if(passPreSel && selector->ElectronsLoose.size() <= NlooseEleVeto_le) {cutFlow->Fill(4); cutFlowWeight->Fill(4,weight);}
+	if(passPreSel && selector->Electrons.size() <= NEleVeto_le) {cutFlow->Fill(4); cutFlowWeight->Fill(4,weight);}
 	else passPreSel = false;
 	if(passPreSel && Jets.size() >= Njet_ge) {cutFlow->Fill(5); cutFlowWeight->Fill(5,weight);}
 	else passPreSel = false;
@@ -166,9 +176,9 @@ void EventPick::print_cutflow(){
 	std::cout << "Cut-Flow for the event selector: " << title << std::endl;
 	std::cout << "Input Events                 " << cutFlow->GetBinContent(1) << std::endl;
 	std::cout << "Passing Trigger and PV       " << cutFlow->GetBinContent(2) << std::endl;
-	std::cout << "Events with ==" << Nele_eq << " electron     " << cutFlow->GetBinContent(3) << std::endl;
+	std::cout << "Events with ==" << Nmu_eq << " muon     " << cutFlow->GetBinContent(3) << std::endl;
 	std::cout << "Events with <= " << NlooseMuVeto_le << " loose muons " << cutFlow->GetBinContent(4) << std::endl;
-	std::cout << "Events with <= " << NlooseEleVeto_le << " loose electrons " << cutFlow->GetBinContent(5) << std::endl;
+	std::cout << "Events with <= " << NEleVeto_le << " electrons " << cutFlow->GetBinContent(5) << std::endl;
 	std::cout << "Events with >= " << Njet_ge << " jets        " << cutFlow->GetBinContent(6) << std::endl;
 	std::cout << "Events with >= " << NBjet_ge << " b-tag       " << cutFlow->GetBinContent(7) << std::endl;
 	std::cout << "Events passing MET cut       " << cutFlow->GetBinContent(8) << std::endl;
@@ -192,7 +202,7 @@ void EventPick::set_cutflow_labels(TH1F* hist){
 void EventPick::clear_vectors(){
 	Electrons.clear();
 	ElectronsLoose.clear();
-	//Muons.clear();
+	Muons.clear();
 	MuonsLoose.clear();
 	Jets.clear();
 	bJets.clear();
@@ -205,6 +215,9 @@ void EventPick::clear_vectors(){
 
 double EventPick::dR_jet_ele(int jetInd, int eleInd){
 	return dR(tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), tree->eleSCEta_->at(eleInd), tree->elePhi_->at(eleInd));
+}
+double EventPick::dR_jet_mu(int jetInd, int muInd){
+	return dR(tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), tree->muEta_->at(muInd), tree->muPhi_->at(muInd));
 }
 double EventPick::dR_jet_pho(int jetInd, int phoInd){
 	return dR(tree->jetEta_->at(jetInd), tree->jetPhi_->at(jetInd), tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd));

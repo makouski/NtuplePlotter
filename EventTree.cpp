@@ -164,13 +164,33 @@ EventTree::EventTree(int nFiles, char** fileNames){
 
 	// muons
 	// keep some branches in the skim
+	muChi2NDF_ = new vector<float>;
 	chain->SetBranchStatus("muChi2NDF", 1);
+	chain->SetBranchAddress("muChi2NDF",&muChi2NDF_);
+
+	muNumberOfValidTrkLayers_ = new vector<int>;
 	chain->SetBranchStatus("muNumberOfValidTrkLayers",1);
+	chain->SetBranchAddress("muNumberOfValidTrkLayers",&muNumberOfValidTrkLayers_);
+		
+	muNumberOfValidMuonHits_ = new vector<int>;
 	chain->SetBranchStatus("muNumberOfValidMuonHits",1);
+	chain->SetBranchAddress("muNumberOfValidMuonHits", &muNumberOfValidMuonHits_);
+
+	muNumberOfValidPixelHits_ = new vector<int>;
 	chain->SetBranchStatus("muNumberOfValidPixelHits",1);
+	chain->SetBranchAddress("muNumberOfValidPixelHits",&muNumberOfValidPixelHits_);
+	
+	muDz_ = new vector<float>;
 	chain->SetBranchStatus("muDz",1);
+	chain->SetBranchAddress("muDz",&muDz_);
+	
+	muD0_ = new vector<float>;
 	chain->SetBranchStatus("muD0",1);
+	chain->SetBranchAddress("muD0",&muD0_);
+
+	muStations_ = new vector<int>;
 	chain->SetBranchStatus("muStations",1);
+	chain->SetBranchAddress("muStations",&muStations_);
 
 	chain->SetBranchStatus("nMu",1);
 	chain->SetBranchAddress("nMu", &nMu_);
@@ -198,6 +218,14 @@ EventTree::EventTree(int nFiles, char** fileNames){
 	muPFIsoR04_Pho_ = new vector<float>;
 	chain->SetBranchStatus("muPFIsoR04_Pho",1);
 	chain->SetBranchAddress("muPFIsoR04_Pho", &muPFIsoR04_Pho_);
+
+	muPFIsoR04_PU_ = new vector<float>;
+	chain->SetBranchStatus("muPFIsoR04_PU",1);
+	chain->SetBranchAddress("muPFIsoR04_PU", &muPFIsoR04_PU_);
+
+	muType_ = new vector<int>;
+	chain->SetBranchStatus("muType",1);
+	chain->SetBranchAddress("muType",&muType_);
 	
 	// jets
 	

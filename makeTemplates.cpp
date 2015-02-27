@@ -70,36 +70,14 @@ int main(int ac, char** av){
 	std::cout << "  topPt: " << toppt012_g << std::endl;
 	// book HistCollect
 	HistCollect* looseCollect = new HistCollect("1pho",std::string("top_")+av[1]);
-	HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
+	looseCollect->fillEndcap = false;
+	//HistCollect* looseCollectNoMET = new HistCollect("1phoNoMET",std::string("top_")+av[1]);
 	//HistCollect* fourjCollect = new HistCollect("1pho4j",std::string("top4j_")+av[1]);
 	// HistCollect for tight Photon ID
 	//HistCollect* tightCollect = new HistCollect("1photight",std::string("top_")+av[1]);
 	
 	// object selectors
 	Selector* selectorLoose = new Selector();
-	bool isQCD = false;
-	if(std::string(av[3]).find("QCD") != std::string::npos){
-		isQCD = true;
-		selectorLoose->ele_MVA_range[0] = -1.0;
-		selectorLoose->ele_MVA_range[1] = -0.1;
-		selectorLoose->ele_RelIso_range[0] = 0.25;
-		selectorLoose->ele_RelIso_range[1] = 1.0;
-		//selectorLoose->ele_Iso_MVA_invert = true;
-
-		// no MC categories for data-driven QCD needed
-		looseCollect->fillRS = false;
-		looseCollect->fillFE = false;
-		looseCollect->fillFJRB = false;
-
-		looseCollectNoMET->fillRS = false;
-		looseCollectNoMET->fillFE = false;
-		looseCollectNoMET->fillFJRB = false;
-	}
-	//selectorLoose->jet_Pt_cut = 15000;
-	//selectorLoose->ele_Pt_cut = 25;
-	//selectorLoose->pho_Et_cut = 20.0;
-	//selectorLoose->pho_ID_ind = 2;  //pho ID	
-
 	//Selector* selectorTight = new Selector();
 	// set up the parameters for object selectors here
 	//selectorTight->pho_ID_ind = 2; // tight ID
@@ -109,33 +87,6 @@ int main(int ac, char** av){
 	//evtPickLoose->veto_pho_jet_dR = 0.05;
 	//evtPickLoose->Njet_ge = 4;
 	//evtPickLoose->NBjet_ge = 2;
-	EventPick* evtPickLooseNoMET = new EventPick("LoosePhotonID");
-	evtPickLooseNoMET->MET_cut = -1.0;
-	if( outDirName.find("zeroB") != std::string::npos){
-		evtPickLoose->NBjet_ge = 0;
-		evtPickLooseNoMET->NBjet_ge = 0;
-	}
-	
-	if( outDirName.find("twoEle") != std::string::npos){
-		evtPickLoose->Nele_eq = 2;
-		evtPickLooseNoMET->Nele_eq = 2;
-	}
-
-	//evtPickLooseNoMET->veto_pho_jet_dR = 0.05;
-	//evtPickLooseNoMET->Njet_ge = 4;
-	//evtPickLooseNoMET->NBjet_ge = 2;
-
-	//evtPickLoose->no_trigger = true;
-	//evtPickLoose->Nele_eq = 1;
-	//evtPickLoose->NlooseMuVeto_le = 99;
-	
-	//evtPickLoose->veto_jet_dR = 0.1;
-	//evtPickLoose->veto_pho_jet_dR = 0.8;
-	//evtPickLoose->veto_pho_lep_dR = 0.8;
-	//EventPick* evtPickLoose4j = new EventPick("LoosePhotonID4j");
-	//evtPickLoose4j->Njet_ge = 4;
-	//EventPick* evtPickTight = new EventPick("TightPhotonID");
-	
 	
 	bool WHIZARD = false;
 	if( std::string(av[1]).find("WHIZARD") != std::string::npos) WHIZARD = true;
@@ -182,7 +133,7 @@ int main(int ac, char** av){
 		// apply PU reweighting
 		if(isMC) PUweight = PUweighter->getWeight(tree->nPUInfo_, tree->puBX_, tree->nPU_);
 		
-		if(isMC && !isQCD){
+		if(isMC){
 			// JEC
 			jecvar->applyJEC(tree, jecvar012_g); // 0:down, 1:norm, 2:up
 			// JER smearing 
@@ -190,7 +141,7 @@ int main(int ac, char** av){
 			// photon energy smearing
 			doPhoSmearing(tree);
 			// electron energy smearing
-			doEleSmearing(tree);
+			//doEleSmearing(tree);
 		}
 		// do overlap removal here: overlapMadGraph(tree) or overlapWHIZARD(tree)
 		if( isMC && doOverlapRemoval && overlapMadGraph(tree)){
@@ -209,18 +160,14 @@ int main(int ac, char** av){
 
 		selectorLoose->process_objects(tree);
 		//selectorTight->process_objects(tree);
-		
-
 		evtPickLoose->process_event(tree, selectorLoose, PUweight);
-		evtPickLooseNoMET->process_event(tree, selectorLoose, PUweight);
-
 		//evtPickLoose4j->process_event(tree, selectorLoose, PUweight);
 		//evtPickTight->process_event(tree, selectorTight, PUweight);
 		
 		double evtWeight = PUweight;
-		if(isMC && !isQCD){
+		if(isMC){
 			// electron trigger efficiency reweighting
-			evtWeight *= getEleEff(tree, evtPickLoose);
+			//evtWeight *= getEleEff(tree, evtPickLoose);
 			// b-tag SF reweighting
 			evtWeight *= getBtagSF(tree, evtPickLoose);
 		}
@@ -230,13 +177,12 @@ int main(int ac, char** av){
 		}
 
 		// fill the histograms
+		//std::cout << "fill, weight " << evtWeight << "  passPresel " << evtPickLoose->passPreSel << std::endl;
 		looseCollect->fill_histograms(selectorLoose, evtPickLoose, tree, isMC, evtWeight);
-		looseCollectNoMET->fill_histograms(selectorLoose, evtPickLooseNoMET, tree, isMC, evtWeight);
 		//fourjCollect->fill_histograms(selectorLoose, evtPickLoose4j, tree, isMC, evtWweight);
 	}
 	
 	looseCollect->write_histograms(evtPickLoose, isMC, av[2]);
-	looseCollectNoMET->write_histograms(evtPickLoose, isMC, av[2]);
 	//fourjCollect->write_histograms(evtPickLoose4j, isMC, av[2]);
 
 	std::cout << "Average PU weight " << PUweighter->getAvgWeight() << std::endl;

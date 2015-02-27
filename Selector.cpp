@@ -55,7 +55,7 @@ void Selector::clear_vectors(){
 	
 	Electrons.clear();
 	ElectronsLoose.clear();
-	//Muons.clear();
+	Muons.clear();
 	MuonsLoose.clear();
 	Jets.clear();
 	bJets.clear();
@@ -151,17 +151,46 @@ void Selector::filter_electrons(){
 
 void Selector::filter_muons(){
 	for(int muInd = 0; muInd < tree->nMu_; ++muInd){
+		const unsigned int GlobalMuon     =  1<<1;
+		const unsigned int TrackerMuon    =  1<<2;
+		const unsigned int PFMuon =  1<<5;
+		bool isGlobalMuon  = tree->muType_->at(muInd) & GlobalMuon;
+		bool isTrackerMuon = tree->muType_->at(muInd) & TrackerMuon;
+		bool isPFMuon      = tree->muType_->at(muInd) & PFMuon;
 		double eta = tree->muEta_->at(muInd);
 		double pt = tree->muPt_->at(muInd);
+		double frelIsocorr = ( tree->muPFIsoR04_CH_->at(muInd) + 
+					fmax(0.0, tree->muPFIsoR04_NH_->at(muInd) + 
+						tree->muPFIsoR04_Pho_->at(muInd) -
+						0.5*tree->muPFIsoR04_PU_->at(muInd)
+					) 
+				     ) / pt;
 		double rho_zero = std::max(0.0, (double)tree->rho2012_);
-		Mu04RelIso.push_back( 
-			(tree->muPFIsoR04_CH_->at(muInd) +
-			 std::max(0.0, tree->muPFIsoR04_NH_->at(muInd) + tree->muPFIsoR04_Pho_->at(muInd) - rho_zero * muEffArea04(eta))
-			) / pt );
-		bool muSel = TMath::Abs(eta) < 2.5 &&
-						pt > mu_PtLoose_cut &&
-						Mu04RelIso[muInd] < mu_RelIsoLoose_cut;
-		if( muSel ){
+		//Mu04RelIso.push_back( 
+		//	(tree->muPFIsoR04_CH_->at(muInd) +
+		//	 std::max(0.0, tree->muPFIsoR04_NH_->at(muInd) + tree->muPFIsoR04_Pho_->at(muInd) - rho_zero * muEffArea04(eta))
+		//	) / pt );
+		Mu04RelIso.push_back( frelIsocorr );
+		// fill Muons vector with indices of muons passing selection
+		bool passLoose = pt > 10.0 && TMath::Abs(eta) < 2.5 && frelIsocorr < 0.2 && isPFMuon && ( isGlobalMuon || isTrackerMuon);
+		bool passTight = passLoose && pt > 26.0 && TMath::Abs(eta) < 2.1 && 
+				tree->muChi2NDF_->at(muInd) < 10 &&
+				tree->muNumberOfValidTrkLayers_->at(muInd) > 5 &&
+				tree->muNumberOfValidMuonHits_->at(muInd) > 0 &&
+				tree->muD0_->at(muInd) < 0.2 &&
+				fabs( tree->muDz_->at(muInd) ) < 0.5 && //check this
+				tree->muNumberOfValidPixelHits_->at(muInd) > 0 &&
+				tree->muStations_->at(muInd) > 1 &&
+				frelIsocorr < 0.12 &&
+				isPFMuon && isGlobalMuon && isTrackerMuon;
+		
+		//bool muSel = TMath::Abs(eta) < 2.5 &&
+		//				pt > mu_PtLoose_cut &&
+		//				Mu04RelIso[muInd] < mu_RelIsoLoose_cut;
+		if( passTight ){
+			Muons.push_back(muInd);
+		}
+		else if( passLoose ){
 			MuonsLoose.push_back(muInd);
 		}
 	}

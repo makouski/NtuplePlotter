@@ -22,7 +22,7 @@ public:
 	// selected object indices
 	std::vector<int> Electrons;
 	std::vector<int> ElectronsLoose;
-	//std::vector<int> Muons;
+	std::vector<int> Muons;
 	std::vector<int> MuonsLoose;
 	std::vector<int> Jets;
 	std::vector<int> bJets;
@@ -47,7 +47,8 @@ public:
 	int NBjet_ge;
 	
 	int Nele_eq;
-	int NlooseEleVeto_le;
+	int Nmu_eq;
+	int NEleVeto_le;
 	
 	int Npho_ge;
 	int NlooseMuVeto_le;
@@ -69,6 +70,7 @@ private:
 	void clear_vectors();
 	void set_cutflow_labels(TH1F* hist);
 	double dR_jet_ele(int jetInd, int eleInd);
+	double dR_jet_mu(int jetInd, int muInd);
 	double dR_jet_pho(int jetInd, int phoInd);
 	double dR_ele_pho(int eleInd, int phoInd);
 };

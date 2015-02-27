@@ -36,7 +36,7 @@ public:
 	std::vector<bool> PhoPassSih;
 	std::vector<int> Electrons;
 	std::vector<int> ElectronsLoose;
-	//std::vector<int> Muons;
+	std::vector<int> Muons;
 	std::vector<int> MuonsLoose;
 	std::vector<int> Jets;
 	std::vector<int> bJets;

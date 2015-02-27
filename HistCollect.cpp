@@ -100,7 +100,6 @@ void HistCollect::fill_histograms(Selector* selector, EventPick* selEvent, Event
 
 void HistCollect::write_histograms(EventPick* selEvent, bool isMC, std::string outDir){
 	std::vector<TH1F*> emptyVec;
-	
 	if(fillSum) histnom->write_histograms(outDir,selEvent->histVector);
 	if(fillBarrel) histnom_barrel->write_histograms(outDir,emptyVec);
 	if(fillEndcap) histnom_endcap->write_histograms(outDir,emptyVec);
