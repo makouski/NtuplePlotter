@@ -69,19 +69,12 @@ ttbar_all, ttbar_fake, ttbar_ele, ttbar_pho = addEle_Pho_contributions('TTGamma'
 
 bg_all, bg_fake, bg_ele, bg_pho = addEle_Pho_contributions('WJets', bg_all, bg_fake, bg_ele, bg_pho)
 bg_all, bg_fake, bg_ele, bg_pho = addEle_Pho_contributions('ZJets', bg_all, bg_fake, bg_ele, bg_pho)
-bg_all, bg_fake, bg_ele, bg_pho = addEle_Pho_contributions('Diboson', bg_all, bg_fake, bg_ele, bg_pho)
 bg_all, bg_fake, bg_ele, bg_pho = addEle_Pho_contributions('Vgamma', bg_all, bg_fake, bg_ele, bg_pho)
 bg_all, bg_fake, bg_ele, bg_pho = addEle_Pho_contributions('SingleTop', bg_all, bg_fake, bg_ele, bg_pho)
-# QCD has no MC information, expect no real photon and no electron
-qcdInt,qcdErr = getInt_Err(get1DHist('templates_barrel_scaled.root', 'QCD_MET'))
-print 'QCD total: ',qcdInt,qcdErr
-bg_all = (bg_all[0] + qcdInt, ((bg_all[1])**2 + qcdErr**2)**0.5 )
 
 print 'ttbar all, ele, pho ',ttbar_all, ttbar_ele, ttbar_pho
 print 'bg all, ele, pho ',bg_all, bg_ele, bg_pho
 print
 print 'ttbar ele and pho fractions',ttbar_ele[0]/ttbar_all[0], '  ', ttbar_pho[0]/ttbar_all[0]
 print 'bg ele and pho fractions',bg_ele[0]/bg_all[0], '  ', bg_pho[0]/bg_all[0]
-
-
 

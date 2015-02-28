@@ -19,26 +19,7 @@ int main(int ac, char** av){
 	Selector* selector = new Selector();
 	selector->jet_Pt_cut = 20;
 	EventPick* evtPick = new EventPick("nominal");
-	
-	// no MET cut, for QCD fits
-	evtPick->MET_cut = -1.0;
-	
-	// antiselection for QCD fit
-	std::string outDirName(av[1]);
-	if( outDirName.find("QCD") != std::string::npos){
-		std::cout << "electron antiselection is on" << std::endl;
-		selector->ele_Iso_MVA_invert = true;
-	}
-
-	evtPick->NBjet_ge = 0;
-
-	// for zjets and zgamma fitting
-	
-	if( outDirName.find("twoEle") != std::string::npos){
-		std::cout << "selecting events with 2 electrons" << std::endl;
-		evtPick->Nele_eq = 2;
-	}
-
+		
 	// add more branches to be saved
 	//tree->chain->SetBranchStatus("*",1);
 

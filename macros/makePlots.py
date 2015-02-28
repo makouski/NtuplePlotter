@@ -22,7 +22,7 @@ if len(sys.argv) > 1:
 WJetsSF = 1.0
 TopSF = 1.0
 QCDSF = 0.0
-ZJetsSF = 1.20 
+ZJetsSF = 1.0 #1.20 
 ZJetsSFErr = 0.06
 if systematic == 'ZJetsSF_up':
 	ZJetsSF += ZJetsSFErr
@@ -135,20 +135,6 @@ def loadDataTemplate(varlist, inputDir, prefix):
 	return DataTempl
 
 
-def loadQCDTemplate(varlist, inputDir, prefix):
-	templPrefix = inputDir+prefix
-	QCD_sf = QCDSF
-	QCDTempl = distribution('QCD', [
-		(templPrefix+'Data_a.root', QCD_sf),
-		(templPrefix+'Data_b.root', QCD_sf),
-		(templPrefix+'Data_c.root', QCD_sf),
-		(templPrefix+'Data_d.root', QCD_sf),
-		(templPrefix+'TTJets1l.root', -1 * QCD_sf * gSF * TTJets1l_xs/TTJets1l_num),
-		(templPrefix+'TTJets2l.root', -1 * QCD_sf * gSF * TTJets2l_xs/TTJets2l_num),
-	], varlist, 46)
-	return QCDTempl
-
-
 def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 	templPrefix = inputDir+prefix
 	
@@ -198,23 +184,23 @@ def loadMCTemplates(varList, inputDir, prefix, titleSuffix, fillStyle):
 		(templPrefix+'ZJets.root', ZJetsSF*nonWJetsSF*gSF*ZJets_xs/ZJets_num)], varList, 9, fillStyle)
 
 	
-	MCtemplates['Other'] = distribution('Diboson'+titleSuffix, [
+	#MCtemplates['Other'] = distribution('Diboson'+titleSuffix, [
 
-        (templPrefix+'WZ_3lnu.root', nonWJetsSF*gSF*WZ_3lnu_xs/WZ_3lnu_num),
-        (templPrefix+'WZ_2l2q.root', nonWJetsSF*gSF*WZ_2l2q_xs/WZ_2l2q_num),
+        #(templPrefix+'WZ_3lnu.root', nonWJetsSF*gSF*WZ_3lnu_xs/WZ_3lnu_num),
+        #(templPrefix+'WZ_2l2q.root', nonWJetsSF*gSF*WZ_2l2q_xs/WZ_2l2q_num),
         
-        (templPrefix+'ZZ_2e2mu.root', nonWJetsSF*gSF*ZZ_2e2mu_xs/ZZ_2e2mu_num),
-        (templPrefix+'ZZ_2e2tau.root', nonWJetsSF*gSF*ZZ_2e2tau_xs/ZZ_2e2tau_num),
-        (templPrefix+'ZZ_2mu2tau.root', nonWJetsSF*gSF*ZZ_2mu2tau_xs/ZZ_2mu2tau_num),
-        (templPrefix+'ZZ_4e.root', nonWJetsSF*gSF*ZZ_4e_xs/ZZ_4e_num),
-        (templPrefix+'ZZ_4mu.root', nonWJetsSF*gSF*ZZ_4mu_xs/ZZ_4mu_num),
-        (templPrefix+'ZZ_4tau.root', nonWJetsSF*gSF*ZZ_4tau_xs/ZZ_4tau_num),
+        #(templPrefix+'ZZ_2e2mu.root', nonWJetsSF*gSF*ZZ_2e2mu_xs/ZZ_2e2mu_num),
+        #(templPrefix+'ZZ_2e2tau.root', nonWJetsSF*gSF*ZZ_2e2tau_xs/ZZ_2e2tau_num),
+        #(templPrefix+'ZZ_2mu2tau.root', nonWJetsSF*gSF*ZZ_2mu2tau_xs/ZZ_2mu2tau_num),
+        #(templPrefix+'ZZ_4e.root', nonWJetsSF*gSF*ZZ_4e_xs/ZZ_4e_num),
+        #(templPrefix+'ZZ_4mu.root', nonWJetsSF*gSF*ZZ_4mu_xs/ZZ_4mu_num),
+        #(templPrefix+'ZZ_4tau.root', nonWJetsSF*gSF*ZZ_4tau_xs/ZZ_4tau_num),
         
-        (templPrefix+'WW_2l2nu.root', nonWJetsSF*gSF*WW_2l2nu_xs/WW_2l2nu_num),
+        #(templPrefix+'WW_2l2nu.root', nonWJetsSF*gSF*WW_2l2nu_xs/WW_2l2nu_num),
 
           #(templPrefix+'TTW.root', gSF*TTW_xs/TTW_num),
           #(templPrefix+'TTZ.root', gSF*TTZ_xs/TTZ_num),
-		], varList, 49, fillStyle)
+	#	], varList, 49, fillStyle)
 
 	return MCtemplates
 
@@ -241,24 +227,9 @@ def saveAccTemplates(inputDir, outFileName):
 	
 	saveTemplatesToFile(AccTemplates.values(), varList, outFileName)
 
-	
-def saveNoMETTemplates(inputDir, inputData, outFileName):
-	varList = ['MET','M3']
-	DataTempl = loadDataTemplate(varList, inputData, 'hist_1phoNoMET_top_')
-	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1phoNoMET_top_','',1001)
-	MCTempl = []
-	MCTempl.append(MCTemplDict['WHIZARD'])
-	MCTempl.append(MCTemplDict['TTJets'])
-	MCTempl.append(MCTemplDict['Vgamma'])
-	MCTempl.append(MCTemplDict['SingleTop'])
-	MCTempl.append(MCTemplDict['WJets'])
-	MCTempl.append(MCTemplDict['ZJets'])
-	MCTempl.append(MCTemplDict['Other'])
-	saveTemplatesToFile([DataTempl] + MCTempl, varList, outFileName)
-
 
 def saveBarrelFitTemplates(inputDir, inputData,  outFileName):
-	varList = ['MET','M3','photon1ChHadSCRIso', 'photon1ChHadRandIso', 'photon1_Sigma_ChSCRIso','ele1pho1Mass']
+	varList = ['MET','M3','photon1ChHadSCRIso', 'photon1ChHadRandIso', 'photon1_Sigma_ChSCRIso']
 	DataTempl_b = loadDataTemplate(varList, inputData, 'hist_1pho_barrel_top_')
 	
 	MCTempl_b = loadMCTemplates(varList, inputDir, 'hist_1pho_barrel_top_','',1001)	
@@ -266,16 +237,9 @@ def saveBarrelFitTemplates(inputDir, inputData,  outFileName):
 	MCTempl_fe_b = loadMCTemplates(varList, inputDir, 'hist_1pho_fe_barrel_top_', '_electron', 3005)
 	MCTempl_fjrb_b = loadMCTemplates(varList, inputDir, 'hist_1pho_fjrb_barrel_top_', '_fake', 3005)
 	
-	saveTemplatesToFile([DataTempl_b] +  MCTempl_b.values() + MCTempl_rs_b.values() + MCTempl_fe_b.values() + MCTempl_fjrb_b.values()
-	#[
-		#MCTempl_b['WHIZARD'],     MCTempl_b['TTJets'],     MCTempl_b['MGTTGamma'],
-		#MCTempl_rs_b['WHIZARD'],  MCTempl_rs_b['TTJets'],  MCTempl_rs_b['MGTTGamma'],
-		#MCTempl_fe_b['WHIZARD'],  MCTempl_fe_b['TTJets'],  MCTempl_fe_b['MGTTGamma'],
-		#MCTempl_fjrb_b['WHIZARD'],MCTempl_fjrb_b['TTJets'],MCTempl_fjrb_b['MGTTGamma'],
-	#]
-	, varList, outFileName)
+	saveTemplatesToFile([DataTempl_b] +  MCTempl_b.values() + MCTempl_rs_b.values() + MCTempl_fe_b.values() + MCTempl_fjrb_b.values(), varList, outFileName)
 
-def savePreselTemplates(inputDir, qcdDir, inputData, outFileName):
+def savePreselTemplates(inputDir, inputData, outFileName):
 	if WJetsSF != 1.0 or TopSF != 1.0:
 		print 'We want to save templates for M3 fit, but the SFs are not 1.0'
 		print 'exiting'
@@ -283,10 +247,7 @@ def savePreselTemplates(inputDir, qcdDir, inputData, outFileName):
 	
 	varList = ['MET','M3']
 	DataTempl = loadDataTemplate(varList, inputData, 'hist_1pho_top_')
-	if QCDSF > 0.0001:
-		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_')
-	else:
-		print 'The purpose of this function is to save templates for M3 fit, without QCD it is useless'
+	
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001)
 	MCTempl = []
 	MCTempl.append(MCTemplDict['WHIZARD'])
@@ -295,17 +256,12 @@ def savePreselTemplates(inputDir, qcdDir, inputData, outFileName):
 	MCTempl.append(MCTemplDict['SingleTop'])
 	MCTempl.append(MCTemplDict['WJets'])
 	MCTempl.append(MCTemplDict['ZJets'])
-	MCTempl.append(MCTemplDict['Other'])
-	if QCDSF > 0.0001:
-		MCTempl.append(QCDTempl)
 	saveTemplatesToFile([DataTempl] + MCTempl, varList, outFileName)
 
 
-def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
+def makeAllPlots(varList, inputDir, dataDir, outDirName):
 	# load templates PreSel	
 	DataTempl = loadDataTemplate(varList, dataDir, 'hist_1pho_top_') #NoMET
-	if QCDSF > 0.0001:
-		QCDTempl = loadQCDTemplate(varList, qcdDir, 'hist_1pho_top_') #NoMET
 	MCTemplDict = loadMCTemplates(varList, inputDir, 'hist_1pho_top_','',1001) #NoMET
 	MCTempl = []
 	MCTempl.append(MCTemplDict['WHIZARD'])
@@ -314,15 +270,9 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	MCTempl.append(MCTemplDict['SingleTop'])
 	MCTempl.append(MCTemplDict['WJets'])
 	MCTempl.append(MCTemplDict['ZJets'])
-	MCTempl.append(MCTemplDict['Other'])
-	if QCDSF > 0.0001:
-		MCTempl.append(QCDTempl)
 	
-	if WJetsSF == 1.0 and TopSF == 1.0:
-		pass
-	else:
-		# save final templates, exactly as they are on the plots
-		saveTemplatesToFile([DataTempl] + MCTempl, ['MET','M3','WtransMass','genPhoRegionWeight','MCcategory'], 'templates_presel_scaled.root')
+	# save final templates, exactly as they are on the plots
+	saveTemplatesToFile([DataTempl] + MCTempl, ['MET','M3','WtransMass','genPhoRegionWeight','MCcategory'], 'templates_presel_scaled.root')
 	
 	plotTemplates( DataTempl, MCTempl, [], varList, outDirName+'/presel')
 	
@@ -334,29 +284,22 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	region = 'barrel'
 	# load templates
 	DataTempl_b = loadDataTemplate(shortVarList, dataDir, 'hist_1pho_'+region+'_top_')
-	if QCDSF > 0.0001:
-		QCDTempl_b = loadQCDTemplate(shortVarList, qcdDir, 'hist_1pho_'+region+'_top_')
 	MCTemplDict_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_'+region+'_top_','',1001)
 	MCTempl_b = []
-	#MCTempl_b.append(MCTemplDict_b['mst_510_200'])
 	MCTempl_b.append(MCTemplDict_b['WHIZARD'])
 	MCTempl_b.append(MCTemplDict_b['TTJets'])
 	MCTempl_b.append(MCTemplDict_b['Vgamma'])
 	MCTempl_b.append(MCTemplDict_b['SingleTop'])
 	MCTempl_b.append(MCTemplDict_b['WJets'])
 	MCTempl_b.append(MCTemplDict_b['ZJets'])
-	MCTempl_b.append(MCTemplDict_b['Other'])
-	if QCDSF > 0.0001:
-		MCTempl_b.append(QCDTempl_b)
 	
 	MCTempl_rs_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_barrel_top_', '_signal', 1001)
 	MCTempl_fe_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_barrel_top_', '_electron', 3005)
 	MCTempl_fjrb_b = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_barrel_top_', '_fake', 3005)
 	
-	#if WJetsSF != 1.0 or TopSF != 1.0:
 	# save final templates, exactly as they are on the plots and by categories
 	saveTemplatesToFile([DataTempl_b] + MCTempl_b + MCTempl_rs_b.values() + MCTempl_fe_b.values() + MCTempl_fjrb_b.values(), 
-		['MET','M3','WtransMass','ele1pho1Mass','MCcategory','nJets'], 
+		['MET','M3','WtransMass','MCcategory','nJets'], 
 		'templates_barrel_scaled.root'
 		)
 	
@@ -365,60 +308,12 @@ def makeAllPlots(varList, inputDir, qcdDir, dataDir, outDirName):
 	############################
 	return
 	############################
-	
-	MCTempl_rs_c = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_rs_'+region+'_top_', '_signal', 1001)
-	MCTempl_fe_c = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fe_'+region+'_top_', '_electron', 3005)
-	MCTempl_fjrb_c = loadMCTemplates(shortVarList, inputDir, 'hist_1pho_fjrb_'+region+'_top_', '_fake', 3005)
-	
-	# combine MC categories
-	TTphoton = MCTempl_rs_c['WHIZARD']
-	TTphoton.mergeWith(MCTempl_rs_c['TTJets'])
-	TTphoton.name = 'TopPair+photon'
-	
-	TTfake = MCTempl_fe_c['WHIZARD']
-	TTfake.mergeWith(MCTempl_fjrb_c['WHIZARD'])
-	TTfake.mergeWith(MCTempl_fe_c['TTJets'])
-	TTfake.mergeWith(MCTempl_fjrb_c['TTJets'])
-	TTfake.name = 'TopPair+fake'
-	
-	BGphoton = MCTempl_rs_c['Vgamma']
-	BGphoton.mergeWith(MCTempl_rs_c['SingleTop'])
-	#BGphoton.mergeWith(MCTempl_rs_c['Other'])
-	BGphoton.mergeWith(MCTempl_rs_c['WJets'])
-	BGphoton.mergeWith(MCTempl_rs_c['ZJets'])
-	BGphoton.name = 'BG+photon'
-	
-	BGfake = MCTempl_fe_c['Vgamma']
-	BGfake.mergeWith(MCTempl_fjrb_c['Vgamma'])
-	BGfake.mergeWith(MCTempl_fe_c['SingleTop'])
-	BGfake.mergeWith(MCTempl_fjrb_c['SingleTop'])
-	#BGfake.mergeWith(MCTempl_fe_c['Other'])
-	#BGfake.mergeWith(MCTempl_fjrb_c['Other'])
-	BGfake.mergeWith(MCTempl_fe_c['WJets'])
-	BGfake.mergeWith(MCTempl_fjrb_c['WJets'])
-	BGfake.mergeWith(MCTempl_fe_c['ZJets'])
-	BGfake.mergeWith(MCTempl_fjrb_c['ZJets'])
-	BGfake.name = 'BG+fake'
-
-	
-	MCTempl_c = []
-	MCTempl_c.append(TTphoton)
-	MCTempl_c.append(TTfake)
-	MCTempl_c.append(BGphoton)
-	MCTempl_c.append(BGfake)
-	
-	plotTemplates( DataTempl_b, MCTempl_c, [], shortVarList, outDirName+'/'+region+'_categories')
 
 
 varList_all = ['nVtx',
-			'MET','Ht','WtransMass','M3','M3first','minM3','M3pho','dRpho3j','M3phoMulti', 
+			'MET','Ht','WtransMass','M3', 
 			#'M3_0_30', 'M3_30_100', 'M3_100_200', 'M3_200_300', 'M3_300_up', #'M3minPt',
-			'ele1Pt','ele1Eta','ele1RelIso',
-			'ele1D0','ele1MVA','ele1Dz',
-			'ele2Pt','ele2RelIso',
-			'ele1sigmaIetaIeta','ele1EoverP',
-			'ele1DrJet','ele1pho1Mass',
-			'looseEleDrGenPho',
+			'mu1Pt','mu1Eta','mu1RelIso',
 			'genPhoRegionWeight', 'MCcategory',
 			'cut_flow',
 			'nJets',
@@ -437,15 +332,8 @@ if systematic in ['Btag_down','Btag_up','EleEff_down','EleEff_up','JEC_down','JE
 else:
 	outSuffix = ''
 
-InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist'+outSuffix+'/'
-QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd/'
-DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist/'
-
-if systematic == 'zeroB':
-	InputHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_zeroB/'
-	QCDHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_qcd_zeroB/'
-	DataHist = '/Users/makouski/dis/plotting_trees/new_hist/hist_zeroB/'
-
+InputHist = '../../hist'+outSuffix+'/'
+DataHist = '../../hist/'
 
 # TTJets and TTGamma acceptance histograms
 saveAccTemplates(InputHist, 'ttbar_acceptance.root')
@@ -455,51 +343,22 @@ saveAccTemplates(InputHist, 'ttbar_acceptance.root')
 #templateFits.InputFilename = 'templates_barrel.root'
 #templateFits.fitData = False ## to do closure test
 #templateFits.NpseudoExp = 3000
-phoPurity,phoPurityError = 0.564, 0.063 #### 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
+phoPurity,phoPurityError = 0.534, 0.0564 #0.506, 0.078  #0.564, 0.063 #### 0.556427532887, 0.0616417156454 ## auto binsize: 0.561220079533, 0.0529980243576
 #phoPurity,phoPurityError,MCfrac = templateFits.doTheFit()
 #exit()
 
-
-# QCD selection histograms
-#makeAllPlots(varList_all, QCDHist, QCDHist, QCDHist, 'plots_QCD')
-#exit()
-
-#WJetsSF = 1.84
-# for MET fit. No rescaling
-if WJetsSF == 1.0 and TopSF == 1.0:
-	saveNoMETTemplates(InputHist, DataHist, 'templates_presel_nomet.root')
-	saveNoMETTemplates(QCDHist, QCDHist, 'templates_presel_nomet_qcd.root')
-
-qcd_fit.qcdMETfile = 'templates_presel_nomet_qcd.root'
-qcd_fit.normMETfile = 'templates_presel_nomet.root'
-
-QCDSF,QCDSFerror = qcd_fit.doQCDfit()
-
-# for systematics of QCD fit
-if systematic == 'QCD_up':
-	QCDSF *= 2
-if systematic == 'QCD_down':
-	QCDSF /= 2
-
 # save templates for M3 fit
-savePreselTemplates(InputHist, QCDHist, DataHist, 'templates_presel.root')
+savePreselTemplates(InputHist, DataHist, 'templates_presel.root')
 
 # do M3 fit, update SF for Top and WJets
 qcd_fit.M3file = 'templates_presel.root'
 TopSF, TopSFerror, WJetsSF, WJetsSFerror = qcd_fit.doM3fit()
-#TopSF, TopSFerror, WJetsSF, WJetsSFerror = (1.0, 0.01, 1.0, 0.01)
 
-if systematic != 'zeroB':
-	makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots')
-else:
-	makeAllPlots(varList_all, InputHist, QCDHist, DataHist, 'plots_zeroB')
-	exit()
-
+makeAllPlots(varList_all, InputHist, DataHist, 'plots')
 
 M3_photon_topFrac, M3_photon_topFracErr = vgamma_fit.doM3fit_photon()
 print '*'*80
-# don't do it this way
-#VgammaSF, VgammaSFError = vgamma_fit.doNjetsfit_photon()
+#exit()
 
 calc_the_answer.TTJets1l_num = TTJets1l_num
 calc_the_answer.TTJets2l_num = TTJets2l_num
@@ -514,8 +373,6 @@ if systematic == 'EleFakeSF_up':
 if systematic == 'EleFakeSF_down':
 	calc_the_answer.eleFakeSF = 1.5 - 0.2
 
-#calc_the_answer.QCDSF = QCDSF
-#calc_the_answer.QCDSFErr = QCDSFerror
 calc_the_answer.M3TopSF = TopSF
 calc_the_answer.M3TopSFErr = TopSFerror
 calc_the_answer.M3WJetsSF = WJetsSF
@@ -523,25 +380,5 @@ calc_the_answer.M3WJetsSFErr = WJetsSFerror
 calc_the_answer.M3_photon_topFrac = M3_photon_topFrac
 calc_the_answer.M3_photon_topFracErr = M3_photon_topFracErr
 
-
-#print '#'*80,'   nominal'
 calc_the_answer.doTheCalculation()
 
-#print '#'*80,'   photon Purity Up'
-#calc_the_answer.photnPurity = phoPurity + phoPurityError
-#calc_the_answer.doTheCalculation()
-
-
-#print '#'*80,'   photon Purity Down'
-#calc_the_answer.photnPurity = phoPurity - phoPurityError
-#calc_the_answer.doTheCalculation()
-
-#calc_the_answer.photnPurity = phoPurity
-
-#print '#'*80,'   electron fakes up'
-#calc_the_answer.eleFakeSF = 1.5 + 0.2
-#calc_the_answer.doTheCalculation()
-
-#print '#'*80,'   electron fakes down'
-#calc_the_answer.eleFakeSF = 1.5 - 0.2
-#calc_the_answer.doTheCalculation()

@@ -31,9 +31,6 @@ TTJetsHad_num       = 31178278
 photnPurity = 0.562
 photnPurityErr = 0.065
 
-#QCDSF = 1.338 #0.1429
-#QCDSFErr = 0.032 #0.0033
-
 M3TopSF = 0.994
 M3TopSFErr = 0.0075
 
@@ -55,7 +52,6 @@ def doTheCalculation():
 	print '#$'*50
 	print 'input data'
 	print 'photon Purity: ',photnPurity,' +-',photnPurityErr
-	#print 'QCDSF: ',QCDSF,' +-',QCDSFErr
 	print 'TopSF: ',M3TopSF,' +-',M3TopSFErr
 	print 'WJetsSF: ',M3WJetsSF,' +-',M3WJetsSFErr
 	print 'eleFakeSF: ',eleFakeSF,' +-',eleFakeSFErr
@@ -69,7 +65,7 @@ def doTheCalculation():
 	print 'TTJets presel events expected ',topPreselInt,' +-',topPreselErr,'(MC stat)'
 	print
 	whizPreselInt,whizPreselErr = integral(preselfile,'TTGamma_MET')
-	print 'WHIZARD presel events expected ',whizPreselInt,' +-',whizPreselErr,'(MC stat)'
+	print 'TTGamma presel events expected ',whizPreselInt,' +-',whizPreselErr,'(MC stat)'
 	print
 	print
 	# total number of events with top quark is the sum of them
@@ -178,5 +174,5 @@ def doTheCalculation():
 	print vis_xsRatio,' +-',vis_xsRatio*vis_xsRatioErr
 	print '*'*80
 	return (xsRatio, xsRatio*xsRatioRelErr)
-	
-	
+
+

@@ -30,17 +30,11 @@ NdataErr = 30.2
 
 def readSamples(suffix):
 	var = 'MET'
-	samplnames = ['TTGamma', 'TTJets', 'Vgamma', 'SingleTop', 'WJets', 'ZJets', 'Diboson', 'QCD']
+	samplnames = ['TTGamma', 'TTJets', 'Vgamma', 'SingleTop', 'WJets', 'ZJets']
 	samples = {}
 	for n in samplnames:
-		if n=='QCD' and (suffix=='signal' or suffix=='electron'):
-			samples[n] = (0.0,0.0)
-			continue
 		print 'getting counts for ',n,suffix
-		if n=='QCD':
-			int,err = integral(n+'_'+var)
-		else:
-			int,err = integral(n+'_'+suffix+'_'+var)
+		int,err = integral(n+'_'+suffix+'_'+var)
 		samples[n] = (int,err)
 		
 	return samples
