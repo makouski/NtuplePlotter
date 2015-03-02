@@ -73,5 +73,6 @@ private:
 	double dR_jet_mu(int jetInd, int muInd);
 	double dR_jet_pho(int jetInd, int phoInd);
 	double dR_ele_pho(int eleInd, int phoInd);
+	double dR_mu_pho(int muInd, int phoInd);
 };
 #endif

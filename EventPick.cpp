@@ -116,7 +116,10 @@ void EventPick::process_event(const EventTree* inp_tree, const Selector* inp_sel
 		// and electrons
 		for(std::vector<int>::iterator eleInd = Electrons.begin(); eleInd != Electrons.end(); eleInd++)
 			if(dR_ele_pho(*eleInd, selector->PhotonsPresel.at(phoVi)) < veto_pho_lep_dR) goodPhoton = false;
-		
+		// and muons too; 0.3 is dR cut between photon and anything in MadGraph 2 to 7 ttgamma  
+		for(std::vector<int>::iterator muInd = Muons.begin(); muInd != Muons.end(); muInd++)
+			if(dR_mu_pho(*muInd, selector->PhotonsPresel.at(phoVi)) < 0.3) goodPhoton = false;
+
 		if(goodPhoton){
 			PhotonsPresel.push_back(selector->PhotonsPresel.at(phoVi));
 			PhoPassChHadIso.push_back(selector->PhoPassChHadIso.at(phoVi));
@@ -228,3 +231,7 @@ double EventPick::dR_jet_pho(int jetInd, int phoInd){
 double EventPick::dR_ele_pho(int eleInd, int phoInd){
 	return dR(tree->eleSCEta_->at(eleInd), tree->elePhi_->at(eleInd), tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd));
 }
+double EventPick::dR_mu_pho(int muInd, int phoInd){
+	return dR(tree->muEta_->at(muInd), tree->muPhi_->at(muInd), tree->phoEta_->at(phoInd), tree->phoPhi_->at(phoInd));
+}
+
